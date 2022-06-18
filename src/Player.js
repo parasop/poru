@@ -8,9 +8,9 @@ class Player extends EventEmitter {
         this.manager = manager;
         this.queue = new Queue()
         this.node = node;
-        this.filters = new Filters(this,this.node)
+        this.filters = new Filters(this, this.node)
 
-       
+
         this.guild = options.guild.id || options.guild;
 
         this.voiceChannel = options.voiceChannel.id || options.voiceChannel;
@@ -32,29 +32,28 @@ class Player extends EventEmitter {
 
         this.timestamp = Date.now();
 
+        this.pause = false;
         this.position = 0;
 
-        this.isPaused = false
 
-       // this.tracks = {}
-       
+
         this.currentTrack = {};
 
         this.previousTrack = {};
 
-       
+
         this.voiceUpdateState = null;
 
-       
 
-    
+
+
 
 
         this.on("event", (data) => (this.lavalinkEvent(data).bind(this))());
-        this.on("event",(data)=> this.manager.emit("debug",data))
+        this.on("event", (data) => this.manager.emit("debug", data))
         this.on("playerUpdate", (packet) => {
             this.isConnectd = packet.state.connected,
-            this.position = packet.state.position
+                this.position = packet.state.position
             this.state = {
                 volume: this.state.volume,
                 equalizer: this.state.equalizer,
@@ -63,9 +62,9 @@ class Player extends EventEmitter {
         });
     }
     async play() {
-       
-        if(!this.queue.length){
-             return nulll;
+
+        if (!this.queue.length) {
+            return nulll;
         }
         this.currentTrack = this.queue.shift();
         this.playing = true;
@@ -76,7 +75,7 @@ class Player extends EventEmitter {
             track: this.currentTrack.track,
             volume: this.volume || 100,
         });
-        this.position =0;
+        this.position = 0;
         return this;
     }
 
@@ -85,7 +84,7 @@ class Player extends EventEmitter {
 
         this.position = 0;
         this.isConnectd = false
-        this.playing =false;
+        this.playing = false;
         this.node.send({
             op: "stop",
             guildId: this.guild
@@ -95,14 +94,15 @@ class Player extends EventEmitter {
 
     pause(pause = true) {
         if (typeof pause !== "boolean") throw new RangeError("Pause function must be pass with boolean value.");
-        if (this.paused || !this.queue.size) return this;
-        this.playing = !pause;
-        this.paused = pause;
+
         this.node.send({
             op: "pause",
             guildId: this.guild,
             pause,
         });
+        this.playing = !pause;
+        this.paused = pause;
+
         return this;
     }
 
@@ -139,32 +139,32 @@ class Player extends EventEmitter {
     async QueueRepeat() {
         this.loop = 2;
         this.queueRepeat = true;
-        this.trackRepeat= false;
+        this.trackRepeat = false;
         return this;
     }
 
     async DisableRepeat() {
         this.loop = 0;
-        this.trackRepeat =false;
+        this.trackRepeat = false;
         this.queueRepeat = false;
-     
-      
+
+
         return this;
     }
 
- async   setTextChannel(channel) {
+    async setTextChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
         this.textChannel = channel;
         return this;
     }
 
-   async setVoiceChannel(channel) {
+    async setVoiceChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
         this.voiceChannel = channel;
         return this;
     }
 
- async   connect(data) {
+    async connect(data) {
         this.voiceUpdateState = data;
         this.node.send({
             op: "voiceUpdate",
@@ -188,10 +188,10 @@ class Player extends EventEmitter {
         return this;
     }
 
- 
 
 
-   async disconnect() {
+
+    async disconnect() {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnectd = false;
@@ -218,26 +218,26 @@ class Player extends EventEmitter {
         this.manager.players.delete(this.guild);
     }
 
-  async  autoplay(toggle =false){
+    async autoplay(toggle = false) {
 
-    if(!toggle) return null;
-        try{
-        if(!this.previousTrack) return this.stop();
-        let data = `https://www.youtube.com/watch?v=${this.previousTrack.identifier}&list=RD${this.previousTrack.identifier}`;
+        if (!toggle) return null;
+        try {
+            if (!this.previousTrack) return this.stop();
+            let data = `https://www.youtube.com/watch?v=${this.previousTrack.identifier}&list=RD${this.previousTrack.identifier}`;
 
-        let response = await this.manager.search(data);
+            let response = await this.manager.search(data);
 
-        if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.type)) return this.stop();
+            if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.type)) return this.stop();
 
-        let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
+            let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
 
-        this.queue.push(track);
+            this.queue.push(track);
 
-        this.play();
+            this.play();
 
-        return this;
+            return this;
 
-        }catch(e){
+        } catch (e) {
             console.log(`[Poru Autoplay] error : ${e}`)
             return this.stop();
         }
@@ -248,46 +248,46 @@ class Player extends EventEmitter {
     lavalinkEvent(data) {
         const events = {
             TrackStartEvent() {
-                this.playing =true;
-                this.paused =false;
+                this.playing = true;
+                this.paused = false;
                 this.manager.emit("trackStart", this, this.currentTrack);
             },
             // eslint-disable-next-line consistent-return
             TrackEndEvent() {
-          
-               this.previousTrack = this.currentTrack;
-    
+
+                this.previousTrack = this.currentTrack;
+
                 if (this.currentTrack && this.loop === 1) {
-                  
-                     this.queue.unshift(this.previousTrack)
-                     return this.play();
+
+                    this.queue.unshift(this.previousTrack)
+                    return this.play();
                 } else if (this.currentTrack && this.loop === 2) {
-                   
+
                     this.queue.push(this.previousTrack)
                     return this.play();
-                } 
-
-                if(this.queue.length ===0){
-                return this.manager.emit("queueEnd", this, this.track,data);
-                   // this.destroy();
-                } else if (this.queue.length>0) {
-                           
-                   return this.play();
                 }
-                    this.manager.emit("queueEnd", this, this.track,data);
-              
+
+                if (this.queue.length === 0) {
+                    return this.manager.emit("queueEnd", this, this.track, data);
+                    // this.destroy();
+                } else if (this.queue.length > 0) {
+
+                    return this.play();
+                }
+                this.manager.emit("queueEnd", this, this.track, data);
+
             },
             TrackStuckEvent() {
-              this.queue.shift();
-              this.manager.emit("trackError", this, this.track, data);
+                this.queue.shift();
+                this.manager.emit("trackError", this, this.track, data);
             },
             TrackExceptionEvent() {
-              this.queue.shift();
-              /**
-               * Fire up when there's an error while playing the track
-               * @event trackError
-               */
-              this.manager.emit("trackError", this, this.track, data);
+                this.queue.shift();
+                /**
+                 * Fire up when there's an error while playing the track
+                 * @event trackError
+                 */
+                this.manager.emit("trackError", this, this.track, data);
             },
             WebSocketClosedEvent() {
                 if ([4015, 4009].includes(data.code)) {
