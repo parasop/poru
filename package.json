@@ -1,0 +1,23 @@
+{
+  "name": "poru",
+  "version": "1.0.1",
+  "description": "A stable and powefull lavalink client with so many features",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parasop/poru.git"
+  },
+  "author": "PARAS",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/parasop/poru/issues"
+  },
+  "homepage": "https://github.com/parasop/poru#readme",
+  "dependencies": {
+    "node-fetch": "^3.2.6",
+    "ws": "^8.8.0"
+  }
+}
