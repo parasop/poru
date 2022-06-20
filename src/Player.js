@@ -35,7 +35,7 @@ class Player extends EventEmitter {
 
         this.timestamp = Date.now();
 
-        this.pause = false;
+        this.paused = false;
         this.position = 0;
 
 
