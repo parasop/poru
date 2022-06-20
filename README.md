@@ -75,7 +75,7 @@ client.poru.on("nodeConnect", node => {
 })
 
 // Emitted whenever a node encountered an error
-client.manager.on("nodeError", (node, error) => {
+client.poru.on("nodeError", (node, error) => {
     console.log(`Node "${node.name}" encountered an error`)
 })
 
