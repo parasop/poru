@@ -19,10 +19,10 @@
 
 ## Table of contents
 
-- [Documentation](https://gorillas-team.github.io/Gorilink/)
+- [Documentation](https://poru.parasdocs.tech)
 - [Installation](#installation)
 - [About](#about)
-- [Example](#example-usage-basic-bot)
+- [Example](https://github.com/parasop/poru-example)
 
 # Installation
 ```
@@ -86,7 +86,7 @@ client.once("ready", () => {
 });
 
 // THIS IS REQUIRED. Send raw events to Erela.js
-client.on("raw", d => client.poru.packetUpdate(d));
+client.on("raw",async d => await client.poru.packetUpdate(d));
 
 // Finally login at the END of your code
 client.login("your bot token here");
