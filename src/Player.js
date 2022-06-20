@@ -6,8 +6,11 @@ class Player extends EventEmitter {
         super();
 
         this.manager = manager;
-        this.queue = new Queue()
+
+        this.queue = new Queue();
+
         this.node = node;
+
         this.filters = new Filters(this, this.node)
 
 
@@ -46,9 +49,6 @@ class Player extends EventEmitter {
 
 
 
-
-
-
         this.on("event", (data) => (this.lavalinkEvent(data).bind(this))());
         this.on("event", (data) => this.manager.emit("debug", data))
         this.on("playerUpdate", (packet) => {
@@ -58,7 +58,9 @@ class Player extends EventEmitter {
                 volume: this.state.volume,
                 equalizer: this.state.equalizer,
                 ...packet.state,
+
             };
+            this.manager.emit("playerUpdate", this, data);
         });
     }
     async play() {
@@ -250,7 +252,7 @@ class Player extends EventEmitter {
             TrackStartEvent() {
                 this.playing = true;
                 this.paused = false;
-                this.manager.emit("trackStart", this, this.currentTrack);
+                this.manager.emit("trackStart", this, this.currentTrack, data);
             },
             // eslint-disable-next-line consistent-return
             TrackEndEvent() {

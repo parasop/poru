@@ -42,10 +42,72 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 - 100% Customizable
 - Easy to setup
 
+## Implementation
+[Poru Music](https://github.com/parasop/poru-example) **Example bot as guide for beginning.** 
+
+
 ## Example usage basic bot
 ```javascript
-//  adding soon
+// main file
+// Require both libraries
+const { Client } = require("discord.js");
+const { Poru } = require("poru");
+
+// Initiate both main classes
+const client = new Client();
+
+// Define some options for the node
+const nodes = [
+  {
+    host: "localhost",
+    password: "youshallnotpass",
+    port: 2333,
+    secure:false
+  }
+];
+
+// Assign Manager to the client variable
+client.poru = new Poru(client,nodes);
+
+// Emitted whenever a node connects
+client.poru.on("nodeConnect", node => {
+    console.log(`Node "${node.name}" connected.`)
+})
+
+// Emitted whenever a node encountered an error
+client.manager.on("nodeError", (node, error) => {
+    console.log(`Node "${node.name}" encountered an error`)
+})
+
+// Listen for when the client becomes ready
+client.once("ready", () => {
+  client.poru.init(client;
+  console.log(`Logged in as ${client.user.tag}`);
+});
+
+// THIS IS REQUIRED. Send raw events to Erela.js
+client.on("raw", d => client.poru.packetUpdate(d));
+
+// Finally login at the END of your code
+client.login("your bot token here");
+
+
+```
+
+
+```javascript
+// creating player
+const player = await client.poru.createConnection({
+  guild: message.guild.id,
+  voiceChannel: message.member.voice.channel.id,
+  textChannel: message.channel,
+  selfDeaf: true,
+  selfMute: false, 
+  })
+  // Getting tracks
+const resolve = await client.poru.resolve('Ignite',"yt");
 ```
 
 ## Need Help?
-If you do not understand something in the documentation or have any questions, please join our [My disocrd server ](https://discord.gg/Zmmc47Nrh8)
+Feel free to join our [discord server](https://discord.gg/Zmmc47Nrh8), Give us suggestions and advice about errors and new features. 
+with ❤️ by [Paras](https://github.com/parasop) .

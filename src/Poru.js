@@ -38,6 +38,12 @@ class Poru extends EventEmitter {
         return node;
     }
 
+    deleteNode(identifier){
+        const node = this.nodes.get(identifier);
+        if (!node) return;
+        node.destroy();
+        this.nodes.delete(identifier)
+      }
     //create  connection with discord voice channel
     createConnection(data = {}, options = {}) {
         const player = this.players.get(data.guild.id || data.guild);
@@ -55,6 +61,8 @@ class Poru extends EventEmitter {
         });
         return this.Player(data);
     }
+
+
 
     init(client) {
 

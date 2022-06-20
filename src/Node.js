@@ -106,13 +106,29 @@ message(payload) {
      * Fire up when node return an error
      * @event nodeError
      */
-    this.manager.emit("nodeError", event, this);
+    this.manager.emit("nodeError", this, event);
     return this.reconnect();
 }
 
+destroy(){
+    if(!this.isConnected) return;
+
+    const players = this.manager.players.filter(p => p.node == this);
+    if (players.size) players.forEach(p => p.destroy());
+    this.ws.close(1000, "destroy");
+    this.ws.removeAllListeners();
+    this.ws = null;
+    this.reconnect = 1;
+    this.manager.nodes.delete(this.host)
+    this.manager.emit("nodeDestroy", this);
+
+
+}
+
 reconnect() {
-    this.reconnect = setTimeout(() => {
-        this.connected = false;
+    this.reconnect++;
+     setTimeout(() => {
+        this.isConnected = false;
         this.ws.removeAllListeners();
         this.ws = null;
         this.manager.emit("nodeReconnect", this);
