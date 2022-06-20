@@ -60,7 +60,7 @@ class Player extends EventEmitter {
                 ...packet.state,
 
             };
-            this.manager.emit("playerUpdate", this, data);
+            this.manager.emit("playerUpdate", this, packet);
         });
     }
     async play() {
