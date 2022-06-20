@@ -12,10 +12,11 @@ class Node {
         this.password = options.password ||"youshallnotpass"
         this.secure = options.secure || false;
         this.ws = null;
-        this.reconnect = options.reconnect || 10000;
         this.reconnectTime = 50000;
         this.resumeKey = options.resumeKey || null;
-        this._resumeTimeout = options.resumeTimeout || 60
+        this._resumeTimeout = options.resumeTimeout || 60;
+        this.reconnectAttempt;
+        this.reconnects = 0;
         this.queue = [];
         this.isConnected = false;
         this.stats = {
@@ -56,9 +57,9 @@ class Node {
 
 
 open(){
-    if (this.reconnect) {
-        clearTimeout(this.reconnect);
-        delete this.reconnect;
+    if (this.reconnectAttempt) {
+        clearTimeout(this.reconnectAttempt);
+        delete this.reconnectAttempt;
     }
 
 this.queue =[];
@@ -89,13 +90,11 @@ message(payload) {
 }
 
     close(event) {
-    // if (!event) return "Unknown event";
-    /**
-     * Fire up when node disconnect
-     * @event nodeClosed
-     */
     this.manager.emit("nodeClose", event, this);
-    if (event !== 1000) return this.reconnect();
+    if (event !== 1000){
+        
+     return this.reconnect();
+    }
 }
 
 
@@ -126,7 +125,7 @@ destroy(){
 }
 
 reconnect() {
-    this.reconnect = setTimeout(() => {
+    this.reconnectAttempt = setTimeout(() => {
         this.isConnected = false;
         this.ws.removeAllListeners();
         this.ws = null;

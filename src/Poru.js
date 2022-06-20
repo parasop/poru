@@ -131,10 +131,10 @@ class Poru extends EventEmitter {
         const guild = data.guild.id || data.guild;
         const Nodes = this.nodes.get(guild);
         if (Nodes) return Nodes;
-        if (this.leastUsedNodes.length === 0) throw new Error("No nodes are avaliable");
+        if (this.leastUsedNodes.length === 0) throw new Error("[Poru Error] No nodes are avaliable");
         const node = this.nodes.get(this.leastUsedNodes[0].name
             || this.leastUsedNodes[0].host);
-        if (!node) throw new Error("No nodes are avalible");
+        if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
         // eslint-disable-next-line new-cap
         const player = new this.player(node, data, this);
