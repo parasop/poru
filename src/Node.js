@@ -126,8 +126,7 @@ destroy(){
 }
 
 reconnect() {
-    this.reconnect++;
-     setTimeout(() => {
+    this.reconnect = setTimeout(() => {
         this.isConnected = false;
         this.ws.removeAllListeners();
         this.ws = null;
