@@ -85,7 +85,7 @@ client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
 
-// THIS IS REQUIRED. Send raw events to Erela.js
+// this event used to make connections upto date with lavalink
 client.on("raw",async d => await client.poru.packetUpdate(d));
 
 // Finally login at the END of your code
