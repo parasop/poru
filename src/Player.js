@@ -13,16 +13,17 @@ class Player extends EventEmitter {
 
         this.filters = new Filters(this, this.node)
 
-
         this.guild = options.guild.id || options.guild;
 
         this.voiceChannel = options.voiceChannel.id || options.voiceChannel;
 
         this.textChannel = options.textChannel || null;
 
-        this.state = { volume: 100, equalizer: [] };
-
         this.isConnectd = false;
+
+        this.isPlaying = false;
+
+        this.isPause = false;
 
         this.trackRepeat = false;
 
@@ -30,36 +31,22 @@ class Player extends EventEmitter {
 
         this.loop = 0;
 
-
-        this.playing = false;
-
-        this.timestamp = Date.now();
-
-        this.isPause = false;
         this.position = 0;
 
-
+        this.volume = 100;
 
         this.currentTrack = {};
 
         this.previousTrack = {};
-
 
         this.voiceUpdateState = null;
 
 
 
         this.on("event", (data) => (this.lavalinkEvent(data).bind(this))());
-        this.on("event", (data) => this.manager.emit("debug", data))
         this.on("playerUpdate", (packet) => {
             this.isConnectd = packet.state.connected,
                 this.position = packet.state.position
-            this.state = {
-                volume: this.state.volume,
-                equalizer: this.state.equalizer,
-                ...packet.state,
-
-            };
             this.manager.emit("playerUpdate", this, packet);
         });
     }
@@ -86,7 +73,7 @@ class Player extends EventEmitter {
 
         this.position = 0;
         this.isConnectd = false
-        this.playing = false;
+        this.isPlaying = false;
         this.node.send({
             op: "stop",
             guildId: this.guild
@@ -102,7 +89,7 @@ class Player extends EventEmitter {
             guildId: this.guild,
             pause,
         });
-        this.playing = !pause;
+        this.isPlaying = !pause;
         this.isPause = pause;
 
         return this;
@@ -121,7 +108,7 @@ class Player extends EventEmitter {
 
     async setVolume(volume) {
         if (Number.isNaN(volume)) throw new RangeError("Volume level must be a number.");
-        this.volume = volume;
+        this.filters.volume = volume;
         this.node.send({
             op: "volume",
             guildId: this.guild,
@@ -167,14 +154,14 @@ class Player extends EventEmitter {
     }
 
     async connect(data) {
-    if(data){
-        this.voiceUpdateState = data;
-        this.node.send({
-            op: "voiceUpdate",
-            guildId: this.guild,
-            ...data,
-        });
-    }
+        if (data) {
+            this.voiceUpdateState = data;
+            this.node.send({
+                op: "voiceUpdate",
+                guildId: this.guild,
+                ...data,
+            });
+        }
         return this;
     }
 
@@ -252,7 +239,7 @@ class Player extends EventEmitter {
     lavalinkEvent(data) {
         const events = {
             TrackStartEvent() {
-                this.playing = true;
+                this.isPlaying = true;
                 this.paused = false;
                 this.manager.emit("trackStart", this, this.currentTrack, data);
             },
@@ -264,18 +251,20 @@ class Player extends EventEmitter {
                 if (this.currentTrack && this.loop === 1) {
 
                     this.queue.unshift(this.previousTrack)
+                    this.manager.emit("trackEnd", this, this.currentTrack, data)
                     return this.play();
                 } else if (this.currentTrack && this.loop === 2) {
 
                     this.queue.push(this.previousTrack)
+                    this.manager.emit("trackEnd", this, this.currentTrack, data)
+
                     return this.play();
                 }
 
                 if (this.queue.length === 0) {
                     return this.manager.emit("queueEnd", this, this.track, data);
-                    // this.destroy();
                 } else if (this.queue.length > 0) {
-
+                    this.manager.emit("trackEnd", this, this.currentTrack, data)
                     return this.play();
                 }
                 this.manager.emit("queueEnd", this, this.track, data);
