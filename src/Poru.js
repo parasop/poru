@@ -48,7 +48,7 @@ class Poru extends EventEmitter {
         this.nodes.delete(identifier)
       }
     //create  connection with discord voice channel
-    createConnection(data = {}, options = {}) {
+    createConnection(data = {}) {
         const player = this.players.get(data.guild.id || data.guild);
         if (player){
             return player;
@@ -58,8 +58,8 @@ class Poru extends EventEmitter {
             d: {
                 guild_id: data.guild.id || data.guild,
                 channel_id: data.voiceChannel.id || data.voiceChannel,
-                self_mute: options.selfMute || false,
-                self_deaf: options.selfDeaf || true,
+                self_mute: data.selfMute || false,
+                self_deaf: data.selfDeaf || true,
             },
         });
         return this.#Player(data);
@@ -81,7 +81,7 @@ class Poru extends EventEmitter {
         console.log(`Thanks for using Poru`)
     }
 
-         setServersUpdate(data) {
+    setServersUpdate(data) {
             let guild = data.guild_id
             this.voiceServers.set(guild, data);
             const server = this.voiceServers.get(guild);
