@@ -2,21 +2,11 @@ class Queue extends Array{
     constructor() {
         super(...arguments);
     }
-        get duration() {
-            return this.reduce((acc, val) => acc + val.info.length, 0);
-        }
-    
-        get totalSize() {
-            return this.length  + (this.current ? 1 : 0);
-        }
-    
+     
         get size() {
             return this.length 
         }
     
-        get empty() {
-            return this.length / 2 < 1;
-        }
     
         first() {
             return this ? this[0] : 0;
@@ -27,10 +17,7 @@ class Queue extends Array{
             return this;
            }
     
-        removeFirst() {
-            return this.shift();
-        }
-    
+      
         remove(index) {
             return this.splice(index, 1)[0];
         }
