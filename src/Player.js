@@ -108,7 +108,7 @@ class Player extends EventEmitter {
 
     async setVolume(volume) {
         if (Number.isNaN(volume)) throw new RangeError("Volume level must be a number.");
-        this.filters.volume = volume;
+         this.volume = volume;
         this.node.send({
             op: "volume",
             guildId: this.guild,
