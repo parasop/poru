@@ -2,7 +2,7 @@ const { EventEmitter } = require("events");
 const Queue = require("./guild/Queue");
 const Filters = require("./guild/Filter")
 class Player extends EventEmitter {
-    constructor(node, options, manager) {
+    constructor(manager,node, options) {
         super();
 
         this.manager = manager;
@@ -69,7 +69,7 @@ class Player extends EventEmitter {
     }
 
 
-    async stop() {
+     stop() {
 
         this.position = 0;
         this.isConnectd = false

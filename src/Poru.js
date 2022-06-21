@@ -156,7 +156,7 @@ class Poru extends EventEmitter {
         if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
         // eslint-disable-next-line new-cap
-        const player = new Player(node, data, this);
+        const player = new Player(this,node, data);
         this.players.set(guild, player);
         player.connect()
         return player;
