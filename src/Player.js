@@ -167,12 +167,14 @@ class Player extends EventEmitter {
     }
 
     async connect(data) {
+    if(data){
         this.voiceUpdateState = data;
         this.node.send({
             op: "voiceUpdate",
             guildId: this.guild,
             ...data,
         });
+    }
         return this;
     }
 
