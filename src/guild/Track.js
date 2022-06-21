@@ -1,6 +1,6 @@
 class Track {
     constructor(data) {
-      this.track = data.info.track
+      this.track = data.track
       this.info ={
         identifier : data.info.identifier,
         isSeekable : data.info.isSeekable,
