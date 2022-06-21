@@ -35,7 +35,7 @@ class Player extends EventEmitter {
 
         this.timestamp = Date.now();
 
-        this.paused = false;
+        this.isPause = false;
         this.position = 0;
 
 
@@ -103,7 +103,7 @@ class Player extends EventEmitter {
             pause,
         });
         this.playing = !pause;
-        this.paused = pause;
+        this.isPause = pause;
 
         return this;
     }
@@ -197,7 +197,7 @@ class Player extends EventEmitter {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnectd = false;
-        this.manager.sendWS({
+        this.manager.sendData({
             op: 4,
             d: {
                 guild_id: this.guild,
@@ -293,7 +293,7 @@ class Player extends EventEmitter {
             },
             WebSocketClosedEvent() {
                 if ([4015, 4009].includes(data.code)) {
-                    this.manager.sendWS({
+                    this.manager.sendData({
                         op: 4,
                         d: {
                             guild_id: data.guildId,
