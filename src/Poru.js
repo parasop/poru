@@ -81,45 +81,59 @@ class Poru extends EventEmitter {
         console.log(`Thanks for using Poru`)
     }
 
-    voiceServersUpdate(data) {
-        this.voiceServers.set(data.guild_id, data);
-        return this.connectionProcess(data.guild_id);
-    }
+         setServersUpdate(data) {
+            let guild = data.guild_id
+            this.voiceServers.set(guild, data);
+            const server = this.voiceServers.get(guild);
+            const state = this.voiceStates.get(guild);
+            if (!server) return false;
+            const player = this.players.get(guild);
+            if (!player) return false;
+    
+            player.connect({
+                sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
+                event: server,
+            });
+    
+            return true;
+         } 
 
-    voiceStateUpdate(data) {
+    setStateUpdate(data) {
         if (data.user_id !== this.user) return;
         if (data.channel_id) {
+            const guild = data.guild_id;
+     
             this.voiceStates.set(data.guild_id, data);
-            // eslint-disable-next-line consistent-return
-            return this.connectionProcess(data.guild_id);
+            const server = this.voiceServers.get(guild);
+            const state = this.voiceStates.get(guild);
+            if (!server) return false;
+            const player = this.players.get(guild);
+            if (!player) return false;
+    
+            player.connect({
+                sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
+                event: server,
+            });
+    
+            return true;
         }
         this.voiceServers.delete(data.guild_id);
         this.voiceStates.delete(data.guild_id);
     }
 
     #packetUpdate(packet) {
+    if (!['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE'].includes(packet.t)) return;
+        const player = this.players.get(packet.d.guild_id);
+        if (!player) return;
+
         if (packet.t === "VOICE_SERVER_UPDATE"){ 
-            this.voiceServersUpdate(packet.d);
+                   this.setServersUpdate(packet.d);
         }
-
-        if (packet.t === "VOICE_STATE_UPDATE"){
-             this.voiceStateUpdate(packet.d);
+         if (packet.t === "VOICE_STATE_UPDATE"){
+             this.setStateUpdate(packet.d);
         }
     }
 
-    connectionProcess(guildId) {
-        const server = this.voiceServers.get(guildId);
-        const state = this.voiceStates.get(guildId);
-        if (!server) return false;
-        const player = this.players.get(guildId);
-        if (!player) return false;
-
-        player.connect({
-            sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
-            event: server,
-        });
-        return true;
-    }
 
 
     get leastUsedNodes() {
@@ -144,7 +158,7 @@ class Poru extends EventEmitter {
         // eslint-disable-next-line new-cap
         const player = new Player(node, data, this);
         this.players.set(guild, player);
-
+        player.connect()
         return player;
     }
 
@@ -161,7 +175,7 @@ class Poru extends EventEmitter {
         }
         const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
      
-        if (!result) throw new Error("No tracks found.");
+        if (!result) throw new Error("[Poru Error] No tracks found.");
         return new Response(result);
     }
 
@@ -178,8 +192,7 @@ class Poru extends EventEmitter {
         return fetch(`http${node.secure ? "s" : ""}://${node.host}:${node.port}/${endpoint}?${param}`, {
             headers: {
                 Authorization: node.password,
-                "Client-Name": config.client
-  
+               
             },
         })
             .then((r) => r.json())
