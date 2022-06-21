@@ -1,33 +1,35 @@
 const { EventEmitter } = require("events");
 const fetch = (...args) => import('node-fetch').then(({
     default: fetch
-}) => fetch(...args));const Player = require("./Player");
+}) => fetch(...args));
+const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
+const config = require("./config.json")
 
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
         if (!client) throw new Error("[Poru Error] you did't provide a valid client");
         if (!nodes) throw new Error("[Poru Error] you did't provide a lavalink nodes");
-
+        if(!options) throw new Error("[Poru Error] options must be provided!")
         this.client = client;
-        this.player = options.player || Player;
         this._nodes = nodes;
         this.nodes = new Map();
         this.players = new Map();
         this.voiceStates = new Map();
         this.voiceServers = new Map();
         this.user = null;
+        this.options = options
         this.shards = options.shards || 1;
-        this.sendWS = null;
+        this.sendData = null;
     }
 
 
 
     //create a node and connect it with lavalink
-    createNode(options) {
-        const node = new Node(this, options);
+    addNode(options) {
+        const node = new Node(this, options,this.options);
         if (options.name) {
             this.nodes.set(options.name || options.host, node);
             node.connect();
@@ -38,7 +40,8 @@ class Poru extends EventEmitter {
         return node;
     }
 
-    deleteNode(identifier){
+    //remove node and destroy web socket connection
+    removeNode(identifier){
         const node = this.nodes.get(identifier);
         if (!node) return;
         node.destroy();
@@ -50,7 +53,7 @@ class Poru extends EventEmitter {
         if (player){
             return player;
         }
-        this.sendWS({
+        this.sendData({
             op: 4,
             d: {
                 guild_id: data.guild.id || data.guild,
@@ -59,20 +62,22 @@ class Poru extends EventEmitter {
                 self_deaf: options.selfDeaf || true,
             },
         });
-        return this.Player(data);
+        return this.#Player(data);
     }
 
 
 
     init(client) {
 
-        this.user =client.user.id;
-        this.sendWS = (data) => {
+        this.user = client.user.id;
+        this.sendData = (data) => {
             const guild = client.guilds.cache.get(data.d.guild_id);
             if (guild) guild.shard.send(data);
         }
-           // eslint-disable-next-line no-underscore-dangle
-        this._nodes.forEach((node) => this.createNode(node));
+        client.on("raw",async packet =>{
+            await this.#packetUpdate(packet);
+        })
+        this._nodes.forEach((node) => this.addNode(node));
         console.log(`Thanks for using Poru`)
     }
 
@@ -92,7 +97,7 @@ class Poru extends EventEmitter {
         this.voiceStates.delete(data.guild_id);
     }
 
-    packetUpdate(packet) {
+    #packetUpdate(packet) {
         if (packet.t === "VOICE_SERVER_UPDATE"){ 
             this.voiceServersUpdate(packet.d);
         }
@@ -127,7 +132,7 @@ class Poru extends EventEmitter {
             });
     }
 
-    Player(data) {
+    #Player(data) {
         const guild = data.guild.id || data.guild;
         const Nodes = this.nodes.get(guild);
         if (Nodes) return Nodes;
@@ -137,25 +142,13 @@ class Poru extends EventEmitter {
         if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
         // eslint-disable-next-line new-cap
-        const player = new this.player(node, data, this);
+        const player = new Player(node, data, this);
         this.players.set(guild, player);
 
         return player;
     }
 
-    async search(track, source) {
-        const node = this.leastUsedNodes[0];
-        if (!node) throw new Error("No nodes are available.");
-        const regex = /^https?:\/\//;
-        if (!regex.test(track)) {
-            // eslint-disable-next-line no-param-reassign
-            track = `${source || "yt"}search:${track}`;
-        }
-        const result = await this.request(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
-      //  this.emit("error", result);
-        if (!result) throw new Error("No tracks found.");
-        return new Response(result);
-    }
+
 
 
     async resolve(track, source) {
@@ -166,8 +159,8 @@ class Poru extends EventEmitter {
             // eslint-disable-next-line no-param-reassign
             track = `${source || "yt"}search:${track}`;
         }
-        const result = await this.request(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
-      //  this.emit("error", result);
+        const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
+     
         if (!result) throw new Error("No tracks found.");
         return new Response(result);
     }
@@ -176,21 +169,22 @@ class Poru extends EventEmitter {
     async decodeTrack(track) {
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
-        const result = await this.request(node, "decodetrack", `track=${track}`);
-        this.emit("error", result);
+        const result = await this.#fetch(node, "decodetrack", `track=${track}`);
         if (result.status === 500) return null;
         return result;
     }
 
-    request(node, endpoint, param) {
+    #fetch(node, endpoint, param) {
         return fetch(`http${node.secure ? "s" : ""}://${node.host}:${node.port}/${endpoint}?${param}`, {
             headers: {
                 Authorization: node.password,
+                "Client-Name": config.client
+  
             },
         })
             .then((r) => r.json())
             .catch((e) => {
-                throw new Error(`[Poru Error] Failed to request to the lavalink.\n  error: ${e}`);
+                throw new Error(`[Poru Error] Failed to fetch from the lavalink.\n  error: ${e}`);
             });
     }
 
