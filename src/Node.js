@@ -2,7 +2,7 @@ const WebSocket = require("ws");
 const config = require("./config.json")
 
 class Node {
-    constructor(manager, options = { }) {
+    constructor(manager,options,node) {
 
         this.manager = manager
         this.name= options.name || null;
@@ -12,13 +12,13 @@ class Node {
         this.password = options.password ||"youshallnotpass"
         this.secure = options.secure || false;
         this.ws = null;
-        this.reconnectTime = 50000;
-        this.resumeKey = options.resumeKey || null;
-        this._resumeTimeout = options.resumeTimeout || 60;
+        this.reconnectTime = node.reconnectTime || 5000;
+        this.resumeKey = node.resumeKey || null;
+        this.resumeTimeout = node.resumeTimeout || 60;
         this.reconnectAttempt;
         this.reconnects = 0;
-        this.queue = [];
         this.isConnected = false;
+        this.destroyed = null;
         this.stats = {
             players: 0,
             playingPlayers: 0,
@@ -49,29 +49,36 @@ class Node {
    };
    if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
    this.ws = new WebSocket(`ws${this.secure ? "s" : ""}:${this.host}:${this.port}/`, { headers });
-   this.ws.on("open", this.open.bind(this));
-   this.ws.on("error", this.error.bind(this));
-   this.ws.on("message", this.message.bind(this));
-   this.ws.on("close", this.close.bind(this));
- }
+   this.ws.on("open",this.#open.bind(this));
+   this.ws.on("error", this.#error.bind(this));
+   this.ws.on("message", this.#message.bind(this));
+   this.ws.on("close", this.#close.bind(this));
+  }
 
 
-open(){
+#open(){
     if (this.reconnectAttempt) {
         clearTimeout(this.reconnectAttempt);
         delete this.reconnectAttempt;
-    }
+    } 
 
-this.queue =[];
-if (this.resumeKey) this.send({ op: "configureResuming", key: (this.resumeKey).toString(), timeout: this._resumeTimeout });
- this.manager.emit("nodeConnect", this);
-this.isConnected = true;
+if (this.resumeKey){
+this.send({
+     op: "configureResuming", 
+     key: (this.resumeKey).toString(), 
+     timeout: this.resumeTimeout 
+    });
+    this.manager.emit("debug",this.name,`[Web Socket]  Resuming configured on Lavalink`)
 }
 
-message(payload) {
-    // eslint-disable-next-line no-param-reassign
+this.manager.emit("nodeConnect", this);
+this.isConnected = true;
+this.manager.emit('debug', this.name, `[Web Socket] Connection ready ${this.url}`);
+      
+}
+
+#message(payload) {
     if (Array.isArray(payload)) payload = Buffer.concat(payload);
-    // eslint-disable-next-line no-param-reassign
     else if (payload instanceof ArrayBuffer) payload = Buffer.from(payload);
 
     const packet = JSON.parse(payload);
@@ -83,14 +90,13 @@ message(payload) {
     if (packet.guildId && player) player.emit(packet.op, packet);
 
     packet.node = this;
-    /**
-     * Fire up when raw packets / or sending raw data
-     */
+    this.manager.emit("debug",this.name,`[Web Socket] Lavalink Node Update : ${packet.op}  `)
     this.manager.emit("raw", packet);
 }
 
-    close(event) {
-    this.manager.emit("nodeClose", event, this);
+    #close(event) {
+    this.manager.emit("nodeDisconnect", event, this);
+    this.manager.emit("debug",this.name,`[Web Socket] Connection with Lavalink closed with Error code : ${event||"Unkwon code"}`)
     if (event !== 1000){
         
      return this.reconnect();
@@ -98,13 +104,10 @@ message(payload) {
 }
 
 
-    error(event) {
+    #error(event) {
     if (!event) return "Unknown event";
 
-    /**
-     * Fire up when node return an error
-     * @event nodeError
-     */
+    this.manager.emit("debug",this.name,`[Web Socket] Connection for Lavalink node has error code: ${event.code}`)
     this.manager.emit("nodeError", this, event);
     return this.reconnect();
 }
@@ -118,6 +121,7 @@ destroy(){
     this.ws.removeAllListeners();
     this.ws = null;
     this.reconnect = 1;
+    this.destroyed = true;
     this.manager.nodes.delete(this.host)
     this.manager.emit("nodeDestroy", this);
 
@@ -141,6 +145,19 @@ send(payload) {
     });
 }
 
+
+
+get penalties(){
+    let penalties = 0;
+    if (!this.isConnected) return penalties;
+    penalties += this.stats.players;
+    penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
+    if (this.stats.frameStats) {
+        penalties += this.stats.frameStats.deficit;
+        penalties += this.stats.frameStats.nulled * 2;
+    }
+    return penalties;
+}
 
 
  }
