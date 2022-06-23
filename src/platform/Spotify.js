@@ -1,8 +1,6 @@
 const fetch = (...args) => import('node-fetch').then(({
     default: fetch
 }) => fetch(...args));
-const req = require("node-superfetch");
-const request = require("petitio")
 class Spotify {
     constructor(manager) {
         this.manager = manager;
@@ -24,19 +22,18 @@ class Spotify {
         if (this.nextRequest) return;
 
         try {
-            const { access_token, expires_in } = await request("https://accounts.spotify.com/api/token", "POST")
-                .query("grant_type", "client_credentials")
-                .header("Authorization", `Basic ${this.authorization}`)
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .json();
+            const data = await fetch("https://accounts.spotify.com/api/token?grant_type=client_credentials",{
+                method:"POST",
+                headers: {
+                Authorization: `Basic ${this.authorization}`,
+                'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
 
-            if (!access_token) {
-                throw new Error("Invalid Spotify client.");
-            }
+           const body = await data.json();
 
-
-            this.token = `Bearer ${access_token}`;
-            this.interval = expires_in * 1000
+           this.token = `Bearer ${body.access_token}`;
+            this.interval = body.expires_in * 1000
         } catch (e) {
             if (e.status === 400) {
                 throw new Error("Invalid Spotify client.")
@@ -110,6 +107,7 @@ class Spotify {
     }
 
     async fetchAlbum(id) {
+        try{
         const album = await this.requestData(`/albums/${id}`)
 
         const unresolvedPlaylistTracks = album.tracks.map(x => this.buildUnresolved(x));
@@ -119,9 +117,13 @@ class Spotify {
             album.name
         );
 
+        }catch(e){
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+        }
     }
 
     async fetchArtist(id) {
+        try{
         const artist = await this.requestData(`/artists/${id}`)
 
         const data = await this.requestData(`/artists/${id}/top-tracks?market=US`)
@@ -132,12 +134,14 @@ class Spotify {
             (await Promise.all(unresolvedPlaylistTracks.map(x => x.then((a) => a.resolve())))).filter(Boolean),
             artist.name
         );
-
+        }catch(e){
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+        }
 
     }
 
     async fetchTrack(id) {
-
+        try{
         const data = await this.requestData(`/tracks/${id}`)
         const unresolvedTrack = this.buildUnresolved(data);
 
@@ -145,10 +149,13 @@ class Spotify {
             "TRACK_LOADED",
             [await unresolvedTrack.then((a) => a.resolve())]
         );
+        }catch(e){
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+        }
     }
 
     async fetchByWords(query) {
-
+            try{
         const data = await this.requestData(`/search/?q="${query}"&type=artist,album,track`)
        
         const unresolvedTrack = this.buildUnresolved(data.tracks.items[0]);
@@ -157,6 +164,9 @@ class Spotify {
             "TRACK_LOADED",
             [await unresolvedTrack.then((a) => a.resolve())]
         );
+            }catch(e){
+                return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+            }
     }
 
     async fetchPlaylistTracks(spotifyPlaylist) {
@@ -164,9 +174,10 @@ class Spotify {
         let pageLoaded = 1;
         while (nextPage) {
             if (!nextPage) break;
-            const { body } = await req
-                .get(nextPage)
-                .set("Authorization", this.token);
+    const req = await fetch(nextPage, {
+                headers: { Authorization: this.token }
+        })
+        const body = await req.json() 
             if (body.error) break;
             spotifyPlaylist.tracks.items.push(...body.items);
 
