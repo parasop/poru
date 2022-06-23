@@ -7,7 +7,6 @@ class Track {
         author : data.info.author,
         length : data.info.length,
         isStream : data.info.isStream,
-        position : data.info.position,
         sourceName:data.info.sourceName,
         title : data.info.title,
         uri : data.info.uri,
