@@ -6,13 +6,13 @@ const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
 const config = require("./config.json")
-
+const Spotify = require("./platform/Spotify")
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
         if (!client) throw new Error("[Poru Error] you did't provide a valid client");
         if (!nodes) throw new Error("[Poru Error] you did't provide a lavalink nodes");
-        if(!options) throw new Error("[Poru Error] options must be provided!")
+        if (!options) throw new Error("[Poru Error] options must be provided!")
         this.client = client;
         this._nodes = nodes;
         this.nodes = new Map();
@@ -29,7 +29,7 @@ class Poru extends EventEmitter {
 
     //create a node and connect it with lavalink
     addNode(options) {
-        const node = new Node(this, options,this.options);
+        const node = new Node(this, options, this.options);
         if (options.name) {
             this.nodes.set(options.name || options.host, node);
             node.connect();
@@ -41,16 +41,16 @@ class Poru extends EventEmitter {
     }
 
     //remove node and destroy web socket connection
-    removeNode(identifier){
+    removeNode(identifier) {
         const node = this.nodes.get(identifier);
         if (!node) return;
         node.destroy();
         this.nodes.delete(identifier)
-      }
+    }
     //create  connection with discord voice channel
     createConnection(data = {}) {
         const player = this.players.get(data.guild.id || data.guild);
-        if (player){
+        if (player) {
             return player;
         }
         this.sendData({
@@ -74,47 +74,56 @@ class Poru extends EventEmitter {
             const guild = client.guilds.cache.get(data.d.guild_id);
             if (guild) guild.shard.send(data);
         }
-        client.on("raw",async packet =>{
+        client.on("raw", async packet => {
             await this.#packetUpdate(packet);
         })
+        
         this._nodes.forEach((node) => this.addNode(node));
+
+
+ if (this.options.spotify.clientID && this.options.spotify.clientSecret) {
+            this.spotify = new Spotify(this, {
+                clientID: this.options.clientID,
+                clientSecret: this.options.clientSecret 
+                })
+        }
         console.log(`Thanks for using Poru`)
     }
 
     setServersUpdate(data) {
-            let guild = data.guild_id
-            this.voiceServers.set(guild, data);
-            const server = this.voiceServers.get(guild);
-            const state = this.voiceStates.get(guild);
-            if (!server) return false;
-            const player = this.players.get(guild);
-            if (!player) return false;
-    
-            player.connect({
-                sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
-                event: server,
-            });
-    
-            return true;
-         } 
+        let guild = data.guild_id
+        this.voiceServers.set(guild, data);
+        const server = this.voiceServers.get(guild);
+        const state = this.voiceStates.get(guild);
+        if (!server) return false;
+        const player = this.players.get(guild);
+        if (!player) return false;
+
+        player.connect({
+            sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
+            event: server,
+        });
+
+        return true;
+    }
 
     setStateUpdate(data) {
         if (data.user_id !== this.user) return;
         if (data.channel_id) {
             const guild = data.guild_id;
-     
+
             this.voiceStates.set(data.guild_id, data);
             const server = this.voiceServers.get(guild);
             const state = this.voiceStates.get(guild);
             if (!server) return false;
             const player = this.players.get(guild);
             if (!player) return false;
-    
+
             player.connect({
                 sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
                 event: server,
             });
-    
+
             return true;
         }
         this.voiceServers.delete(data.guild_id);
@@ -122,15 +131,15 @@ class Poru extends EventEmitter {
     }
 
     #packetUpdate(packet) {
-    if (!['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE'].includes(packet.t)) return;
+        if (!['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE'].includes(packet.t)) return;
         const player = this.players.get(packet.d.guild_id);
         if (!player) return;
 
-        if (packet.t === "VOICE_SERVER_UPDATE"){ 
-                   this.setServersUpdate(packet.d);
+        if (packet.t === "VOICE_SERVER_UPDATE") {
+            this.setServersUpdate(packet.d);
         }
-         if (packet.t === "VOICE_STATE_UPDATE"){
-             this.setStateUpdate(packet.d);
+        if (packet.t === "VOICE_STATE_UPDATE") {
+            this.setStateUpdate(packet.d);
         }
     }
 
@@ -156,7 +165,7 @@ class Poru extends EventEmitter {
         if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
         // eslint-disable-next-line new-cap
-        const player = new Player(this,node, data);
+        const player = new Player(this, node, data);
         this.players.set(guild, player);
         player.connect()
         return player;
@@ -168,13 +177,16 @@ class Poru extends EventEmitter {
     async resolve(track, source) {
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
+        if(this.spotify &&  this.spotify.check(track)){
+             return await this.spotify.resolve(track);
+        }
         const regex = /^https?:\/\//;
         if (!regex.test(track)) {
             // eslint-disable-next-line no-param-reassign
             track = `${source || "yt"}search:${track}`;
         }
         const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
-     
+
         if (!result) throw new Error("[Poru Error] No tracks found.");
         return new Response(result);
     }
@@ -192,7 +204,7 @@ class Poru extends EventEmitter {
         return fetch(`http${node.secure ? "s" : ""}://${node.host}:${node.port}/${endpoint}?${param}`, {
             headers: {
                 Authorization: node.password,
-               
+
             },
         })
             .then((r) => r.json())
