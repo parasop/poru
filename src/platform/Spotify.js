@@ -226,9 +226,11 @@ class Spotify {
 
     async buildTrack(unresolvedTrack) {
         const lavaTrack = await this.fetchMetaData(unresolvedTrack);
+        if(lavaTrack){
         unresolvedTrack.track = lavaTrack.track;
         unresolvedTrack.info.identifier = lavaTrack.info.identifier
         return unresolvedTrack
+        }
     }
 
 
