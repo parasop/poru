@@ -81,7 +81,7 @@ class Poru extends EventEmitter {
         this._nodes.forEach((node) => this.addNode(node));
 
 
- if (this.options.spotify.clientID && this.options.spotify.clientSecret) {
+ if (this.options.spotify && this.options.spotify.clientID && this.options.spotify.clientSecret) {
             this.spotify = new Spotify(this, {
                 clientID: this.options.clientID,
                 clientSecret: this.options.clientSecret 
