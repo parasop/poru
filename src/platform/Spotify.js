@@ -110,7 +110,7 @@ class Spotify {
         try{
         const album = await this.requestData(`/albums/${id}`)
 
-        const unresolvedPlaylistTracks = album.tracks.map(x => this.buildUnresolved(x));
+        const unresolvedPlaylistTracks = album.tracks.items.map(x => this.buildUnresolved(x));
         return this.buildResponse(
             "PLAYLIST_LOADED",
             (await Promise.all(unresolvedPlaylistTracks.map(x => x.then((a) => a.resolve())))).filter(Boolean),
