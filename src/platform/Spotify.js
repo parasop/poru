@@ -1,6 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({
     default: fetch
 }) => fetch(...args));
+const Track = require("../guild/Track")
 class Spotify {
     constructor(manager) {
         this.manager = manager;
@@ -22,17 +23,17 @@ class Spotify {
         if (this.nextRequest) return;
 
         try {
-            const data = await fetch("https://accounts.spotify.com/api/token?grant_type=client_credentials",{
-                method:"POST",
+            const data = await fetch("https://accounts.spotify.com/api/token?grant_type=client_credentials", {
+                method: "POST",
                 headers: {
-                Authorization: `Basic ${this.authorization}`,
-                'Content-Type': 'application/x-www-form-urlencoded',
+                    Authorization: `Basic ${this.authorization}`,
+                    'Content-Type': 'application/x-www-form-urlencoded',
                 }
             })
 
-           const body = await data.json();
+            const body = await data.json();
 
-           this.token = `Bearer ${body.access_token}`;
+            this.token = `Bearer ${body.access_token}`;
             this.interval = body.expires_in * 1000
         } catch (e) {
             if (e.status === 400) {
@@ -92,12 +93,12 @@ class Spotify {
         try {
             const playlist = await this.requestData(`/playlists/${id}`)
             await this.fetchPlaylistTracks(playlist);
-            const unresolvedPlaylistTracks = playlist.tracks.items.map(x => this.buildUnresolved(x.track));
+            const unresolvedPlaylistTracks = await Promise.all(playlist.tracks.items.map(x => this.buildUnresolved(x.track)))
 
 
             return this.buildResponse(
                 "PLAYLIST_LOADED",
-                (await Promise.all(unresolvedPlaylistTracks.map(x => x.then((a) => a.resolve())))).filter(Boolean),
+                unresolvedPlaylistTracks,
                 playlist.name
             );
 
@@ -107,66 +108,68 @@ class Spotify {
     }
 
     async fetchAlbum(id) {
-        try{
-        const album = await this.requestData(`/albums/${id}`)
+        try {
+            const album = await this.requestData(`/albums/${id}`)
 
-        const unresolvedPlaylistTracks = album.tracks.items.map(x => this.buildUnresolved(x));
-        return this.buildResponse(
-            "PLAYLIST_LOADED",
-            (await Promise.all(unresolvedPlaylistTracks.map(x => x.then((a) => a.resolve())))).filter(Boolean),
-            album.name
-        );
+            const unresolvedPlaylistTracks = await Promise.all(album.tracks.items.map(x => this.buildUnresolved(x)));
+            return this.buildResponse(
+                "PLAYLIST_LOADED",
+                unresolvedPlaylistTracks,
+                album.name
+            );
 
-        }catch(e){
+        } catch (e) {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
         }
     }
 
     async fetchArtist(id) {
-        try{
-        const artist = await this.requestData(`/artists/${id}`)
+        try {
+            const artist = await this.requestData(`/artists/${id}`)
 
-        const data = await this.requestData(`/artists/${id}/top-tracks?market=US`)
-        const unresolvedPlaylistTracks = data.tracks.map(x => this.buildUnresolved(x));
+            const data = await this.requestData(`/artists/${id}/top-tracks?market=US`)
+            const unresolvedPlaylistTracks = await Promise.all(data.tracks.map(x => this.buildUnresolved(x)));
 
-        return this.buildResponse(
-            "PLAYLIST_LOADED",
-            (await Promise.all(unresolvedPlaylistTracks.map(x => x.then((a) => a.resolve())))).filter(Boolean),
-            artist.name
-        );
-        }catch(e){
+            return this.buildResponse(
+                "PLAYLIST_LOADED",
+                unresolvedPlaylistTracks,
+                artist.name
+            );
+        } catch (e) {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
         }
 
     }
 
     async fetchTrack(id) {
-        try{
-        const data = await this.requestData(`/tracks/${id}`)
-        const unresolvedTrack = this.buildUnresolved(data);
-
-        return this.buildResponse(
-            "TRACK_LOADED",
-            [await unresolvedTrack.then((a) => a.resolve())]
-        );
-        }catch(e){
+        try {
+            const data = await this.requestData(`/tracks/${id}`)
+            const unresolvedTrack = await this.buildUnresolved(data);
+            return this.buildResponse(
+                "TRACK_LOADED",
+                [unresolvedTrack]
+            );
+        } catch (e) {
             return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
         }
     }
 
-    async fetchByWords(query) {
-            try{
-        const data = await this.requestData(`/search/?q="${query}"&type=artist,album,track`)
-       
-        const unresolvedTrack = this.buildUnresolved(data.tracks.items[0]);
+    async fetch(query) {
+        try {
 
-        return this.buildResponse(
-            "TRACK_LOADED",
-            [await unresolvedTrack.then((a) => a.resolve())]
-        );
-            }catch(e){
-                return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
-            }
+            if (this.check(query)) return this.resolve(query)
+
+            const data = await this.requestData(`/search/?q="${query}"&type=artist,album,track`)
+
+            const unresolvedTrack = await this.buildUnresolved(data.tracks.items[0]);
+
+            return this.buildResponse(
+                "TRACK_LOADED",
+                [unresolvedTrack]
+            );
+        } catch (e) {
+            return this.buildResponse(e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED", [], undefined, e.body?.error.message ?? e.message);
+        }
     }
 
     async fetchPlaylistTracks(spotifyPlaylist) {
@@ -174,10 +177,10 @@ class Spotify {
         let pageLoaded = 1;
         while (nextPage) {
             if (!nextPage) break;
-    const req = await fetch(nextPage, {
+            const req = await fetch(nextPage, {
                 headers: { Authorization: this.token }
-        })
-        const body = await req.json() 
+            })
+            const body = await req.json()
             if (body.error) break;
             spotifyPlaylist.tracks.items.push(...body.items);
 
@@ -190,13 +193,8 @@ class Spotify {
 
     async buildUnresolved(track) {
         if (!track) throw new ReferenceError("The Spotify track object was not provided");
-   //     if (!track.artists) throw new ReferenceError("The track artists array was not provided");
-        if (!track.name) throw new ReferenceError("The track name was not provided");
-        if (!Array.isArray(track.artists)) throw new TypeError(`The track artists must be an array, received type ${typeof track.artists}`);
-        if (typeof track.name !== "string") throw new TypeError(`The track name must be a string, received type ${typeof track.name}`);
 
-        const _this = this;
-        return {
+        return new Track({
             track: "",
             info: {
                 sourceName: 'spotify',
@@ -209,10 +207,7 @@ class Spotify {
                 uri: `https://open.spotify.com/track/${track.id}`,
                 image: track.album?.images[0]?.url,
             },
-            resolve() {
-                return _this.buildTrack(this)
-            }
-        }
+        })
 
 
 
@@ -226,10 +221,10 @@ class Spotify {
 
     async buildTrack(unresolvedTrack) {
         const lavaTrack = await this.fetchMetaData(unresolvedTrack);
-        if(lavaTrack){
-        unresolvedTrack.track = lavaTrack.track;
-        unresolvedTrack.info.identifier = lavaTrack.info.identifier
-        return unresolvedTrack
+        if (lavaTrack) {
+            unresolvedTrack.track = lavaTrack.track;
+            unresolvedTrack.info.identifier = lavaTrack.info.identifier
+            return unresolvedTrack
         }
     }
 
