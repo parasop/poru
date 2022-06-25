@@ -141,7 +141,6 @@ class Filters {
       }
 
     updateFilters(){
-        console.log(this.node.send)
         const { volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass } = this;
         this.node.send({
             op:"filters",
