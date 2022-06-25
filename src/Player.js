@@ -56,6 +56,9 @@ class Player extends EventEmitter {
             return nulll;
         }
         this.currentTrack = this.queue.shift();
+        if(!this.currentTrack.track){
+          this.currentTrack = await this.currentTrack.resolve(this.manager);
+        }
         this.playing = true;
         this.timestamp = Date.now();
         this.node.send({
