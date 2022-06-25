@@ -67,7 +67,7 @@ const nodes = [
 ];
 
 // Assign Manager to the client variable
-client.poru = new Poru(client,nodes);
+client.poru = new Poru(client,nodes, { spotify: { clientID: "spotify client id" , clientSecret: "spotify client secret" } });
 
 // Emitted whenever a node connects
 client.poru.on("nodeConnect", node => {
@@ -84,9 +84,6 @@ client.once("ready", () => {
   client.poru.init(client;
   console.log(`Logged in as ${client.user.tag}`);
 });
-
-// this event used to make connections upto date with lavalink
-client.on("raw",async d => await client.poru.packetUpdate(d));
 
 // Finally login at the END of your code
 client.login("your bot token here");
@@ -107,6 +104,25 @@ const player = await client.poru.createConnection({
   // Getting tracks
 const resolve = await client.poru.resolve('Ignite',"yt");
 ```
+### Adding and playing songs
+```js
+const { loadType, tracks, playlistInfo } = resolve;
+
+if (loadType === "TRACK_LOADED") {
+  player.queue.add(track);
+  message.channel.send({ content: `Added: \`${track.info.title}\`` });
+  if (!player.isPlaying && !player.isPaused) return player.play();
+}
+```
+### Poru's options
+
+ Options | Type | Description
+ --------|------|------------
+spotify | Object {clientID:"" , clientSecret:""} | support's spotify track / playlist.
+reconnectTime | Number | Time to reconnect a connection
+resumeKey  | String | Resume key for Lavalink
+resumeTimeout | Number | Timeout before resuming a connection
+
 
 ## Need Help?
 Feel free to join our [discord server](https://discord.gg/Zmmc47Nrh8), Give us suggestions and advice about errors and new features. 
