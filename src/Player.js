@@ -219,7 +219,7 @@ class Player extends EventEmitter {
             if (!this.previousTrack) return this.stop();
             let data = `https://www.youtube.com/watch?v=${this.previousTrack.identifier}&list=RD${this.previousTrack.identifier}`;
 
-            let response = await this.manager.search(data);
+            let response = await this.manager.resolve(data);
 
             if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.type)) return this.stop();
 
