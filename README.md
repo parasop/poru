@@ -81,7 +81,7 @@ client.poru.on("nodeError", (node, error) => {
 
 // Listen for when the client becomes ready
 client.once("ready", () => {
-  client.poru.init(client;
+  client.poru.init(client);
   console.log(`Logged in as ${client.user.tag}`);
 });
 
