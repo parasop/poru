@@ -7,6 +7,8 @@ const Node = require("./Node");
 const Response = require("./guild/Response");
 const config = require("./config.json")
 const Spotify = require("./platform/Spotify")
+const Apple = require("./platform/Apple")
+
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
@@ -87,8 +89,15 @@ class Poru extends EventEmitter {
                 clientSecret: this.options.clientSecret 
                 })
         }
+if(this.options.apple){
+    if(!this.options.apple.playlistLimit){
+        throw new Error("[Poru Apple Music] playlistLimit must be provided")
+      }
+    this.apple = new Apple(this,this.options)
+}
         console.log(`Thanks for using Poru`)
-    }
+}
+
 
     setServersUpdate(data) {
         let guild = data.guild_id
@@ -175,11 +184,18 @@ class Poru extends EventEmitter {
 
 
     async resolve(track, source) {
+        
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
         if(this.spotify &&  this.spotify.check(track)){
              return await this.spotify.resolve(track);
         }
+        
+        if(this.apple &&  this.apple.check(track)){
+            return await this.apple.resolve(track);
+       }
+      
+
         const regex = /^https?:\/\//;
         if (!regex.test(track)) {
             // eslint-disable-next-line no-param-reassign
