@@ -22,8 +22,14 @@ class Apple {
          
     }
 
+    async decodeUrl(url){
+    let [,id] = await this.baseURL.exec(url)
+    return id;
+    }
+
     async  resolve(url) {
-      const urlType = this.linkType(url);
+      const urlType = await this.decodeUrl(url);
+      console.log(urlType)
       const page = await axios
         .get(url)
         .then((res) => res.data)
@@ -72,24 +78,7 @@ class Apple {
     
     }
 
-     linkType(url) {
-      if (
-        RegExp(
-          /https?:\/\/music\.apple\.com\/.+?\/album\/.+?\/.+?\?i=([0-9]+)/
-        ).test(url)
-      ) {
-        return "song";
-      } else if (
-        RegExp(/https?:\/\/music\.apple\.com\/.+?\/playlist\//).test(url)
-      ) {
-        return "playlist";
-      } else if (RegExp(/https?:\/\/music\.apple\.com\/.+?\/album\//).test(url)) {
-        return "album";
-      } else {
-        throw Error("Apple Music link is invalid");
-      }
-    }
-
+  
     getRawPlaylist(document) {
         const $ = cheerio.load(document);
       
