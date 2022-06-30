@@ -29,7 +29,6 @@ class Apple {
 
     async  resolve(url) {
       const urlType = await this.decodeUrl(url);
-      console.log(urlType)
       const page = await axios
         .get(url)
         .then((res) => res.data)
