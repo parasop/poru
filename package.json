@@ -22,5 +22,17 @@
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.12"
    
-  }
+  },
+   "keywords": [
+     "music",
+     "lavalink",
+     "poru",
+     "bot",
+     "spotify",
+     "apple-music",
+     "soundcloud",
+     "discordjs",
+     "eris"
+     
+   ],
 }
