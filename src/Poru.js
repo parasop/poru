@@ -1,6 +1,5 @@
 const { EventEmitter } = require("events");
-const fetch = require("undici")
-const Player = require("./Player");
+const { fetch } = require('undici');const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
 const config = require("./config.json")

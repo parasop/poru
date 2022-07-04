@@ -1,5 +1,4 @@
-const fetch = require("undici")
-
+const { fetch } = require('undici');
 const Track = require("../guild/Track")
 const cheerio = require("cheerio")
 
