@@ -1,4 +1,5 @@
-const axios = require("axios")
+const fetch = require("undici")
+
 const Track = require("../guild/Track")
 const cheerio = require("cheerio")
 
@@ -29,8 +30,7 @@ class Apple {
 
     async  resolve(url) {
       const urlType = await this.decodeUrl(url);
-      const page = await axios
-        .get(url)
+      const page = await fetch(url)
         .then((res) => res.data)
         .catch(() => undefined);
     

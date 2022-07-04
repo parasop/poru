@@ -1,6 +1,4 @@
-const fetch = (...args) => import('node-fetch').then(({
-    default: fetch
-}) => fetch(...args));
+const fetch = require("undici")
 const Track = require("../guild/Track")
 class Spotify {
     constructor(manager) {
