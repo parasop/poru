@@ -1,5 +1,6 @@
 const { fetch } = require('undici');
-const Track = require('../guild/Track');
+const Track = require("../guild/Track")
+
 class Spotify {
   constructor(manager) {
     this.manager = manager;

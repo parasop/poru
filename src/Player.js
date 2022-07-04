@@ -217,7 +217,7 @@ class Player extends EventEmitter {
         if (!toggle) return null;
         try {
             if (!this.previousTrack) return this.stop();
-            let data = `https://www.youtube.com/watch?v=${this.previousTrack.identifier}&list=RD${this.previousTrack.identifier}`;
+            let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier}&list=RD${this.previousTrack.info.identifier}`;
 
             let response = await this.manager.resolve(data);
 
