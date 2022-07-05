@@ -197,7 +197,7 @@ if(this.options.apple){
         const regex = /^https?:\/\//;
         if (!regex.test(track)) {
             // eslint-disable-next-line no-param-reassign
-            track = `${source || "yt"}search:${track}`;
+            track = `${source || "ytsearch"}:${track}`;
         }
         const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
 
