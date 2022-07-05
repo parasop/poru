@@ -3,7 +3,6 @@ const { fetch } = require('undici');
 const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
-const config = require("./config.json")
 const Spotify = require("./platform/Spotify")
 const Apple = require("./platform/Apple")
 
@@ -75,7 +74,7 @@ class Poru extends EventEmitter {
             if (guild) guild.shard.send(data);
         }
         client.on("raw", async packet => {
-            await this.#packetUpdate(packet);
+            await this.packetUpdate(packet);
         })
         
         this._nodes.forEach((node) => this.addNode(node));
@@ -137,7 +136,7 @@ if(this.options.apple){
         this.voiceStates.delete(data.guild_id);
     }
 
-    #packetUpdate(packet) {
+    packetUpdate(packet) {
         if (!['VOICE_STATE_UPDATE', 'VOICE_SERVER_UPDATE'].includes(packet.t)) return;
         const player = this.players.get(packet.d.guild_id);
         if (!player) return;
