@@ -220,7 +220,7 @@ class Player extends EventEmitter {
             let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier}&list=RD${this.previousTrack.info.identifier}`;
 
             let response = await this.manager.resolve(data);
-
+            console.log(response);
             if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.type)) return this.stop();
 
             let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
