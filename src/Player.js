@@ -50,7 +50,6 @@ class Player extends EventEmitter {
             this.manager.emit("playerUpdate", this, packet);
         });
     }
-
     async play() {
 
         if (!this.queue.length) {
@@ -73,7 +72,7 @@ class Player extends EventEmitter {
     }
 
 
-    stop() {
+     stop() {
 
         this.position = 0;
         this.isConnectd = false
@@ -182,6 +181,9 @@ class Player extends EventEmitter {
         });
         return this;
     }
+
+
+
 
     async disconnect() {
         if (this.voiceChannel === null) return null;
@@ -303,6 +305,7 @@ class Player extends EventEmitter {
         };
         return events[data.type] || events.default;
     }
+
 
 }
 
