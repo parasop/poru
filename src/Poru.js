@@ -1,8 +1,8 @@
 const { EventEmitter } = require("events");
-const { fetch } = require('undici');const Player = require("./Player");
+const { fetch } = require('undici');
+const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
-const config = require("./config.json")
 const Spotify = require("./platform/Spotify")
 const Apple = require("./platform/Apple")
 
@@ -196,7 +196,7 @@ if(this.options.apple){
         const regex = /^https?:\/\//;
         if (!regex.test(track)) {
             // eslint-disable-next-line no-param-reassign
-            track = `${source || "yt"}search:${track}`;
+            track = `${source || "ytsearch"}:${track}`;
         }
         const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
 

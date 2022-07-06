@@ -1,4 +1,4 @@
-import { EventEmitter } from "ws";
+import { EventEmitter, WebSocket } from "ws";
 
 declare module'Poru' {
 
@@ -56,48 +56,45 @@ export class Node {
         constructor(manager:typeof EventEmitter|any,options:object,node:object)
 
         public manager: EventEmitter
-        public name: String
-        public host: String
-        public port : Number
-        public url : String
-        public password: String
-        public secure: Boolean
-        public ws = any
-        public reconnectTime : Number
-        public resumeKey:String|Number;
-        public resumeTimeout =Number
-        public reconnectAttempt:Number;
-        public reconnects:Number;
-        public isConnected:Boolean;
-        public destroyed:Boolean;
+        public name: string
+        public host: string
+        public port : number
+        public url : string
+        public password: string
+        public secure: boolean
+        public ws: WebSocket
+        public reconnectTime : number
+        public resumeKey:string|number;
+        public resumeTimeout: number
+        public reconnectAttempt:number;
+        public reconnects:number;
+        public isConnected:boolean;
+        public destroyed:boolean;
         public stats:Object
 
 
         connect():void
 
-        destroy()
+        destroy(): void
 
-        reconnect()
+        reconnect(): void
 
-        send(playload:any)
+        send(playload:Object): void | Object | String
 
         get penalties():Number
-
-
 
 }
 
 
 export class Player extends EventEmitter {
-        constructor(manager:EventEmitter,node:Map|Object, options:Object)
-
+        constructor(manager:EventEmitter,node:Map<any, any>|Object, options:Object)
 
         
         public  manager:EventEmitter
 
-        public  queue:Array |any
+        public  queue:Array<any> |any
 
-        public  node: Map|Object|Any;
+        public  node: Map<any, any>|Object|Any;
 
         public  filters: any
 
@@ -107,15 +104,15 @@ export class Player extends EventEmitter {
 
         public  textChannel:any;
 
-        public  isConnectd = Boolean;
+        public  isConnected: boolean;
 
-        public  isPlaying:Boolean;
+        public  isPlaying:boolean;
 
-        public  isPause:Boolean;
+        public  isPause:boolean;
 
-        public  trackRepeat:Boolean;
+        public  trackRepeat:boolean;
 
-        public  queueRepeat:Boolean;
+        public  queueRepeat:boolean;
 
         public  loop:Number;
 
@@ -127,9 +124,7 @@ export class Player extends EventEmitter {
 
         public  previousTrack:Object;
 
-        public  voiceUpdateState = any;
-
-
+        public  voiceUpdateState:any;
 
 
         play()
@@ -158,24 +153,8 @@ export class Player extends EventEmitter {
 
         disconnect()
 
-
         destroy()
 
         autoplay(toggle:Boolean)
-
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }

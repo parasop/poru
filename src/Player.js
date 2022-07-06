@@ -50,6 +50,7 @@ class Player extends EventEmitter {
             this.manager.emit("playerUpdate", this, packet);
         });
     }
+
     async play() {
 
         if (!this.queue.length) {
@@ -72,7 +73,7 @@ class Player extends EventEmitter {
     }
 
 
-     stop() {
+    stop() {
 
         this.position = 0;
         this.isConnectd = false
@@ -182,9 +183,6 @@ class Player extends EventEmitter {
         return this;
     }
 
-
-
-
     async disconnect() {
         if (this.voiceChannel === null) return null;
         this.pause(true);
@@ -221,7 +219,7 @@ class Player extends EventEmitter {
 
             let response = await this.manager.resolve(data);
 
-            if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.type)) return this.stop();
+            if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
 
             let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
 
@@ -305,7 +303,6 @@ class Player extends EventEmitter {
         };
         return events[data.type] || events.default;
     }
-
 
 }
 
