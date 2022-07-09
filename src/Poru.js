@@ -5,7 +5,7 @@ const Node = require("./Node");
 const Response = require("./guild/Response");
 const Spotify = require("./platform/Spotify")
 const Apple = require("./platform/Apple")
-
+const Deezer = require("./platform/Deezer")
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
@@ -94,6 +94,8 @@ class Poru extends EventEmitter {
                 throw new Error("[Poru Deezer Music] playlistLimit must be provided")
 
             }
+            this.deezer = new Deezer(this, this.options)
+       
         }
         console.log(`Thanks for using Poru`)
     }
@@ -189,11 +191,12 @@ class Poru extends EventEmitter {
         if (!node) throw new Error("No nodes are available.");
         if (this.spotify && this.spotify.check(track)) {
             return await this.spotify.resolve(track);
+        }else if (this.apple && this.apple.check(track)) {
+            return await this.apple.resolve(track);
+        }else if (this.deezer && this.deezer.check(track)) {
+            return await this.deezer.resolve(track);
         }
 
-        if (this.apple && this.apple.check(track)) {
-            return await this.apple.resolve(track);
-        }
 
 
         const regex = /^https?:\/\//;
