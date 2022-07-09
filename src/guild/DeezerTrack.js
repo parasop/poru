@@ -47,13 +47,13 @@ class DeezerTrack {
       if (sameDuration) {
         this.info.identifier = sameDuration.info.identifier
         this.track = sameDuration.track;
-        this.length = officialAudio.info.length
+        this.length = sameDuration.length
         return this
       }
     }
     this.info.identifier = result.tracks[0].info.identifier
     this.track = result.tracks[0].track;
-    this.length = officialAudio.info.length
+    this.length = result.tracks[0].officialAudio.info.length
     return this
   }
 }
