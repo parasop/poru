@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-const { handlers } = require("./handlers")
+const { handlers } = require("./handlers/stats")
 const config = require("./config")
 
 class Node {
