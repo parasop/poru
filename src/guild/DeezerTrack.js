@@ -53,7 +53,7 @@ class DeezerTrack {
     }
     this.info.identifier = result.tracks[0].info.identifier
     this.track = result.tracks[0].track;
-    this.length = result.tracks[0].officialAudio.info.length
+    this.length = result.tracks[0].info.length
     return this
   }
 }
