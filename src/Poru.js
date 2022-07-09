@@ -89,8 +89,8 @@ class Poru extends EventEmitter {
             }
             this.apple = new Apple(this, this.options)
         }
-        if (this.options.dezzer) {
-            if (!this.options.dezzer.playlistLimit) {
+        if (this.options.deezer) {
+            if (!this.options.deezer.playlistLimit) {
                 throw new Error("[Poru Deezer Music] playlistLimit must be provided")
 
             }
