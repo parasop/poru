@@ -22,8 +22,7 @@ class Spotify {
   }
 
   async requestToken() {
-    if (this.nextRequest) return;
-
+    
     try {
       const data = await fetch('https://accounts.spotify.com/api/token?grant_type=client_credentials', {
         method: 'POST',
