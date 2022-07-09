@@ -1,5 +1,4 @@
 const WebSocket = require("ws");
-const { handlers } = require("./handlers/stats")
 const config = require("./config")
 
 class Node {
@@ -83,8 +82,11 @@ class Node {
 
         const packet = JSON.parse(payload);
         if(!packet.op) return;
-        new (handlers[packet.op])(this, packet, this.name);
-
+        
+        if (packet.op && packet.op === "stats") {
+            this.stats = { ...packet };
+            delete this.stats.op;
+        }
         const player = this.manager.players.get(packet.guildId);
         if (packet.guildId && player) player.emit(packet.op, packet);
 
