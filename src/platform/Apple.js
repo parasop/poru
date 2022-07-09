@@ -1,4 +1,4 @@
-const { fetch } = require('undici');
+const {fetch} = require("undici")
 const Track = require("../guild/Track")
 const cheerio = require("cheerio")
 
@@ -8,8 +8,9 @@ class Apple {
         this.baseURL = /(?:https:\/\/music\.apple\.com\/)(?:.+)?(artist|album|music-video|playlist)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)/;
         this.applePattern =  /(?:https:\/\/music\.apple\.com\/)(?:\w{2}\/)?(track|album|playlist)/g;
         this.REGEX = /(?:https:\/\/music\.apple\.com\/)(?:\w{2}\/)?(track|album|playlist)/g;
-        this.playlistLimit = options.playlistLimit || null;
+        this.playlistLimit = options.apple.playlistLimit || null;
   }
+
 
     check(url) {
         return this.baseURL.test(url);
@@ -232,4 +233,5 @@ class Apple {
 
 
 }
+
 module.exports = Apple

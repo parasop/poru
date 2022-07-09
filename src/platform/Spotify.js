@@ -78,9 +78,7 @@ class Spotify {
         return this.fetchArtist(id);
       }
 
-      default: {
-        return this.manager.resolve(url);
-      }
+  
     }
   }
 
@@ -90,7 +88,7 @@ class Spotify {
       await this.fetchPlaylistTracks(playlist);
 
       const limitedTracks = this.playlistLimit
-        ? playlist.tracks.items.slice(0, this.playlistLimit * 50)
+        ? playlist.tracks.items.slice(0, this.playlistLimit * 100)
         : playlist.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x.track)));
@@ -110,7 +108,7 @@ class Spotify {
     try {
       const album = await this.requestData(`/albums/${id}`);
 
-      const limitedTracks = this.albumLimit ? album.tracks.items.slice(0, this.albumLimit * 50) : album.tracks.items;
+      const limitedTracks = this.albumLimit ? album.tracks.items.slice(0, this.albumLimit * 100) : album.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
       return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, album.name);
@@ -130,7 +128,7 @@ class Spotify {
 
       const data = await this.requestData(`/artists/${id}/top-tracks?market=${this.searchMarket ?? 'US'}`);
 
-      const limitedTracks = this.artistLimit ? data.tracks.slice(0, this.artistLimit * 50) : data.tracks;
+      const limitedTracks = this.artistLimit ? data.tracks.slice(0, this.artistLimit * 100) : data.tracks;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
 

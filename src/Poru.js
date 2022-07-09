@@ -76,24 +76,27 @@ class Poru extends EventEmitter {
         client.on("raw", async packet => {
             await this.packetUpdate(packet);
         })
-        
+
         this._nodes.forEach((node) => this.addNode(node));
 
 
- if (this.options.spotify && this.options.spotify.clientID && this.options.spotify.clientSecret) {
-            this.spotify = new Spotify(this, {
-                clientID: this.options.clientID,
-                clientSecret: this.options.clientSecret 
-                })
+        if (this.options.spotify && this.options.spotify.clientID && this.options.spotify.clientSecret) {
+            this.spotify = new Spotify(this, this.options)
         }
-if(this.options.apple){
-    if(!this.options.apple.playlistLimit){
-        throw new Error("[Poru Apple Music] playlistLimit must be provided")
-      }
-    this.apple = new Apple(this,this.options)
-}
+        if (this.options.apple) {
+            if (!this.options.apple.playlistLimit) {
+                throw new Error("[Poru Apple Music] playlistLimit must be provided")
+            }
+            this.apple = new Apple(this, this.options)
+        }
+        if (this.options.dezzer) {
+            if (!this.options.dezzer.playlistLimit) {
+                throw new Error("[Poru Deezer Music] playlistLimit must be provided")
+
+            }
+        }
         console.log(`Thanks for using Poru`)
-}
+    }
 
 
     setServersUpdate(data) {
@@ -181,17 +184,17 @@ if(this.options.apple){
 
 
     async resolve(track, source) {
-        
+
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
-        if(this.spotify &&  this.spotify.check(track)){
-             return await this.spotify.resolve(track);
+        if (this.spotify && this.spotify.check(track)) {
+            return await this.spotify.resolve(track);
         }
-        
-        if(this.apple &&  this.apple.check(track)){
+
+        if (this.apple && this.apple.check(track)) {
             return await this.apple.resolve(track);
-       }
-      
+        }
+
 
         const regex = /^https?:\/\//;
         if (!regex.test(track)) {

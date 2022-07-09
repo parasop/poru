@@ -2,7 +2,6 @@ const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 class DeezerTrack {
   constructor(data) {
     this.track = data.track
-    this.metadata = data.metadata;
     this.info = {
       identifier: null,
       isSeekable: data.info.isSeekable,
@@ -34,8 +33,8 @@ class DeezerTrack {
       );
       if (officialAudio) {
         this.info.identifier = officialAudio.info.identifier
-        this.image =`https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`
         this.track = officialAudio.track;
+        this.length = officialAudio.info.length
         return this
       }
     }
@@ -47,14 +46,14 @@ class DeezerTrack {
       );
       if (sameDuration) {
         this.info.identifier = sameDuration.info.identifier
-        this.image =`https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`
         this.track = sameDuration.track;
+        this.length = officialAudio.info.length
         return this
       }
     }
     this.info.identifier = result.tracks[0].info.identifier
-    this.image =`https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`
     this.track = result.tracks[0].track;
+    this.length = officialAudio.info.length
     return this
   }
 }
