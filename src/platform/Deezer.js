@@ -198,3 +198,4 @@ class Deezer {
 
 }
 
+module.exports = Deezer;
