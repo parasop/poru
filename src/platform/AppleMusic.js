@@ -1,12 +1,15 @@
 const { fetch } = require("undici")
-const Track = require("../guild/Track")
+const PoruTrack = require("../guild/PoruTrack")
 
 class AppleMusic {
   constructor(manager, options) {
     this.manager = manager;
     this.options = {
       playlistLimit: options.apple.playlistLimit || 5,
-      searchMarket: options.apple.searchMarket || "us"
+      searchMarket: options.apple.searchMarket || "us",
+      imageHeight: options.apple.imageHeight || 500,
+      imageWeight: options.apple.imageWeight || 500,
+
 
 
     }
@@ -54,7 +57,6 @@ class AppleMusic {
 
   async requestData(param) {
     await this.requestToken();
-    console.log(`${this.url}${param}`)
     let req = await fetch(`${this.url}${param}`, {
       headers: {
         Authorization: `${this.token}`,
@@ -71,12 +73,18 @@ class AppleMusic {
 
 
 
-  async resolve(url){
-    let [,type, id] = await this.baseURL.exec(url)
-  
-    switch(type){
-      case "playlist":{
-        return this.fetchPlaylist(url)
+  async resolve(url) {
+    let [, type, id] = await this.baseURL.exec(url)
+
+    switch (type) {
+      case "playlist": {
+        return this.fetchPlaylist(url);
+      }
+      case "album": {
+        return this.fetchAlbum(url);
+      }
+      case "artist": {
+        return this.fetchArtist(url);
       }
     }
   }
@@ -93,16 +101,64 @@ class AppleMusic {
   }
 
 
-async fetchPlaylist(url){
-  let query = new URL(url).pathname.split('/');
-  let id = query.pop();
-  let name = query.pop();
-  console.log(`playlists/${name}/${id}`)
-  let playlist = await this.requestData(`/playlists/${name}/${id}`)
-  console.log(playlist)
+  async fetchPlaylist(url) {
+    try {
+      let query = new URL(url).pathname.split('/');
+      let id = query.pop();
+      let playlist = await this.requestData(`/playlists/${id}`)
+      let name = playlist.data.attributes.name
+      let tracks = await Promise.all(playlist.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
+
+      return this.buildResponse('PLAYLIST_LOADED', tracks, name);
+    } catch (e) {
+      return this.buildResponse(
+        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        [],
+        undefined,
+        e.body?.error.message ?? e.message,
+      );
+    }
+  }
+
+
+
+  async fetchAlbum(url) {
+
+    try {
+      let query = new URL(url).pathname.split('/');
+      let id = query.pop();
+      let album = await this.requestData(`/albums/${id}`)
+      let name = album.data[0].attributes.name
+      let tracks = await Promise.all(album.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
+      return this.buildResponse('PLAYLIST_LOADED', tracks, name);
+    } catch (e) {
+      return this.buildResponse(
+        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        [],
+        undefined,
+        e.body?.error.message ?? e.message,
+      );
+    }
 }
 
+async fetchArtist(url) {
 
+  try {
+    let query = new URL(url).pathname.split('/');
+    let id = query.pop();
+    let artist = await this.requestData(`/attists/${id}`)
+    let name = artistdata[0].attributes.name
+    let tracks = await Promise.all(artist.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
+    return this.buildResponse('PLAYLIST_LOADED', tracks, name);
+  } catch (e) {
+    return this.buildResponse(
+      e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+      [],
+      undefined,
+      e.body?.error.message ?? e.message,
+    );
+  }
+}
 
 
 
@@ -113,22 +169,21 @@ async fetchPlaylist(url){
   async buildUnresolved(track) {
     if (!track) throw new ReferenceError('The Apple track object was not provided');
 
-    return new Track({
+    return new PoruTrack({
       track: '',
       info: {
         sourceName: 'Apple Music',
         identifier: track.id,
         isSeekable: true,
-        author: track.artistName ? track.artistName : 'Unknown',
-        length: track.durationInMillis,
+        author: track.attributes.artistName ? track.attributes.artistName : 'Unknown',
+        length: track.attributes.durationInMillis,
         isStream: false,
-        title: track.name,
-        uri: track.url,
-        image: ""
+        title: track.attributes.name,
+        uri: track.attributes.url,
+        image: track.attributes.artwork.url.replace("{w}", this.options.imageWeight).replace("{h}", this.options.imageHeight)
       },
     });
   }
-
 
   compareValue(value) {
     return typeof value !== 'undefined' ? value !== null : typeof value !== 'undefined';
@@ -169,4 +224,5 @@ async fetchPlaylist(url){
 const apple = new AppleMusic(
   "", { apple: { playlistLimit: 5, searchMarket: "in" } });
 
-apple.resolve("https://music.apple.com/us/playlist/bollywood-hits/pl.d60caf02fcce4d7e9788fe01243b7c2c")
+apple.resolve("https://music.apple.com/us/artist/arijit-singh/484568188")
+//apple.fetch("tum hi aana")

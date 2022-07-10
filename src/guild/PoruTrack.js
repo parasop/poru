@@ -1,5 +1,5 @@
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-class DeezerTrack {
+class PoruTrack {
   constructor(data) {
     this.track = data.track
     this.info = {
@@ -11,7 +11,7 @@ class DeezerTrack {
       sourceName: data.info.sourceName,
       title: data.info.title,
       uri: data.info.uri,
-      image: data.image || null
+      image: data.info.image || null
 
     }
   }
@@ -58,4 +58,4 @@ class DeezerTrack {
   }
 }
 
-module.exports = DeezerTrack;
+module.exports = PoruTrack;
