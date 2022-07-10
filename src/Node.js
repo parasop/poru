@@ -38,7 +38,6 @@ class Node {
 
     }
     
-    resolve = this.manager.resolve
 
     connect() {
         if (this.ws) this.ws.close();
