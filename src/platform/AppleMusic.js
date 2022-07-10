@@ -221,8 +221,3 @@ async fetchArtist(url) {
 }
 
 
-const apple = new AppleMusic(
-  "", { apple: { playlistLimit: 5, searchMarket: "in" } });
-
-apple.resolve("https://music.apple.com/us/artist/arijit-singh/484568188")
-//apple.fetch("tum hi aana")

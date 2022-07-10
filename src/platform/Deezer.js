@@ -1,5 +1,5 @@
 const { fetch } = require('undici');
-const DeezerTrack = require("../guild/DeezerTrack")
+const PoruTrack = require("../guild/PoruTrack")
 
 class Deezer {
   constructor(manager, options) {
@@ -143,7 +143,7 @@ class Deezer {
       if (this.check(query)) return this.resolve(query)
       let tracks = await this.requestData(`/search?q="${query}"`)
 
-      const unresolvedTrack = await Promise.all(this.buildUnresolved(tracks.data[0]));
+      const unresolvedTrack = await this.buildUnresolved(tracks.data[0]);
       return this.buildResponse('TRACK_LOADED', [unresolvedTrack]);
     } catch (e) {
       return this.buildResponse(
@@ -161,7 +161,7 @@ class Deezer {
   async buildUnresolved(track) {
     if (!track) throw new ReferenceError('The Deezer track object was not provided');
 
-    return new DeezerTrack({
+    return new PoruTrack({
       track: '',
       info: {
         sourceName: 'deezer',
@@ -199,3 +199,8 @@ class Deezer {
 }
 
 module.exports = Deezer;
+
+let deezer = new Deezer("",{deezer:{playlistLimit:10}})
+
+
+deezer.resolve("https://www.deezer.com/en/playlist/4404579662")

@@ -4,7 +4,7 @@ const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
 const Spotify = require("./platform/Spotify")
-const Apple = require("./platform/Apple")
+const AppleMusic = require("./platform/AppleMusic")
 const Deezer = require("./platform/Deezer")
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
@@ -87,7 +87,7 @@ class Poru extends EventEmitter {
             if (!this.options.apple.playlistLimit) {
                 throw new Error("[Poru Apple Music] playlistLimit must be provided")
             }
-            this.apple = new Apple(this, this.options)
+            this.apple = new AppleMusic(this, this.options)
         }
         if (this.options.deezer) {
             if (!this.options.deezer.playlistLimit) {
@@ -185,10 +185,11 @@ class Poru extends EventEmitter {
 
 
 
-    async resolve(track, source) {
+    async resolve(track,source) {
 
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
+
         if (this.spotify && this.spotify.check(track)) {
             return await this.spotify.resolve(track);
         }else if (this.apple && this.apple.check(track)) {
