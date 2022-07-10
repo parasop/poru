@@ -219,5 +219,4 @@ async fetchArtist(url) {
 
 
 }
-
-
+module.exports = AppleMusic
