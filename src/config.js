@@ -1,5 +1,6 @@
 module.exports = {
     clientName: "Poru",
+    version :"2.0",
     OPCodes: {
         CONFIGURE_RESUMING : 'configureResuming',
         DESTROY : 'destroy',

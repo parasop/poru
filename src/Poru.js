@@ -2,6 +2,7 @@ const { EventEmitter } = require("events");
 const fetch = (...args) => import('node-fetch').then(({
     default: fetch
 }) => fetch(...args));
+const config = require("./config")
 const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
@@ -24,6 +25,7 @@ class Poru extends EventEmitter {
         this.options = options
         this.shards = options.shards || 1;
         this.sendData = null;
+        this.version = config.version
     }
 
 
