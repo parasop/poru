@@ -1,4 +1,8 @@
-const { fetch } = require('undici');
+const fetch = (...args) => import('node-fetch').then(({
+  default: fetch
+}) => fetch(...args));
+let REGEX = /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/
+
 const PoruTrack = require("../guild/PoruTrack")
 
 class Deezer {
@@ -7,14 +11,17 @@ class Deezer {
 
     this.manager = manager;
     this.baseURL = 'https://api.deezer.com';
-    this.REGEX = /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/
-    this.playlistLimit = options.deezer.playlistLimit || null;
+    this.options = {
+      playlistLimit: options.deezer.playlistLimit || null,
+      albumLimit: options.deezer.albumLimit || null,
+      artistLimit: options.deezer.artistLimit || null
 
+    }
   }
 
 
   check(url) {
-    return this.REGEX.test(url);
+    return REGEX.test(url);
   }
 
   async requestData(endpoint) {
@@ -26,7 +33,7 @@ class Deezer {
 
 
   async resolve(url) {
-    const [, type, id] = this.REGEX.exec(url) ?? [];
+    const [, type, id] = REGEX.exec(url) ?? [];
     switch (type) {
       case 'playlist': {
         return this.fetchPlaylist(id);
@@ -51,34 +58,45 @@ class Deezer {
   async fetchPlaylist(id) {
     try {
       const playlist = await this.requestData(`/playlist/${id}`);
-      const unresolvedPlaylistTracks = await Promise.all(playlist.tracks.data.map(x => this.buildUnresolved(x)));
+
+      const limitedTracks = this.options.playlistLimit
+        ? playlist.track.data.slice(0, this.options.playlistLimit * 100)
+        : playlist.track.data;
+
+
+      const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
       return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, playlist.name);
 
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
       );
-
     }
   }
 
   async fetchAlbum(id) {
     try {
-      const album = await this.requestData(`/album/${id}`)
+      const album = await this.requestData(`/album/${id}`);
 
-      const unresolvedAlbumTracks = await Promise.all(playlist.tracks.data.map(x => this.buildUnresolved(x)));
+      const limitedTracks = this.options.albumLimit
+        ? album.track.data.slice(0, this.options.albumLimit * 100)
+        : album.track.data;
+
+
+      const unresolvedAlbumTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
 
       return this.buildResponse('PLAYLIST_LOADED', unresolvedAlbumTracks, album.name);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
       );
+
 
     }
   }
@@ -92,11 +110,12 @@ class Deezer {
       return this.buildResponse('TRACK_LOADED', [unresolvedTrack]);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
       );
+
 
     }
   }
@@ -106,7 +125,12 @@ class Deezer {
     try {
       const artist = await this.requestData(`/artist/${id}/top`);
       await this.fetchArtistTracks(artist)
-      const unresolvedArtistTracks = await Promise.all(artist.data.map(x => this.buildUnresolved(x)
+
+      const limitedTracks = this.options.artistLimit
+        ? artist.data.slice(0, this.options.artistLimit * 100)
+        : artist.data;
+
+      const unresolvedArtistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)
       ));
 
 
@@ -114,11 +138,12 @@ class Deezer {
       return this.buildResponse('PLAYLIST_LOADED', unresolvedArtistTracks, artist.name);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
       );
+
 
     }
   }
@@ -139,6 +164,8 @@ class Deezer {
   }
 
   async fetch(query) {
+    if (this.check(query)) return this.resolve(query);
+
     try {
       if (this.check(query)) return this.resolve(query)
       let tracks = await this.requestData(`/search?q="${query}"`)
@@ -147,7 +174,7 @@ class Deezer {
       return this.buildResponse('TRACK_LOADED', [unresolvedTrack]);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
@@ -200,7 +227,7 @@ class Deezer {
 
 module.exports = Deezer;
 
-let deezer = new Deezer("",{deezer:{playlistLimit:10}})
+let deezer = new Deezer("", { deezer: { playlistLimit: 10 } })
 
 
 deezer.resolve("https://www.deezer.com/en/playlist/4404579662")

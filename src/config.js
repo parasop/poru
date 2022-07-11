@@ -1,17 +1,18 @@
 module.exports = {
     clientName: "Poru",
     OPCodes: {
-        VOICE_UPDATE : 'voiceUpdate',
-        PLAY : 'play',
-        STOP : 'stop',
-        PAUSE : 'pause',
-        SEEK : 'seek',
-        VOLUME : 'volume',
-        FILTERS : 'filters',
-        DESTROY : 'destroy',
-        PLAYER_UPDATE : 'playerUpdate',
         CONFIGURE_RESUMING : 'configureResuming',
+        DESTROY : 'destroy',
+        FILTERS : 'filters',
+        EVENT : 'event',
+        PAUSE : 'pause',
+        PLAY : 'play',
+        PLAYER_UPDATE : 'playerUpdate',
+        SEEK : 'seek',
         STATS : 'stats',
-        EVENT : 'event'
-    }
+        STOP : 'stop',
+        VOICE_UPDATE : 'voiceUpdate',
+        VOLUME : 'volume'
+      
+     }
 }

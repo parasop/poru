@@ -1,6 +1,6 @@
 {
   "name": "poru",
-  "version": "1.1.9",
+  "version": "1.2.3",
   "description": "A stable and powefull lavalink client with so many features",
   "main": "index.js",
   "scripts": {
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/parasop/poru#readme",
   "dependencies": {
-    "undici": "^5.6.1",
+    "node-fetch": "^3.2.6",
     "ws": "^8.8.0"
   },
   "keywords": [

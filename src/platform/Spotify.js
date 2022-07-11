@@ -1,24 +1,29 @@
-const { fetch } = require('undici');
+const fetch = (...args) => import('node-fetch').then(({
+  default: fetch
+}) => fetch(...args));
+let spotifyPattern =
+/^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
+
 const Track = require("../guild/Track")
 
 class Spotify {
   constructor(manager) {
     this.manager = manager;
     this.baseURL = 'https://api.spotify.com/v1';
-    this.spotifyPattern =
-      /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
-    this.clientID = manager.options.spotify.clientID;
-    this.clientSecret = manager.options.spotify.clientSecret;
-    this.playlistLimit = manager.options.spotify.playlistLimit;
-    this.albumLimit = manager.options.spotify.albumLimit;
-    this.artistLimit = manager.options.spotify.artistLimit;
-    this.searchMarket = manager.options.spotify.searchMarket;
-    this.authorization = Buffer.from(`${this.clientID}:${this.clientSecret}`).toString('base64');
+    this.options ={
+    clientID : manager.options.spotify.clientID,
+    clientSecret : manager.options.spotify.clientSecret,
+    playlistLimit : manager.options.spotify.playlistLimit,
+    albumLimit : manager.options.spotify.albumLimit,
+    artistLimit : manager.options.spotify.artistLimit,
+    searchMarket : manager.options.spotify.searchMarket
+    }
+    this.authorization = Buffer.from(`${this.options.clientID}:${this.options.clientSecret}`).toString('base64');
     this.interval = 0;
   }
 
   check(url) {
-    return this.spotifyPattern.test(url);
+    return spotifyPattern.test(url);
   }
 
   async requestToken() {
@@ -61,7 +66,7 @@ class Spotify {
 
   async resolve(url) {
     if (!this.token) await this.requestToken();
-    const [, type, id] = this.spotifyPattern.exec(url) ?? [];
+    const [, type, id] = spotifyPattern.exec(url) ?? [];
 
     switch (type) {
       case 'playlist': {
@@ -86,8 +91,8 @@ class Spotify {
       const playlist = await this.requestData(`/playlists/${id}`);
       await this.fetchPlaylistTracks(playlist);
 
-      const limitedTracks = this.playlistLimit
-        ? playlist.tracks.items.slice(0, this.playlistLimit * 100)
+      const limitedTracks = this.options.playlistLimit
+        ? playlist.tracks.items.slice(0, this.options.playlistLimit * 100)
         : playlist.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x.track)));
@@ -107,7 +112,7 @@ class Spotify {
     try {
       const album = await this.requestData(`/albums/${id}`);
 
-      const limitedTracks = this.albumLimit ? album.tracks.items.slice(0, this.albumLimit * 100) : album.tracks.items;
+      const limitedTracks = this.options.albumLimit ? album.tracks.items.slice(0, this.options.albumLimit * 100) : album.tracks.items;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
       return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, album.name);
@@ -127,7 +132,7 @@ class Spotify {
 
       const data = await this.requestData(`/artists/${id}/top-tracks?market=${this.searchMarket ?? 'US'}`);
 
-      const limitedTracks = this.artistLimit ? data.tracks.slice(0, this.artistLimit * 100) : data.tracks;
+      const limitedTracks = this.options.artistLimit ? data.tracks.slice(0, this.options.artistLimit * 100) : data.tracks;
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
 
@@ -162,7 +167,7 @@ class Spotify {
       if (this.check(query)) return this.resolve(query);
 
       const data = await this.requestData(
-        `/search/?q="${query}"&type=artist,album,track&market=${this.searchMarket ?? 'US'}`,
+        `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? 'US'}`,
       );
 
       const unresolvedTrack = await this.buildUnresolved(data.tracks.items[0]);

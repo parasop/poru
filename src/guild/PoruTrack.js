@@ -34,7 +34,7 @@ class PoruTrack {
       if (officialAudio) {
         this.info.identifier = officialAudio.info.identifier
         this.track = officialAudio.track;
-        this.length = officialAudio.info.length
+        this.info.length = officialAudio.info.length
         return this
       }
     }
@@ -47,13 +47,13 @@ class PoruTrack {
       if (sameDuration) {
         this.info.identifier = sameDuration.info.identifier
         this.track = sameDuration.track;
-        this.length = sameDuration.length
+        this.info.length = sameDuration.length
         return this
       }
     }
     this.info.identifier = result.tracks[0].info.identifier
     this.track = result.tracks[0].track;
-    this.length = result.tracks[0].info.length
+    this.info.length = result.tracks[0].info.length
     return this
   }
 }

@@ -1,5 +1,7 @@
 const { EventEmitter } = require("events");
-const { fetch } = require('undici');
+const fetch = (...args) => import('node-fetch').then(({
+    default: fetch
+}) => fetch(...args));
 const Player = require("./Player");
 const Node = require("./Node");
 const Response = require("./guild/Response");
@@ -88,6 +90,7 @@ class Poru extends EventEmitter {
                 throw new Error("[Poru Apple Music] playlistLimit must be provided")
             }
             this.apple = new AppleMusic(this, this.options)
+            this.apple.requestToken();
         }
         if (this.options.deezer) {
             if (!this.options.deezer.playlistLimit) {

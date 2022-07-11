@@ -1,34 +1,32 @@
-const { fetch } = require("undici")
+const fetch = (...args) => import('node-fetch').then(({
+  default: fetch
+}) => fetch(...args));
 const PoruTrack = require("../guild/PoruTrack")
+let baseURL = /(?:https:\/\/music\.apple\.com\/)(?:.+)?(artist|album|music-video|playlist)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)/;
 
 class AppleMusic {
   constructor(manager, options) {
     this.manager = manager;
     this.options = {
-      playlistLimit: options.apple.playlistLimit || 5,
+      playlistLimit: options.apple.playlistLimit || null,
+      albumLimit: options.apple.albumLimit || null,
+      artistLimit: options.apple.artistLimit || null,
       searchMarket: options.apple.searchMarket || "us",
       imageHeight: options.apple.imageHeight || 500,
       imageWeight: options.apple.imageWeight || 500,
-
-
-
     }
-    this.baseURL = /(?:https:\/\/music\.apple\.com\/)(?:.+)?(artist|album|music-video|playlist)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)/;
-    this.applePattern = /(?:https:\/\/music\.apple\.com\/)(?:\w{2}\/)?(track|album|playlist)/g;
     this.url = `https://amp-api.music.apple.com/v1/catalog/${this.options.searchMarket}`
-    this.authorization = null;
-    this.interval = 0;
+    this.token = null;
 
   }
 
   check(url) {
-    return this.baseURL.test(url);
+    return baseURL.test(url);
   }
 
 
   async requestToken() {
-    if (this.nextRequest) return;
-
+    if (!this.authorization) this.renew();
     try {
 
       let req = await fetch('https://music.apple.com/us/browse');
@@ -41,7 +39,6 @@ class AppleMusic {
       if (!token) throw new Error("No acess key found for apple music")
 
       this.token = `Bearer ${token}`;
-      this.interval = body.expires_in * 1000;
     } catch (e) {
       if (e.status === 400) {
         throw new Error(`[Poru Apple Music]:${e}`);
@@ -49,14 +46,10 @@ class AppleMusic {
     }
   }
 
-  async renew() {
-    if (Date.now() >= this.interval) {
-      await this.requestToken();
-    }
-  }
 
   async requestData(param) {
-    await this.requestToken();
+    if (!this.token) await this.requestToken();
+
     let req = await fetch(`${this.url}${param}`, {
       headers: {
         Authorization: `${this.token}`,
@@ -74,7 +67,7 @@ class AppleMusic {
 
 
   async resolve(url) {
-    let [, type, id] = await this.baseURL.exec(url)
+    let [, type, id] = await baseURL.exec(url)
 
     switch (type) {
       case "playlist": {
@@ -89,17 +82,28 @@ class AppleMusic {
     }
   }
 
-
   async fetch(query) {
+    if (this.check(query)) return this.resolve(query);
 
-    let tracks = await this.requestData(`/search?types=songs&term=${query}`)
+    try {
 
-    let track = await this.buildUnresolved(tracks.results.songs.data[0])
+      let tracks = await this.requestData(`/search?types=songs&term=${query}`)
 
-    return this.buildResponse('TRACK_LOADED', [track]);
+      let track = await this.buildUnresolved(tracks.results.songs.data[0])
+
+      return this.buildResponse('TRACK_LOADED', [track]);
+
+    } catch (e) {
+      return this.buildResponse(
+        'LOAD_FAILED',
+        [],
+        undefined,
+        e.body?.error.message ?? e.message,
+      );
+
+    }
 
   }
-
 
   async fetchPlaylist(url) {
     try {
@@ -107,12 +111,17 @@ class AppleMusic {
       let id = query.pop();
       let playlist = await this.requestData(`/playlists/${id}`)
       let name = playlist.data.attributes.name
-      let tracks = await Promise.all(playlist.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
+
+      const limitedTracks = this.options.playlistLimit
+        ? playlist.data[0].relationships.tracks.data.slice(0, this.options.playlistLimit * 100)
+        : playlist.data[0].relationships.tracks.data;
+
+      let tracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)))
 
       return this.buildResponse('PLAYLIST_LOADED', tracks, name);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
@@ -128,37 +137,51 @@ class AppleMusic {
       let query = new URL(url).pathname.split('/');
       let id = query.pop();
       let album = await this.requestData(`/albums/${id}`)
+
+
+      const limitedTracks = this.options.albumLimit
+        ? album.data[0].relationships.tracks.data.slice(0, this.options.albumLimit * 100)
+        : album.data[0].relationships.tracks.data;
+
+
       let name = album.data[0].attributes.name
-      let tracks = await Promise.all(album.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
+      let tracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
       return this.buildResponse('PLAYLIST_LOADED', tracks, name);
     } catch (e) {
       return this.buildResponse(
-        e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
+        'LOAD_FAILED',
         [],
         undefined,
         e.body?.error.message ?? e.message,
       );
+
     }
-}
-
-async fetchArtist(url) {
-
-  try {
-    let query = new URL(url).pathname.split('/');
-    let id = query.pop();
-    let artist = await this.requestData(`/attists/${id}`)
-    let name = artistdata[0].attributes.name
-    let tracks = await Promise.all(artist.data[0].relationships.tracks.data.map(x => this.buildUnresolved(x)));
-    return this.buildResponse('PLAYLIST_LOADED', tracks, name);
-  } catch (e) {
-    return this.buildResponse(
-      e.body?.error.message === 'invalid id' ? 'NO_MATCHES' : 'LOAD_FAILED',
-      [],
-      undefined,
-      e.body?.error.message ?? e.message,
-    );
   }
-}
+
+  async fetchArtist(url) {
+
+    try {
+      let query = new URL(url).pathname.split('/');
+      let id = query.pop();
+      let artist = await this.requestData(`/attists/${id}`)
+      let name = artistdata[0].attributes.name
+
+      const limitedTracks = this.options.artistLimit
+        ? artist.data[0].relationships.tracks.data.slice(0, this.options.artist * 100)
+        : artist.data[0].relationships.tracks.data;
+
+      let tracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
+      return this.buildResponse('PLAYLIST_LOADED', tracks, name);
+    } catch (e) {
+      return this.buildResponse(
+        'LOAD_FAILED',
+        [],
+        undefined,
+        e.body?.error.message ?? e.message,
+      );
+
+    }
+  }
 
 
 
