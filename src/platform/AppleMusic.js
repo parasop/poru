@@ -26,7 +26,6 @@ class AppleMusic {
 
 
   async requestToken() {
-    if (!this.authorization) this.renew();
     try {
 
       let req = await fetch('https://music.apple.com/us/browse');
