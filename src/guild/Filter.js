@@ -29,8 +29,8 @@ class Filters {
         return this;
     }
     setTimescale(timescale) {
-        this.updateFilters();
         this.timescale = timescale || null;
+        this.updateFilters();
         return this;
     }
     setTremolo(tremolo) {
@@ -90,7 +90,7 @@ class Filters {
           this.doubleTime = false;
           this.vaporwave = false;
         }
-        return this
+        return val;
       }
 
       setSlowmode(val) {
