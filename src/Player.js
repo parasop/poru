@@ -23,7 +23,7 @@ class Player extends EventEmitter {
 
         this.isPlaying = false;
 
-        this.isPause = false;
+        this.isPaused = false;
 
         this.trackRepeat = false;
 
@@ -51,23 +51,25 @@ class Player extends EventEmitter {
         });
     }
 
-    async play() {
+    async play(options={}) {
 
         if (!this.queue.length) {
-            return nulll;
+            return null;
         }
-        this.currentTrack = this.queue.shift();
+        
+         this.currentTrack = this.queue.shift()
+
         if(!this.currentTrack.track){
           this.currentTrack = await this.currentTrack.resolve(this.manager);
         }
+
         this.isPlaying = true;
-        this.timestamp = Date.now();
         this.node.send({
             op: "play",
             guildId: this.guild,
             track: this.currentTrack.track,
-            volume: this.volume || 100,
-        });
+            noReplace:options.noReplace || true,
+           });
         this.position = 0;
         return this;
     }
@@ -94,7 +96,7 @@ class Player extends EventEmitter {
             pause,
         });
         this.isPlaying = !pause;
-        this.isPause = pause;
+        this.isPaused = pause;
 
         return this;
     }
@@ -129,6 +131,7 @@ class Player extends EventEmitter {
         return this;
     }
 
+
     async QueueRepeat() {
         this.loop = 2;
         this.queueRepeat = true;
@@ -140,9 +143,7 @@ class Player extends EventEmitter {
         this.loop = 0;
         this.trackRepeat = false;
         this.queueRepeat = false;
-
-
-        return this;
+           return this;
     }
 
     async setTextChannel(channel) {
@@ -187,7 +188,7 @@ class Player extends EventEmitter {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnectd = false;
-        this.manager.sendData({
+        this.node.send({
             op: 4,
             d: {
                 guild_id: this.guild,
@@ -208,6 +209,24 @@ class Player extends EventEmitter {
         });
         this.manager.emit("playerDestroy", this);
         this.manager.players.delete(this.guild);
+    }
+
+    restart(){
+        this.filters.updateFilters();
+        if(this.currentTrack){
+
+            this.isPlaying = true;
+            this.node.send({
+                op: "play",
+                startTime: this.position,
+                noReplace:true,
+                guildId: this.guild,
+                track: this.currentTrack.track,
+                puase: this.isPaused
+              });
+           
+
+        }
     }
 
     async autoplay(toggle = false) {

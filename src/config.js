@@ -1,5 +1,6 @@
 module.exports = {
     clientName: "Poru",
+    autoResume : true,
     version :"2.0",
     OPCodes: {
         CONFIGURE_RESUMING : 'configureResuming',

@@ -55,6 +55,17 @@ class Node {
         this.ws.on("close", this.#close.bind(this));
     }
 
+    disconnect(){
+        if(!this.isConnected) return;
+
+        this.ws?.removeAllListeners();
+        this.ws?.close();
+        this.ws = null;
+        this.isConnected = false;
+
+
+    }
+
 
     #open(){
         if (this.reconnectAttempt) {
@@ -74,35 +85,36 @@ class Node {
         this.manager.emit("nodeConnect", this);
         this.isConnected = true;
         this.manager.emit('debug', this.name, `[Web Socket] Connection ready ${this.url}`);
+
+        if(config.autoResume){
+            let player =  this.manager.players.filter(x => x.node == this);
+            if (players.size) players.forEach(p => p.restart());
+        }
         
     }
 
     #message(payload) {
-        if (Array.isArray(payload)) payload = Buffer.concat(payload);
-        else if (payload instanceof ArrayBuffer) payload = Buffer.from(payload);
 
         const packet = JSON.parse(payload);
         if(!packet.op) return;
         
         if (packet.op && packet.op === "stats") {
             this.stats = { ...packet };
-            delete this.stats.op;
         }
         const player = this.manager.players.get(packet.guildId);
         if (packet.guildId && player) player.emit(packet.op, packet);
-
-        packet.node = this;
+         packet.node = this;
         this.manager.emit("debug",this.name,`[Web Socket] Lavalink Node Update : ${packet.op}  `)
         this.manager.emit("raw", packet);
     }
 
     #close(event) {
+        this.disconnect();
         this.manager.emit("nodeDisconnect",this,event);
         this.manager.emit("debug",this.name,`[Web Socket] Connection with Lavalink closed with Error code : ${event||"Unknown code"}`)
         if (event !== 1000){
             
-        return this.reconnect();
-        }
+       }
     }
 
 
