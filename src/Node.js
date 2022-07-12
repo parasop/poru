@@ -97,7 +97,7 @@ class Node {
     }
 
     #close(event) {
-        this.manager.emit("nodeDisconnect", event, this);
+        this.manager.emit("nodeDisconnect",this,event);
         this.manager.emit("debug",this.name,`[Web Socket] Connection with Lavalink closed with Error code : ${event||"Unknown code"}`)
         if (event !== 1000){
             
