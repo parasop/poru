@@ -87,8 +87,18 @@ class Node {
         this.manager.emit('debug', this.name, `[Web Socket] Connection ready ${this.url}`);
 
         if(config.autoResume){
-            let player =  this.manager.players.filter(x => x.node == this);
-            if (players.size) players.forEach(p => p.restart());
+          
+            for (const player of this.manager.players.values()) {
+                if (player.node === this) {
+                  player.restart();
+                }
+              }
+
+
+
+
+
+
         }
         
     }
