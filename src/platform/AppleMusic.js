@@ -109,14 +109,13 @@ class AppleMusic {
       let query = new URL(url).pathname.split('/');
       let id = query.pop();
       let playlist = await this.requestData(`/playlists/${id}`)
-      let name = playlist.data.attributes.name
+       let name = playlist.data[0].attributes.name
 
       const limitedTracks = this.options.playlistLimit
         ? playlist.data[0].relationships.tracks.data.slice(0, this.options.playlistLimit * 100)
         : playlist.data[0].relationships.tracks.data;
 
       let tracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)))
-
       return this.buildResponse('PLAYLIST_LOADED', tracks, name);
     } catch (e) {
       return this.buildResponse(
@@ -242,3 +241,8 @@ class AppleMusic {
 
 }
 module.exports = AppleMusic
+
+
+const apple = new AppleMusic("",{apple:{}})
+
+apple.resolve("https://music.apple.com/us/playlist/bollywood-hits/pl.d60caf02fcce4d7e9788fe01243b7c2c")
