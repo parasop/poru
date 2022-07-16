@@ -100,7 +100,7 @@ class Poru extends EventEmitter {
 
             }
             this.deezer = new Deezer(this, this.options)
-       
+
         }
         console.log(`Thanks for using Poru`)
     }
@@ -190,16 +190,16 @@ class Poru extends EventEmitter {
 
 
 
-    async resolve(track,source) {
+    async resolve(track, source) {
 
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
 
         if (this.spotify && this.spotify.check(track)) {
             return await this.spotify.resolve(track);
-        }else if (this.apple && this.apple.check(track)) {
+        } else if (this.apple && this.apple.check(track)) {
             return await this.apple.resolve(track);
-        }else if (this.deezer && this.deezer.check(track)) {
+        } else if (this.deezer && this.deezer.check(track)) {
             return await this.deezer.resolve(track);
         }
 
