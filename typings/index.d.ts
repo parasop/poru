@@ -2,7 +2,6 @@ import { EventEmitter, WebSocket } from "ws";
 
 declare module'Poru' {
 
-    import { EventEmitter } from 'events';
 
     export class Poru extends EventEmitter {
         constructor(client: typeof EventEmitter| any,nodes:[],options:{})
