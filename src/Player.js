@@ -188,7 +188,7 @@ class Player extends EventEmitter {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnectd = false;
-        this.node.send({
+        this.manager.sendData({
             op: 4,
             d: {
                 guild_id: this.guild,
