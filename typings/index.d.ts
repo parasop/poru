@@ -108,7 +108,7 @@ export class Player extends EventEmitter {
 
         public  isPlaying:boolean;
 
-        public  isPause:boolean;
+        public  isPaused:boolean;
 
         public  trackRepeat:boolean;
 
