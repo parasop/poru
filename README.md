@@ -18,14 +18,14 @@
 
 ## Table of contents
 
-- [Documentation](https://poru.parasdocs.tech)
-- [Installation](#installation)
-- [About](#about)
-- [Example](https://github.com/parasop/poru-example)
+    - [Documentation](https://poru.parasdocs.tech)
+        -[Installation](#installation)
+        - [About](#about)
+        - [Example](https://github.com/parasop/poru-example)
 
 # Installation
 
-```
+            ```
 // Using npm
 npm install poru
 
@@ -35,13 +35,13 @@ yarn add poru
 
 # About
 
-To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) instance.
+To use you need a configured[Lavalink](https://github.com/Frederikam/Lavalink) instance.
 
-- Stable client
-- 100% Compatible with Lavalink
-- Object-oriented
-- 100% Customizable
-- Easy to setup
+                - Stable client
+            - 100 % Compatible with Lavalink
+            - Object - oriented
+            - 100 % Customizable
+            - Easy to setup
 
 ## Implementation
 
@@ -94,7 +94,16 @@ client.poru.on('nodeError', (node, error) => {
 // Listen for when the client becomes ready
 client.once('ready', () => {
   client.poru.init(client);
-  console.log(`Logged in as ${client.user.tag}`);
+  console.log(`Logged in as ${ client.user.tag }`);
+
+  // Custom status for discord bot
+client.user.setPresence({
+        status: "online",
+        game: {
+            name: "playing music",
+            type: "PLAYING" // [PLAYING, WATCHING, LISTENING, STREAMING]
+        }
+    });
 });
 
 // this event used to make connections upto date with lavalink
@@ -120,4 +129,4 @@ const resolve = await client.poru.resolve('Ignite', 'yt');
 ## Need Help?
 
 Feel free to join our [discord server](https://discord.gg/Zmmc47Nrh8), Give us suggestions and advice about errors and new features.
-with ❤️ by [Paras](https://github.com/parasop) .
+    with ❤️ by [Paras](https://github.com/parasop) .
