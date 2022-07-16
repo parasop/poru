@@ -19,7 +19,7 @@ class Player extends EventEmitter {
 
         this.textChannel = options.textChannel || null;
 
-        this.isConnectd = false;
+        this.isConnected = false;
 
         this.isPlaying = false;
 
@@ -45,7 +45,7 @@ class Player extends EventEmitter {
 
         this.on("event", (data) => (this.lavalinkEvent(data).bind(this))());
         this.on("playerUpdate", (packet) => {
-            this.isConnectd = packet.state.connected,
+            this.isConnected = packet.state.connected,
                 this.position = packet.state.position
             this.manager.emit("playerUpdate", this, packet);
         });
@@ -78,7 +78,7 @@ class Player extends EventEmitter {
     stop() {
 
         this.position = 0;
-        this.isConnectd = false
+        this.isConnected = false
         this.isPlaying = false;
         this.node.send({
             op: "stop",
@@ -187,7 +187,7 @@ class Player extends EventEmitter {
     async disconnect() {
         if (this.voiceChannel === null) return null;
         this.pause(true);
-        this.isConnectd = false;
+        this.isConnected = false;
         this.manager.sendData({
             op: 4,
             d: {
