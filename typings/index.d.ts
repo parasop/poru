@@ -136,7 +136,7 @@ export class Player extends EventEmitter {
 
         setVolume(volume:Number)
 
-        setRepeat(value:String)
+        setRepeat("off" | "queue" | "track")
         
         setTextChannel(channel:any)
 
