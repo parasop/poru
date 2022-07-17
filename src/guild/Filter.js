@@ -5,7 +5,7 @@ class Filters {
         this.bassboost = options.bassboost || null;
         this.player = player;
         this.node = player.node
-        this.volume = player.volume ?? 1.0 ;
+        this.volume = player.volume || 1.0 ;
         this.equalizer = options.equalizer || [];
         this.karaoke = options.karaoke || null;
         this.timescale = options.timescale || null;
@@ -69,7 +69,7 @@ class Filters {
     }
 
     setFilters(options) {
-        this.player.filters = new Filters(options);
+        this.player.filters = new Filters(this.player,options);
         this.updateFilters();
         return this;
     }
