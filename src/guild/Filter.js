@@ -131,7 +131,7 @@ class Filters {
         if (!this.player) return;
         this.bassboost = !!val;
         this.bassboost = val / 100;
-        this.player.setEqualizer(
+        this.setEqualizer(
           val
             ? Array(6)
                 .fill(0.22)
