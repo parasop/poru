@@ -101,7 +101,7 @@ class Player extends EventEmitter {
         return this;
     }
 
-    async seekTo(position) {
+    seekTo(position) {
         if (Number.isNaN(position)) throw new RangeError("[Poru Error] Position must be a number.");
         this.position = position;
         this.node.send({
@@ -124,26 +124,26 @@ class Player extends EventEmitter {
 
     }
 
-    TrackRepeat() {
-        this.loop = 1;
-        this.trackRepeat = true;
-        this.queueRepeat = false;
+    setRepeat(value) {
+        if (!['queue', 'track', 'off'].includes(value) throw new RangeError(`[Poru Error] Repeat method only accepts the value 'queue', 'track' or 'off'.`);
+        switch(value) {
+         case 'track' :
+          this.loop = 1;
+          this.trackRepeat = true;
+          this.queueRepeat = false;
+          break;
+         case 'queue' :
+          this.loop = 2;
+          this.trackRepeat = false:
+          this.queueRepeat = true;
+          break;
+         case 'off':
+          this.loop = 0;
+          this.trackRepeat = false;
+          this.queueRepeat = false;
+          break;
+        }
         return this;
-    }
-
-
-    QueueRepeat() {
-        this.loop = 2;
-        this.queueRepeat = true;
-        this.trackRepeat = false;
-        return this;
-    }
-
-    DisableRepeat() {
-        this.loop = 0;
-        this.trackRepeat = false;
-        this.queueRepeat = false;
-           return this;
     }
 
     setTextChannel(channel) {
