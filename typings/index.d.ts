@@ -136,12 +136,8 @@ export class Player extends EventEmitter {
 
         setVolume(volume:Number)
 
-        TrackRepeat();
-
-        QueueRepeat();
-
-        DisableRepeat();
-
+        setRepeat(value:String)
+        
         setTextChannel(channel:any)
 
         setVoiceChannel(channel:any)
