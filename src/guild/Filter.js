@@ -69,7 +69,7 @@ class Filters {
     }
 
     setFilters(options) {
-        this.player.filters = new Filters(options);
+        this.player.filters = new Filters(this.player,options);
         this.updateFilters();
         return this;
     }
