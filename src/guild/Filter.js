@@ -76,7 +76,7 @@ class Filters {
 
     clearFilters() {
         this.player.filters = new Filters();
-        this.node.send({
+        this.player.node.send({
             op: "filters",
             guildId: this.player.guild
         });
