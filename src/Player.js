@@ -222,7 +222,7 @@ class Player extends EventEmitter {
                 noReplace:true,
                 guildId: this.guild,
                 track: this.currentTrack.track,
-                puase: this.isPaused
+                pause: this.isPaused
               });
            
 
