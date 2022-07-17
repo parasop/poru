@@ -12,9 +12,9 @@ const Deezer = require("./platform/Deezer")
 class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
-        if (!client) throw new Error("[Poru Error] you did't provide a valid client");
-        if (!nodes) throw new Error("[Poru Error] you did't provide a lavalink nodes");
-        if (!options) throw new Error("[Poru Error] options must be provided!")
+        if (!client) throw new Error("[Poru Error] You didn't provide a valid client");
+        if (!nodes) throw new Error("[Poru Error] You did't provide a lavalink node");
+        if (!options) throw new Error("[Poru Error] Manager options must be provided")
         this.client = client;
         this._nodes = nodes;
         this.nodes = new Map();
