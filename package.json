@@ -1,7 +1,7 @@
 {
   "name": "poru",
   "version": "2.0.1",
-  "description": "A stable and powefull lavalink client with so many features",
+  "description": "A stable and poweful lavalink client with so many features",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

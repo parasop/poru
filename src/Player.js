@@ -112,7 +112,7 @@ class Player extends EventEmitter {
         return this;
     }
 
-    async setVolume(volume) {
+    setVolume(volume) {
         if (Number.isNaN(volume)) throw new RangeError("Volume level must be a number.");
          this.volume = volume;
         this.node.send({
@@ -124,7 +124,7 @@ class Player extends EventEmitter {
 
     }
 
-    async TrackRepeat() {
+    TrackRepeat() {
         this.loop = 1;
         this.trackRepeat = true;
         this.queueRepeat = false;
@@ -132,33 +132,33 @@ class Player extends EventEmitter {
     }
 
 
-    async QueueRepeat() {
+    QueueRepeat() {
         this.loop = 2;
         this.queueRepeat = true;
         this.trackRepeat = false;
         return this;
     }
 
-    async DisableRepeat() {
+    DisableRepeat() {
         this.loop = 0;
         this.trackRepeat = false;
         this.queueRepeat = false;
            return this;
     }
 
-    async setTextChannel(channel) {
+    setTextChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
         this.textChannel = channel;
         return this;
     }
 
-    async setVoiceChannel(channel) {
+    setVoiceChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
         this.voiceChannel = channel;
         return this;
     }
 
-    async connect(data) {
+    connect(data) {
         if (data) {
             this.voiceUpdateState = data;
             this.node.send({
@@ -170,7 +170,7 @@ class Player extends EventEmitter {
         return this;
     }
 
-    async reconnect() {
+    reconnect() {
         if (this.voiceChannel === null) return null;
         this.node.send({
             op: 4,
@@ -184,7 +184,7 @@ class Player extends EventEmitter {
         return this;
     }
 
-    async disconnect() {
+    disconnect() {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnected = false;
@@ -222,7 +222,7 @@ class Player extends EventEmitter {
                 noReplace:true,
                 guildId: this.guild,
                 track: this.currentTrack.track,
-                puase: this.isPaused
+                pause: this.isPaused
               });
            
 
