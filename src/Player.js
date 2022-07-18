@@ -125,7 +125,6 @@ class Player extends EventEmitter {
     }
 
     setRepeat(value) {
-        if (!['queue', 'track', 'off'].includes(value) throw new RangeError(`[Poru Error] Repeat method only accepts the value 'queue', 'track' or 'off'.`);
         switch(value) {
          case 'track' :
           this.loop = 1;
@@ -142,6 +141,8 @@ class Player extends EventEmitter {
           this.trackRepeat = false;
           this.queueRepeat = false;
           break;
+         default:
+          throw new RangeError(`[Poru Error] Repeat method only accepts the value 'queue', 'track' or 'off'.`);
         }
         return this;
     }
