@@ -143,7 +143,7 @@ class Filters {
         const {equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass } = this;
         this.node.send({
             op:"filters",
-            guildId: this.player.guild,
+            guildId: this.player.guildId,
             equalizer,
             karaoke,
             timescale,
