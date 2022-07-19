@@ -1,6 +1,4 @@
-const fetch = (...args) => import('node-fetch').then(({
-  default: fetch
-}) => fetch(...args));
+const {fetch} = require("undici")
 const PoruTrack = require("../guild/PoruTrack")
 let baseURL = /(?:https:\/\/music\.apple\.com\/)(?:.+)?(artist|album|music-video|playlist)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)\/([\w\-\.]+(\/)+[\w\-\.]+|[^&]+)/;
 
@@ -8,12 +6,12 @@ class AppleMusic {
   constructor(manager, options) {
     this.manager = manager;
     this.options = {
-      playlistLimit: options.apple.playlistLimit || null,
-      albumLimit: options.apple.albumLimit || null,
-      artistLimit: options.apple.artistLimit || null,
-      searchMarket: options.apple.searchMarket || "us",
-      imageHeight: options.apple.imageHeight || 500,
-      imageWeight: options.apple.imageWeight || 500,
+      playlistLimit: options.playlistLimit || null,
+      albumLimit: options.albumLimit || null,
+      artistLimit: options.artistLimit || null,
+      searchMarket: options.searchMarket || "us",
+      imageHeight: options.imageHeight || 500,
+      imageWeight: options.imageWeight || 500,
     }
     this.url = `https://amp-api.music.apple.com/v1/catalog/${this.options.searchMarket}`
     this.token = null;
