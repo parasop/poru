@@ -50,72 +50,76 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 ## Example usage basic bot
 
 ```javascript
-// main file
-// Require both libraries
 const { Client } = require('discord.js');
-const { Poru } = require('poru');
-
-// Initiate both main classes
+const  { Poru } = require('poru');
+const nodes = [
+    {
+      id: "main_node",
+      hostname:"localhost",
+      port: 8080,
+      password: "iloveyou3000"
+    }
+  ]
+  
 const client = new Client();
 
-// Define some options for the node
-const nodes = [
-  {
-    host: 'localhost',
-    password: 'youshallnotpass',
-    port: 2333,
-    secure: false,
-  },
-];
+client.poru = new Poru(client,nodes,PoruOptions)
 
-// Define if you want to integrate spotify
-const spotifyOptions = {
-  clientID: 'Your Client ID', // You'll find this on https://developers.spotify.com/dashboard/
-  clientSecret: 'Your Client Secret', // You'll find this on https://developers.spotify.com/dashboard/
-  playlistLimit: 10, // The amount of pages to load when a playlist is searched with each page having 50 tracks.
-  albumLimit: 5, // The amount of pages to load when a album is searched with each page having 50 tracks.
-  artistLimit: 5, // The amount of pages to load when a artist is searched with each page having 50 tracks.
-  searchMarket: 'IN', // The market from where the query should be searched from. Mainly this should contain your country.
-};
 
-// Assign Manager to the client variable
-client.poru = new Poru(client, nodes);
 
-// Emitted whenever a node connects
-client.poru.on('nodeConnect', node => {
-  console.log(`Node "${node.name}" connected.`);
+client.poru.on('trackStart', (player, track) => {
+  
+  player.textChannel.send(`Now playing \`${track.title}\``);
 });
 
-// Emitted whenever a node encountered an error
-client.poru.on('nodeError', (node, error) => {
-  console.log(`Node "${node.name}" encountered an error`);
-});
 
-// Listen for when the client becomes ready
-client.once('ready', () => {
+client.on('ready', () => {
+  console.log('Ready!');
   client.poru.init(client);
-  console.log(`Logged in as ${client.user.tag}`);
 });
 
-// this event used to make connections upto date with lavalink
-client.on('raw', async d => await client.poru.packetUpdate(d));
 
-// Finally login at the END of your code
-client.login('your bot token here');
-```
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isCommand()) return;
+  if (!interaction.member.voice.channel) return interaction.reply({ content: `Please connect with voice channel `, ephemeral: true });
 
-```javascript
-// creating player
-const player = await client.poru.createConnection({
-  guild: message.guild.id,
-  voiceChannel: message.member.voice.channel.id,
-  textChannel: message.channel,
-  selfDeaf: true,
-  selfMute: false,
+  const track = interaction.options.getString('track');
+
+  const res = await client.poru.resolve(track);
+
+  if (res.loadType === "LOAD_FAILED") {
+    return interaction.reply(`Failed to load track`);
+  } else if (res.loadType === "NO_MATCHES") {
+    return interaction.reply('No source found!');
+  }
+
+//create connection with discord voice channnel
+  const player = client.poru.createConnection({
+    guildId: interaction.guild.id,
+    voiceChannel: interaction.member.voice.channelId,
+    textChannel: interaction.channel,
+    deaf: true
+  });
+  
+ 
+  if (res.loadType === 'PLAYLIST_LOADED') {
+    for (const track of res.tracks) {
+      trackk.info.requester = interaction.user;
+      player.queue.add(track);
+    }
+
+    interaction.reply(`${res.playlistInfo.name} has been loaded with ${res.tracks.length}`);
+  } else {
+    const track = res.tracks[0];
+    track.info.requester = interaction.user;
+    player.queue.add(track);
+    interacton.reply(`Queued Track \n \`${track.title}\``);
+  }
+
+  if (!player.isPlaying && player.isConnected) player.play();
 });
-// Getting tracks
-const resolve = await client.poru.resolve('Ignite', 'yt');
-```
+
+client.login('TOKEN');```
 
 ## Need Help?
 
