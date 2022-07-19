@@ -1,7 +1,5 @@
 const { EventEmitter } = require("events");
-const fetch = (...args) => import('node-fetch').then(({
-    default: fetch
-}) => fetch(...args));
+const { fetch } = require("undici")
 const config = require("./config")
 const Player = require("./Player");
 const Node = require("./Node");
@@ -14,19 +12,45 @@ class Poru extends EventEmitter {
         super();
         if (!client) throw new Error("[Poru Error] You didn't provide a valid client");
         if (!nodes) throw new Error("[Poru Error] You did't provide a lavalink node");
-        if (!options) throw new Error("[Poru Error] Manager options must be provided")
+
         this.client = client;
         this._nodes = nodes;
         this.nodes = new Map();
         this.players = new Map();
         this.voiceStates = new Map();
         this.voiceServers = new Map();
+        this.isReady = false;
         this.user = null;
         this.options = options
         this.shards = options.shards || 1;
         this.sendData = null;
         this.version = config.version
+        this.spotify = new Spotify(this, this.options);
+        this.apple = new AppleMusic(this, this.options)
+        this.apple.requestToken();
+        this.deezer = new Deezer(this, this.options)
+
     }
+
+
+    init(client) {
+
+        if (this.isReady) return this;
+
+        this.user = client.user.id;
+        this.sendData = (data) => {
+
+            const guild = client.guilds.cache.get(data.d.guild_id);
+            if (guild) guild.shard.send(data);
+        }
+
+        client.on("raw", async packet => {
+            await this.packetUpdate(packet);
+        })
+
+        this._nodes.forEach((node) => this.addNode(node));
+    }
+
 
 
 
@@ -45,65 +69,88 @@ class Poru extends EventEmitter {
 
     //remove node and destroy web socket connection
     removeNode(identifier) {
+        if (!identifier) throw new Error(`[Poru Error] Provide identifier as a parameter of removeNode`)
         const node = this.nodes.get(identifier);
         if (!node) return;
         node.destroy();
         this.nodes.delete(identifier)
     }
-    //create  connection with discord voice channel
-    createConnection(data = {}) {
-        const player = this.players.get(data.guild.id || data.guild);
-        if (player) {
-            return player;
-        }
-        this.sendData({
-            op: 4,
-            d: {
-                guild_id: data.guild.id || data.guild,
-                channel_id: data.voiceChannel.id || data.voiceChannel,
-                self_mute: data.selfMute || false,
-                self_deaf: data.selfDeaf || true,
-            },
-        });
-        return this.#Player(data);
+
+    get leastUsedNodes() {
+        return [...this.nodes.values()]
+            .filter((node) => node.isConnected)
+            .sort((a, b) => {
+                const aLoad = a.stats.cpu ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100 : 0;
+                const bLoad = b.stats.cpu ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100 : 0;
+                return aLoad - bLoad;
+            });
+    }
+
+
+    getNode(identifier = "best") {
+        if (!this.nodes.size) throw new Error(`No nodes avaliable currently`)
+        if (identifier === "best") return this.leastUsedNodes();
+
+        const node = this.nodes.get(indetifier);
+        if (!node) throw new Error('The node identifier you provided is not found');
+        if (!node.isConnected) node.connect();
+        return node;
+    }
+
+
+    createConnection(options) {
+        this.checkConnection(options)
+        const player = this.players.get(options.guildId);
+        if (player) return player;
+
+        if (this.leastUsedNodes.length === 0) throw new Error("[Poru Error] No nodes are avaliable");
+        const node = this.nodes.get(this.leastUsedNodes[0].name || this.leastUsedNodes[0].host);
+        if (!node) throw new Error("[Poru Error] No nodes are avalible");
+
+        return this.#createPlayer(node, options);
+
+
+
+    }
+
+    removeConnection(guildId) {
+        this.players.get(guildId)?.destroy();
+    }
+
+
+    checkConnection(options) {
+
+        let { guildId, voiceChannel, textChannel, shardId } = options;
+        if (!guildId) throw new Error(`[Poru Connection] you have to Provide guildId`)
+        if (!voiceChannel) throw new Error(`[Poru Connection] you have to  Provide voiceChannel`)
+        if (!textChannel) throw new Error(`[Poru Connection] you have to  Provide texteChannel`);
+        //  if(shardId == null) throw new Error(`[Poru Connection] You must have to Provide shardId`);
+
+
+        if (typeof guildId !== "string") throw new Error(`[Poru Connection] guildId must be provided as a string`);
+        if (typeof voiceChannel !== "string") throw new Error(`[Poru Connection] voiceChannel must be provided as a string`);
+        if (typeof textChannel !== "string") throw new Error(`[Poru Connection] textChannel must be provided as a string`);
+        //   if(typeof shardId !=="number") throw new Error(`[Poru Connection] shardId must be provided as a number`);
+
+
+
+    }
+
+
+    #createPlayer(node, options) {
+
+        if (this.players.has(options.guildId)) return this.players.get(options.guildId);
+
+        const player = new Player(this, node, options);
+        this.players.set(options.guildId, player);
+        player.connect(options)
+        return player;
     }
 
 
 
-    init(client) {
-
-        this.user = client.user.id;
-        this.sendData = (data) => {
-            const guild = client.guilds.cache.get(data.d.guild_id);
-            if (guild) guild.shard.send(data);
-        }
-        client.on("raw", async packet => {
-            await this.packetUpdate(packet);
-        })
-
-        this._nodes.forEach((node) => this.addNode(node));
 
 
-        if (this.options.spotify && this.options.spotify.clientID && this.options.spotify.clientSecret) {
-            this.spotify = new Spotify(this, this.options)
-        }
-        if (this.options.apple) {
-            if (!this.options.apple.playlistLimit) {
-                throw new Error("[Poru Apple Music] playlistLimit must be provided")
-            }
-            this.apple = new AppleMusic(this, this.options)
-            this.apple.requestToken();
-        }
-        if (this.options.deezer) {
-            if (!this.options.deezer.playlistLimit) {
-                throw new Error("[Poru Deezer Music] playlistLimit must be provided")
-
-            }
-            this.deezer = new Deezer(this, this.options)
-
-        }
-        console.log(`Thanks for using Poru`)
-    }
 
 
     setServersUpdate(data) {
@@ -115,7 +162,7 @@ class Poru extends EventEmitter {
         const player = this.players.get(guild);
         if (!player) return false;
 
-        player.connect({
+        player.updateSession({
             sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
             event: server,
         });
@@ -134,8 +181,7 @@ class Poru extends EventEmitter {
             if (!server) return false;
             const player = this.players.get(guild);
             if (!player) return false;
-
-            player.connect({
+            player.updateSession({
                 sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
                 event: server,
             });
@@ -161,61 +207,65 @@ class Poru extends EventEmitter {
 
 
 
-    get leastUsedNodes() {
-        return [...this.nodes.values()]
-            .filter((node) => node.isConnected)
-            .sort((a, b) => {
-                const aLoad = a.stats.cpu ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100 : 0;
-                const bLoad = b.stats.cpu ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100 : 0;
-                return aLoad - bLoad;
-            });
-    }
-
-    #Player(data) {
-        const guild = data.guild.id || data.guild;
-        const Nodes = this.nodes.get(guild);
-        if (Nodes) return Nodes;
-        if (this.leastUsedNodes.length === 0) throw new Error("[Poru Error] No nodes are avaliable");
-        const node = this.nodes.get(this.leastUsedNodes[0].name
-            || this.leastUsedNodes[0].host);
-        if (!node) throw new Error("[Poru Error] No nodes are avalible");
-
-        // eslint-disable-next-line new-cap
-        const player = new Player(this, node, data);
-        this.players.set(guild, player);
-        player.connect()
-        return player;
-    }
 
 
 
-
-    async resolve(track, source) {
+    async resolve(query, source) {
 
         const node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
-
-        if (this.spotify && this.spotify.check(track)) {
-            return await this.spotify.resolve(track);
-        } else if (this.apple && this.apple.check(track)) {
-            return await this.apple.resolve(track);
-        } else if (this.deezer && this.deezer.check(track)) {
-            return await this.deezer.resolve(track);
-        }
-
-
-
         const regex = /^https?:\/\//;
-        if (!regex.test(track)) {
-            // eslint-disable-next-line no-param-reassign
-            track = `${source || "ytsearch"}:${track}`;
-        }
-        const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
 
-        if (!result) throw new Error("[Poru Error] No tracks found.");
-        return new Response(result);
+        if (regex.test(query)) {
+            return this.fetchURL(node, query, source)
+        } else {
+            return this.fetchTrack(node, query, source)
+        }
+
     }
 
+    async fetchURL(node, track, source) {
+
+        if (this.spotify.check(track)) {
+            return await this.spotify.resolve(track);
+        } else if (this.apple.check(track)) {
+            return await this.apple.resolve(track);
+        } else if (this.deezer.check(track)) {
+            return await this.deezer.resolve(track);
+        } else {
+            const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
+            if (!result) throw new Error("[Poru Error] No tracks found.");
+            return new Response(result);
+        }
+    }
+
+
+    async fetchTrack(node, query, source) {
+        switch (source) {
+
+            case "spotify": {
+                return this.spotify.fetch(query)
+            }
+            case "applemusic": {
+                return this.apple.fetch(query)
+            }
+            case "deezer": {
+                return this.deezer.fetch(query);
+            }
+            default:
+                {
+                    let track = `${source || "ytsearch"}:${query}`;
+                    const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
+                    if (!result) throw new Error("[Poru Error] No tracks found.");
+                    return new Response(result);
+
+
+                }
+
+        }
+
+
+    }
 
     async decodeTrack(track) {
         const node = this.leastUsedNodes[0];
