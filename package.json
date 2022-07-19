@@ -1,6 +1,6 @@
 {
   "name": "poru",
-  "version": "2.2.0",
+  "version": "3.0.0",
   "description": "A stable and powefull lavalink client with so many features",
   "main": "index.js",
   "scripts": {
