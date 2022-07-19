@@ -1,6 +1,5 @@
-const fetch = (...args) => import('node-fetch').then(({
-  default: fetch
-}) => fetch(...args));
+const {fetch} = require("undici")
+
 let REGEX = /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/
 
 const PoruTrack = require("../guild/PoruTrack")
@@ -12,9 +11,9 @@ class Deezer {
     this.manager = manager;
     this.baseURL = 'https://api.deezer.com';
     this.options = {
-      playlistLimit: options.deezer.playlistLimit || null,
-      albumLimit: options.deezer.albumLimit || null,
-      artistLimit: options.deezer.artistLimit || null
+      playlistLimit: options.playlistLimit || null,
+      albumLimit: options.albumLimit || null,
+      artistLimit: options.artistLimit || null
 
     }
   }
