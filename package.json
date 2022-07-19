@@ -20,6 +20,9 @@
     "undici": "^5.7.0",
     "ws": "^8.8.0"
   },
+  "engines": {
+		"node": ">=16.9.0"
+	},
   "keywords": [
     "music",
     "lavalink",
