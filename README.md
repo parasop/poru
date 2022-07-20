@@ -119,7 +119,8 @@ client.on('interactionCreate', async interaction => {
   if (!player.isPlaying && player.isConnected) player.play();
 });
 
-client.login('TOKEN');```
+client.login('TOKEN');
+```
 
 ## Need Help?
 
