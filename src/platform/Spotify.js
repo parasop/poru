@@ -1,6 +1,5 @@
-const fetch = (...args) => import('node-fetch').then(({
-  default: fetch
-}) => fetch(...args));
+const {fetch} = require("undici")
+
 let spotifyPattern =
 /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 
@@ -11,21 +10,43 @@ class Spotify {
     this.manager = manager;
     this.baseURL = 'https://api.spotify.com/v1';
     this.options ={
-    clientID : manager.options.spotify.clientID,
-    clientSecret : manager.options.spotify.clientSecret,
-    playlistLimit : manager.options.spotify.playlistLimit,
-    albumLimit : manager.options.spotify.albumLimit,
-    artistLimit : manager.options.spotify.artistLimit,
-    searchMarket : manager.options.spotify.searchMarket
+   
+    playlistLimit : manager.options.playlistLimit,
+    albumLimit : manager.options.albumLimit,
+    artistLimit : manager.options.artistLimit,
+    searchMarket : manager.options.searchMarket
     }
     this.authorization = Buffer.from(`${this.options.clientID}:${this.options.clientSecret}`).toString('base64');
     this.interval = 0;
   }
 
   check(url) {
+
     return spotifyPattern.test(url);
   }
 
+
+  async requestToken() {
+    try{
+    const data = await fetch('https://open.spotify.com/get_access_token?reason=transport&productType=embed', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36'
+      }
+    })
+
+    const body = await data.json();
+    this.token = `Bearer ${body.accessToken}`;
+    this.interval =  body.accessTokenExpirationTimestampMs * 1000;
+
+  } catch (e) {
+    if (e.status === 400) {
+      throw new Error('Invalid Spotify client.');
+    }
+
+   }
+  }
+
+   /*
   async requestToken() {
     
     try {
@@ -47,7 +68,7 @@ class Spotify {
       }
     }
   }
-
+*/
   async renew() {
     if (Date.now() >= this.interval) {
       await this.requestToken();
@@ -65,7 +86,7 @@ class Spotify {
   }
 
   async resolve(url) {
-    if (!this.token) await this.requestToken();
+      if (!this.token) await this.requestToken();
     const [, type, id] = spotifyPattern.exec(url) ?? [];
 
     switch (type) {
@@ -81,7 +102,6 @@ class Spotify {
       case 'artist': {
         return this.fetchArtist(id);
       }
-
   
     }
   }

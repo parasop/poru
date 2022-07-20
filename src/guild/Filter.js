@@ -5,7 +5,6 @@ class Filters {
         this.bassboost = options.bassboost || null;
         this.player = player;
         this.node = player.node
-        this.volume = player.volume || 1.0 ;
         this.equalizer = options.equalizer || [];
         this.karaoke = options.karaoke || null;
         this.timescale = options.timescale || null;
@@ -141,11 +140,10 @@ class Filters {
       }
 
     updateFilters(){
-        const { volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass } = this;
+        const {equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass } = this;
         this.node.send({
             op:"filters",
-            guildId: this.player.guild,
-            volume,
+            guildId: this.player.guildId,
             equalizer,
             karaoke,
             timescale,

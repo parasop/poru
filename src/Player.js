@@ -2,7 +2,7 @@ const { EventEmitter } = require("events");
 const Queue = require("./guild/Queue");
 const Filters = require("./guild/Filter")
 class Player extends EventEmitter {
-    constructor(manager,node, options) {
+    constructor(manager, node, options) {
         super();
 
         this.manager = manager;
@@ -11,13 +11,17 @@ class Player extends EventEmitter {
 
         this.node = node;
 
+        this.options = options;
+
         this.filters = new Filters(this, this.node)
 
-        this.guild = options.guild.id || options.guild;
+        this.guildId = options.guildId;
 
         this.voiceChannel = options.voiceChannel.id || options.voiceChannel;
 
         this.textChannel = options.textChannel || null;
+
+        this.shardId = options.shardId || 1;
 
         this.isConnected = false;
 
@@ -51,25 +55,25 @@ class Player extends EventEmitter {
         });
     }
 
-    async play(options={}) {
+    async play(options = {}) {
 
         if (!this.queue.length) {
             return null;
         }
-        
-         this.currentTrack = this.queue.shift()
 
-        if(!this.currentTrack.track){
-          this.currentTrack = await this.currentTrack.resolve(this.manager);
+        this.currentTrack = this.queue.shift()
+
+        if (!this.currentTrack.track) {
+            this.currentTrack = await this.currentTrack.resolve(this.manager);
         }
 
         this.isPlaying = true;
         this.node.send({
             op: "play",
-            guildId: this.guild,
+            guildId: this.guildId,
             track: this.currentTrack.track,
-            noReplace:options.noReplace || true,
-           });
+            noReplace: options.noReplace || true,
+        });
         this.position = 0;
         return this;
     }
@@ -82,7 +86,7 @@ class Player extends EventEmitter {
         this.isPlaying = false;
         this.node.send({
             op: "stop",
-            guildId: this.guild
+            guildId: this.guildId
         });
         return this;
     }
@@ -92,7 +96,7 @@ class Player extends EventEmitter {
 
         this.node.send({
             op: "pause",
-            guildId: this.guild,
+            guildId: this.guildId,
             pause,
         });
         this.isPlaying = !pause;
@@ -106,7 +110,7 @@ class Player extends EventEmitter {
         this.position = position;
         this.node.send({
             op: "seek",
-            guildId: this.guild,
+            guildId: this.guildId,
             position,
         });
         return this;
@@ -114,10 +118,10 @@ class Player extends EventEmitter {
 
     setVolume(volume) {
         if (Number.isNaN(volume)) throw new RangeError("Volume level must be a number.");
-         this.volume = volume;
+        this.volume = volume;
         this.node.send({
             op: "volume",
-            guildId: this.guild,
+            guildId: this.guildId,
             volume: this.volume,
         });
         return this;
@@ -146,7 +150,6 @@ class Player extends EventEmitter {
         }
         return this;
     }
-
     setTextChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
         this.textChannel = channel;
@@ -159,29 +162,36 @@ class Player extends EventEmitter {
         return this;
     }
 
-    connect(data) {
+    connect(options) {
+
+        let { guildId, voiceChannel, deaf, mute } = options;
+        this.send({ guild_id: guildId, channel_id: voiceChannel, self_deaf: deaf || true, self_mute: mute || false }, true);
+        this.isConnected = true;
+
+    }
+
+    updateSession(data) {
         if (data) {
             this.voiceUpdateState = data;
             this.node.send({
                 op: "voiceUpdate",
-                guildId: this.guild,
+                guildId: this.guildId,
                 ...data,
             });
         }
         return this;
+
     }
 
     reconnect() {
         if (this.voiceChannel === null) return null;
-        this.node.send({
-            op: 4,
-            d: {
-                guild_id: this.guild,
+        this.send({
+                guild_id: this.guildId,
                 channel_id: this.voiceChannel,
                 self_mute: false,
                 self_deaf: false,
-            },
-        });
+            })
+            
         return this;
     }
 
@@ -189,14 +199,11 @@ class Player extends EventEmitter {
         if (this.voiceChannel === null) return null;
         this.pause(true);
         this.isConnected = false;
-        this.manager.sendData({
-            op: 4,
-            d: {
-                guild_id: this.guild,
-                channel_id: null,
-                self_mute: false,
-                self_deaf: false,
-            },
+        this.send({
+            guild_id: this.guildId,
+            channel_id: null,
+            self_mute: false,
+            self_deaf: false,
         });
         this.voiceChannel = null;
         return this;
@@ -206,26 +213,26 @@ class Player extends EventEmitter {
         this.disconnect();
         this.node.send({
             op: "destroy",
-            guildId: this.guild,
+            guildId: this.guildId,
         });
         this.manager.emit("playerDestroy", this);
-        this.manager.players.delete(this.guild);
+        this.manager.players.delete(this.guildId);
     }
 
-    restart(){
+    restart() {
         this.filters.updateFilters();
-        if(this.currentTrack){
+        if (this.currentTrack) {
 
             this.isPlaying = true;
             this.node.send({
                 op: "play",
                 startTime: this.position,
-                noReplace:true,
-                guildId: this.guild,
+                noReplace: true,
+                guildId: this.guildId,
                 track: this.currentTrack.track,
                 pause: this.isPaused
-              });
-           
+            });
+
 
         }
     }
@@ -237,7 +244,7 @@ class Player extends EventEmitter {
             if (!this.previousTrack) return this.stop();
             let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier}&list=RD${this.previousTrack.info.identifier}`;
 
-            let response = await this.manager.resolve(data);
+            let response = await this.manager.resolve(data,this.manager.options.defaultPlatform || "ytsearch");
 
             if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
 
@@ -254,6 +261,11 @@ class Player extends EventEmitter {
             return this.stop();
         }
 
+    }
+
+    send(data) {
+
+        this.manager.sendData({ op: 4, d: data });
     }
 
 
@@ -297,22 +309,16 @@ class Player extends EventEmitter {
             },
             TrackExceptionEvent() {
                 this.queue.shift();
-                /**
-                 * Fire up when there's an error while playing the track
-                 * @event trackError
-                 */
                 this.manager.emit("trackError", this, this.track, data);
             },
             WebSocketClosedEvent() {
                 if ([4015, 4009].includes(data.code)) {
-                    this.manager.sendData({
-                        op: 4,
-                        d: {
-                            guild_id: data.guildId,
-                            channel_id: this.voiceChannel.id || this.voiceChannel,
-                            self_mute: this.options.selfMute || false,
-                            self_deaf: this.options.selfDeaf || false,
-                        },
+                    this.send({
+                        guild_id: data.guildId,
+                        channel_id: this.voiceChannel.id || this.voiceChannel,
+                        self_mute: this.options.mute || false,
+                        self_deaf: this.options.deaf || false,
+
                     });
                 }
                 this.manager.emit("socketClosed", this, data);

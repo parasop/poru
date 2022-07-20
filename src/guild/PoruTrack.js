@@ -21,7 +21,7 @@ class PoruTrack {
     const query = [this.info.author, this.info.title].filter((x) => !!x).join(' - ');
 
 
-    const result = await manager.resolve(query);
+    const result = await manager.resolve(query,manager.options.defaultPlatform || "ytsearch");
     if (!result || !result.tracks.length) return;
 
     if (this.info.author) {
