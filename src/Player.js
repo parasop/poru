@@ -149,6 +149,16 @@ class Player extends EventEmitter {
         this.queueRepeat = false;
         return this;
     }
+    
+    setLoop() {
+        if (this.loop === 0) {
+        this.TrackRepeat();
+        } else if (this.loop === 1) {
+        this.QueueRepeat();
+        } else if (this.loop === 2) {
+        this.DisableRepeat();
+        }
+    }
 
     setTextChannel(channel) {
         if (typeof channel !== "string") throw new RangeError("Channel must be a string.");
