@@ -53,14 +53,19 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 const { Client, GatewayIntentBits } = require('discord.js');
 const { Poru } = require('poru');
 const nodes = [
-    {
-      id: "main_node",
-      hostname:"localhost",
-      port: 8080,
-      password: "iloveyou3000"
-    }
-  ]
-  
+  {
+    id: "main_node",
+    hostname: "localhost",
+    port: 8080,
+    password: "iloveyou3000"
+  }
+]
+const PoruOptions = {
+  reconnectTime: 0,
+  resumeKey: 'MyPlayers',
+  resumeTimeout: 60,
+  defaultPlatform: "ytsearch"
+}
 const client = new Client({
   intents: [
    GatewayIntentBits.Guilds,
