@@ -41,7 +41,7 @@ class Player extends EventEmitter {
 
         this.currentTrack = {};
 
-        this.previousTrack = {};
+        this.previousTrack = null;
 
         this.voiceUpdateState = null;
 
