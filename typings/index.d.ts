@@ -20,7 +20,8 @@ declare module'Poru' {
 
     
 
-    public  on(event: 'nodeConnect' | 'nodeReconnect', listener: (node: Object) => void): this
+    public  on(event: 'nodeConnect', listener: (node: Object) => void): this
+    public  on(event: 'nodeReconnect', listener: (node: Object) => void): this
     public  on(event: 'nodeDisconnect', listener: (event: any, node: Object) => void): this
     public  on(event: 'nodeError', listener: (node: Object, event: any) => void): this
     public  on(event: 'queueEnd', listener: (player:typeof EventEmitter |any,track:Object,data:Object|any ) => void): this
