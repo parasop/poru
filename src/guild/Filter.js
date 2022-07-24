@@ -17,8 +17,36 @@ class Filters {
       }
 
 
-    setEqualizer(bands){
-        this.equalizer = bands;
+    setEqualizer(bands,gain){
+         this.band = band || this.band;
+         this.gain = gain || this.gain;
+        
+        this.equalizer =  [
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+        {
+          band: this.band,
+          gain: this.gain,
+        },
+      ]
         this.updateFilters();
         return this;
     }
