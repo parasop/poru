@@ -133,7 +133,7 @@ class Filters {
         this.setEqualizer(
           val
             ? Array(6)
-                .fill(0)
+                .fill(0.10)
                 .map((x, i) => ({ band: i, gain: x * val }))
             : []
         );
