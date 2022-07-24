@@ -158,13 +158,7 @@ class Filters {
         if (!this.player) return;
         this.bassboost = !!val;
         this.bassboost = val / 100;
-        this.setEqualizer(
-          val
-            ? Array(6)
-                .fill(0.10)
-                .map((x, i) => ({ band: i, gain: x * val }))
-            : []
-        );
+        this.setEqualizer(1,0.90);
       }
 
     updateFilters(){
