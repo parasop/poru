@@ -17,7 +17,7 @@ class Filters {
       }
 
 
-    setEqualizer(bands,gain){
+    setEqualizer(band,gain){
          this.band = band || this.band;
          this.gain = gain || this.gain;
         
