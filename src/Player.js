@@ -300,12 +300,12 @@ class Player extends EventEmitter {
                     this.manager.emit("trackEnd", this, this.currentTrack, data)
                     return this.play();
                 }
-                this.manager.emit("queueEnd", this, this.track, data);
+                this.manager.emit("queueEnd", this,  this.currentTrack, data);
 
             },
             TrackStuckEvent() {
                 this.queue.shift();
-                this.manager.emit("trackError", this, this.track, data);
+                this.manager.emit("trackError", this,this.currentTrack, data);
             },
             TrackExceptionEvent() {
                 this.queue.shift();
