@@ -304,12 +304,13 @@ class Player extends EventEmitter {
 
             },
             TrackStuckEvent() {
-                this.queue.shift();
                 this.manager.emit("trackError", this,this.currentTrack, data);
+                 this.stop();
+            
             },
             TrackExceptionEvent() {
-                this.queue.shift();
                 this.manager.emit("trackError", this, this.track, data);
+                    this.stop();
             },
             WebSocketClosedEvent() {
                 if ([4015, 4009].includes(data.code)) {
