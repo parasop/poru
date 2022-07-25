@@ -273,7 +273,7 @@ class Player extends EventEmitter {
         const events = {
             TrackStartEvent() {
                 this.isPlaying = true;
-                this.paused = false;
+                this.isPaused = false;
                 this.manager.emit("trackStart", this, this.currentTrack, data);
             },
             // eslint-disable-next-line consistent-return
