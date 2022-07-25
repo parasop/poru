@@ -11,7 +11,7 @@ class Poru extends EventEmitter {
     constructor(client, nodes, options = {}) {
         super();
         if (!client) throw new Error("[Poru Error] You didn't provide a valid client");
-        if (!nodes) throw new Error("[Poru Error] You did't provide a lavalink node");
+        if (!nodes) throw new Error("[Poru Error] You didn't provide a lavalink node");
 
         this.client = client;
         this._nodes = nodes;
