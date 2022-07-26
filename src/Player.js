@@ -295,7 +295,9 @@ class Player extends EventEmitter {
                 }
 
                 if (this.queue.length === 0) {
-                    return this.manager.emit("queueEnd", this, this.track, data);
+                   this.manager.emit("queueEnd",this, this.track, data);
+                    return this.destroy();
+                    
                 } else if (this.queue.length > 0) {
                     this.manager.emit("trackEnd", this, this.currentTrack, data)
                     return this.play();
