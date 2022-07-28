@@ -3,7 +3,7 @@ const {fetch} = require("undici")
 let spotifyPattern =
 /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 
-const Track = require("../guild/Track")
+const PoruTrack = require("../guild/PoruTrack")
 
 class Spotify {
   constructor(manager) {
@@ -223,7 +223,7 @@ class Spotify {
   async buildUnresolved(track) {
     if (!track) throw new ReferenceError('The Spotify track object was not provided');
 
-    return new Track({
+    return new PoruTrack({
       track: '',
       info: {
         sourceName: 'spotify',
