@@ -1,35 +1,30 @@
-const {fetch} = require("undici")
+const { fetch } = require('undici');
 
-let REGEX = /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/
+let REGEX =
+  /^(?:https?:\/\/|)?(?:www\.)?deezer\.com\/(?:\w{2}\/)?(track|album|playlist|artist)\/(\d+)/;
 
-const PoruTrack = require("../guild/PoruTrack")
+const PoruTrack = require('../guild/PoruTrack');
 
 class Deezer {
   constructor(manager, options) {
-
-
     this.manager = manager;
     this.baseURL = 'https://api.deezer.com';
     this.options = {
       playlistLimit: options.playlistLimit || null,
       albumLimit: options.albumLimit || null,
-      artistLimit: options.artistLimit || null
-
-    }
+      artistLimit: options.artistLimit || null,
+    };
   }
-
 
   check(url) {
     return REGEX.test(url);
   }
 
   async requestData(endpoint) {
-    const req = await fetch(`${this.baseURL}/${endpoint}`, {
-    });
+    const req = await fetch(`${this.baseURL}/${endpoint}`, {});
     const data = await req.json();
     return data;
   }
-
 
   async resolve(url) {
     const [, type, id] = REGEX.exec(url) ?? [];
@@ -46,13 +41,8 @@ class Deezer {
       case 'artist': {
         return this.fetchArtist(id);
       }
-
     }
-
-
-
   }
-
 
   async fetchPlaylist(id) {
     try {
@@ -62,10 +52,14 @@ class Deezer {
         ? playlist.track.data.slice(0, this.options.playlistLimit * 100)
         : playlist.track.data;
 
-
-      const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
-      return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, playlist.name);
-
+      const unresolvedPlaylistTracks = await Promise.all(
+        limitedTracks.map((x) => this.buildUnresolved(x)),
+      );
+      return this.buildResponse(
+        'PLAYLIST_LOADED',
+        unresolvedPlaylistTracks,
+        playlist.name,
+      );
     } catch (e) {
       return this.buildResponse(
         'LOAD_FAILED',
@@ -84,10 +78,15 @@ class Deezer {
         ? album.track.data.slice(0, this.options.albumLimit * 100)
         : album.track.data;
 
+      const unresolvedAlbumTracks = await Promise.all(
+        limitedTracks.map((x) => this.buildUnresolved(x)),
+      );
 
-      const unresolvedAlbumTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
-
-      return this.buildResponse('PLAYLIST_LOADED', unresolvedAlbumTracks, album.name);
+      return this.buildResponse(
+        'PLAYLIST_LOADED',
+        unresolvedAlbumTracks,
+        album.name,
+      );
     } catch (e) {
       return this.buildResponse(
         'LOAD_FAILED',
@@ -95,15 +94,12 @@ class Deezer {
         undefined,
         e.body?.error.message ?? e.message,
       );
-
-
     }
   }
 
   async fetchTrack(id) {
-
     try {
-      const track = await this.requestData(`/track/${id}`)
+      const track = await this.requestData(`/track/${id}`);
 
       const unresolvedTrack = await Promise.all(this.buildUnresolved(track));
       return this.buildResponse('TRACK_LOADED', [unresolvedTrack]);
@@ -114,27 +110,27 @@ class Deezer {
         undefined,
         e.body?.error.message ?? e.message,
       );
-
-
     }
   }
 
   async fetchArtist(id) {
-
     try {
       const artist = await this.requestData(`/artist/${id}/top`);
-      await this.fetchArtistTracks(artist)
+      await this.fetchArtistTracks(artist);
 
       const limitedTracks = this.options.artistLimit
         ? artist.data.slice(0, this.options.artistLimit * 100)
         : artist.data;
 
-      const unresolvedArtistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)
-      ));
+      const unresolvedArtistTracks = await Promise.all(
+        limitedTracks.map((x) => this.buildUnresolved(x)),
+      );
 
-
-
-      return this.buildResponse('PLAYLIST_LOADED', unresolvedArtistTracks, artist.name);
+      return this.buildResponse(
+        'PLAYLIST_LOADED',
+        unresolvedArtistTracks,
+        artist.name,
+      );
     } catch (e) {
       return this.buildResponse(
         'LOAD_FAILED',
@@ -142,8 +138,6 @@ class Deezer {
         undefined,
         e.body?.error.message ?? e.message,
       );
-
-
     }
   }
 
@@ -152,8 +146,8 @@ class Deezer {
     let pageLoaded = 1;
     while (nextPage) {
       if (!nextPage) break;
-      const req = await fetch(nextPage)
-      const json = await req.json()
+      const req = await fetch(nextPage);
+      const json = await req.json();
 
       deezerArtist.data.push(...json.data);
 
@@ -166,8 +160,8 @@ class Deezer {
     if (this.check(query)) return this.resolve(query);
 
     try {
-      if (this.check(query)) return this.resolve(query)
-      let tracks = await this.requestData(`/search?q="${query}"`)
+      if (this.check(query)) return this.resolve(query);
+      let tracks = await this.requestData(`/search?q="${query}"`);
 
       const unresolvedTrack = await this.buildUnresolved(tracks.data[0]);
       return this.buildResponse('TRACK_LOADED', [unresolvedTrack]);
@@ -178,14 +172,12 @@ class Deezer {
         undefined,
         e.body?.error.message ?? e.message,
       );
-
-
     }
   }
 
-
   async buildUnresolved(track) {
-    if (!track) throw new ReferenceError('The Deezer track object was not provided');
+    if (!track)
+      throw new ReferenceError('The Deezer track object was not provided');
 
     return new PoruTrack({
       track: '',
@@ -198,14 +190,15 @@ class Deezer {
         isStream: false,
         title: track.title,
         uri: track.link,
-        image: track.album.cover_medium
+        image: track.album.cover_medium,
       },
     });
   }
 
-
   compareValue(value) {
-    return typeof value !== 'undefined' ? value !== null : typeof value !== 'undefined';
+    return typeof value !== 'undefined'
+      ? value !== null
+      : typeof value !== 'undefined';
   }
 
   buildResponse(loadType, tracks, playlistName, exceptionMsg) {
@@ -215,18 +208,15 @@ class Deezer {
         tracks,
         playlistInfo: playlistName ? { name: playlistName } : {},
       },
-      exceptionMsg ? { exception: { message: exceptionMsg, severity: 'COMMON' } } : {},
+      exceptionMsg
+        ? { exception: { message: exceptionMsg, severity: 'COMMON' } }
+        : {},
     );
   }
-
-
-
-
 }
 
 module.exports = Deezer;
 
-let deezer = new Deezer("", { deezer: { playlistLimit: 10 } })
+let deezer = new Deezer('', { deezer: { playlistLimit: 10 } });
 
-
-deezer.resolve("https://www.deezer.com/en/playlist/4404579662")
+deezer.resolve('https://www.deezer.com/en/playlist/4404579662');

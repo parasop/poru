@@ -1,10 +1,10 @@
 {
   "name": "poru",
   "version": "3.0.0",
-  "description": "A stable and powefull lavalink client with so many features",
+  "description": "A stable and poweful lavalink client with so many features",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "prettier --write src typings index.js"
   },
   "repository": {
     "type": "git",
@@ -21,8 +21,8 @@
     "ws": "^8.8.0"
   },
   "engines": {
-		"node": ">=16.9.0"
-	},
+    "node": ">=16.9.0"
+  },
   "keywords": [
     "music",
     "lavalink",
@@ -33,5 +33,8 @@
     "soundcloud",
     "discordjs",
     "eris"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "^2.7.1"
+  }
 }
