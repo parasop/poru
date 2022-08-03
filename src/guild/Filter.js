@@ -107,7 +107,7 @@ class Filters {
     this.player.filters = new Filters(this.player);
     this.player.node.send({
       op: 'filters',
-      guildId: this.player.guild,
+      guildId: this.player.guildId,
     });
     return this;
   }
