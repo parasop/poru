@@ -76,8 +76,8 @@ declare module 'Poru' {
     init(client: typeof EventEmitter | any);
     leastUsedNodes();
     resolve(track: String, source: String);
-    decodeTrack(tarck: String);
-    get(guildID: String);
+    decodeTrack(track: String);
+    get(guildId: String);
   }
 }
 
