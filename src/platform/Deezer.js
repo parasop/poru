@@ -59,12 +59,12 @@ class Deezer {
       const playlist = await this.requestData(`/playlist/${id}`);
 
       const limitedTracks = this.options.playlistLimit
-        ? playlist.track.data.slice(0, this.options.playlistLimit * 100)
-        : playlist.track.data;
+        ? playlist.tracks.data.slice(0, this.options.playlistLimit * 100)
+        : playlist.tracks.data;
 
 
       const unresolvedPlaylistTracks = await Promise.all(limitedTracks.map(x => this.buildUnresolved(x)));
-      return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, playlist.name);
+      return this.buildResponse('PLAYLIST_LOADED', unresolvedPlaylistTracks, playlist.title);
 
     } catch (e) {
       return this.buildResponse(
@@ -226,7 +226,3 @@ class Deezer {
 
 module.exports = Deezer;
 
-let deezer = new Deezer("", { deezer: { playlistLimit: 10 } })
-
-
-deezer.resolve("https://www.deezer.com/en/playlist/4404579662")
