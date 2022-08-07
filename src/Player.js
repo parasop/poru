@@ -223,9 +223,8 @@ class Player extends EventEmitter {
   async autoplay(toggle = false) {
     if (!toggle) return null;
     try {
-      if (!this.previousTrack) return this.stop();
-      let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier}&list=RD${this.previousTrack.info.identifier}`;
-
+      let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
+      
       let response = await this.manager.resolve(
         data,
         this.manager.options.defaultPlatform || 'ytsearch',
