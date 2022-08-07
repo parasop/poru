@@ -286,6 +286,7 @@ class Player extends EventEmitter {
           this.manager.emit('trackEnd', this, this.currentTrack, data);
           return this.play();
         }
+        
         this.manager.emit('queueEnd', this, this.currentTrack, data);
         this.destroy();
       },
@@ -305,7 +306,7 @@ class Player extends EventEmitter {
             self_mute: this.options.mute || false,
             self_deaf: this.options.deaf || false,
           });
-        }
+      }
         this.manager.emit('socketClosed', this, data);
       },
       default() {
