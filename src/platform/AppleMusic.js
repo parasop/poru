@@ -241,6 +241,3 @@ class AppleMusic {
 module.exports = AppleMusic
 
 
-const apple = new AppleMusic("",{apple:{}})
-
-apple.resolve("https://music.apple.com/us/playlist/bollywood-hits/pl.d60caf02fcce4d7e9788fe01243b7c2c")
