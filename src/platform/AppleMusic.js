@@ -221,4 +221,5 @@ class AppleMusic {
     );
   }
 }
+
 module.exports = AppleMusic;

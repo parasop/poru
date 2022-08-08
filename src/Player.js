@@ -278,6 +278,7 @@ class Player extends EventEmitter {
 
           return this.play();
         }
+      }
 
         if (this.queue.length === 0) {
           this.manager.emit('queueEnd', this, this.track, data);
