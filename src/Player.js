@@ -28,6 +28,8 @@ class Player extends EventEmitter {
         this.isPlaying = false;
 
         this.isPaused = false;
+    
+        this.isAutoplay = false;
 
         this.trackRepeat = false;
 
@@ -237,11 +239,14 @@ class Player extends EventEmitter {
         }
     }
 
-    async autoplay(track) {
+    async setAutoplay(opt = false, tracks) {
+            
+            if (!opt) return null;
 
-        if (!track) return throw new Error("Missing track info");
         try {
-            let data = `https://www.youtube.com/watch?v=${track.info.identifier}&list=RD${track.info.identifier}`;
+            if (!tracks) throw new Error("Missing tracks parameter");
+
+            let data = `https://www.youtube.com/watch?v=${tracks.info.identifier}&list=RD${tracks.info.identifier}`;
 
             let response = await this.manager.resolve(data,this.manager.options.defaultPlatform || "ytsearch");
 
@@ -251,8 +256,7 @@ class Player extends EventEmitter {
 
             this.queue.push(track);
 
-            this.play();
-
+            this.isAutoplay = true
             return this;
 
         } catch (e) {
@@ -301,6 +305,7 @@ class Player extends EventEmitter {
                     this.manager.emit("trackEnd", this, this.currentTrack, data)
                     return this.play();
                 }
+
                 this.manager.emit("queueEnd", this,  this.currentTrack, data);
                 this.destroy();
 
