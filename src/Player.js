@@ -241,10 +241,10 @@ class Player extends EventEmitter {
 
     async setAutoplay(opt = false, tracks) {
             
-            if (!opt) return null;
-
-        try {
+            if (!opt) return this.isAutoplay = false;
             if (!tracks) throw new Error("Missing tracks parameter");
+ 
+        try {
 
             let data = `https://www.youtube.com/watch?v=${tracks.info.identifier}&list=RD${tracks.info.identifier}`;
 
