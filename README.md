@@ -50,73 +50,77 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 ## Example usage basic bot
 
 ```javascript
-const { Client, GatewayIntentBits } = require('discord.js');
-const { Poru } = require('poru');
+const { Client, GatewayIntentBits } = require("discord.js");
+const { Poru } = require("poru");
 const nodes = [
   {
     id: "main_node",
     hostname: "localhost",
     port: 8080,
-    password: "iloveyou3000"
-  }
-]
+    password: "iloveyou3000",
+  },
+];
 const PoruOptions = {
   reconnectTime: 0,
-  resumeKey: 'MyPlayers',
+  resumeKey: "MyPlayers",
   resumeTimeout: 60,
-  defaultPlatform: "ytsearch"
-}
+  defaultPlatform: "ytsearch",
+};
 const client = new Client({
   intents: [
-   GatewayIntentBits.Guilds,
-   GatewayIntentBits.GuildMessages,
-   GatewayIntentBits.GuildVoiceStates,
-   GatewayIntentBits.MessageContent
-  ]
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent,
+  ],
 });
-client.poru = new Poru(client, nodes, PoruOptions)
+client.poru = new Poru(client, nodes, PoruOptions);
 
-client.poru.on('trackStart', (player, track) => {
+client.poru.on("trackStart", (player, track) => {
   const channel = client.channels.cache.get(player.textChannel);
   return channel.send(`Now playing \`${track.title}\``);
 });
 
-client.on('ready', () => {
-  console.log('Ready!');
+client.on("ready", () => {
+  console.log("Ready!");
   client.poru.init(client);
 });
 
-
-client.on('interactionCreate', async (interaction) => {
+client.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  if (!interaction.member.voice.channel) return interaction.reply({ content: `Please connect with voice channel `, ephemeral: true });
+  if (!interaction.member.voice.channel)
+    return interaction.reply({
+      content: `Please connect with voice channel `,
+      ephemeral: true,
+    });
 
-  const track = interaction.options.getString('track');
+  const track = interaction.options.getString("track");
 
   const res = await client.poru.resolve(track);
 
   if (res.loadType === "LOAD_FAILED") {
-    return interaction.reply('Failed to load track.');
+    return interaction.reply("Failed to load track.");
   } else if (res.loadType === "NO_MATCHES") {
-    return interaction.reply('No source found!');
+    return interaction.reply("No source found!");
   }
 
-//create connection with discord voice channnel
+  //create connection with discord voice channnel
   const player = client.poru.createConnection({
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channelId,
     textChannel: interaction.channel.id,
-    selfDeaf: true
+    selfDeaf: true,
   });
-  
- 
-  if (res.loadType === 'PLAYLIST_LOADED') {
+
+  if (res.loadType === "PLAYLIST_LOADED") {
     for (const track of res.tracks) {
       track.info.requester = interaction.user;
       player.queue.add(track);
     }
 
-    interaction.reply(`${res.playlistInfo.name} has been loaded with ${res.tracks.length}`);
+    interaction.reply(
+      `${res.playlistInfo.name} has been loaded with ${res.tracks.length}`
+    );
   } else {
     const track = res.tracks[0];
     track.info.requester = interaction.user;
@@ -127,7 +131,7 @@ client.on('interactionCreate', async (interaction) => {
   if (!player.isPlaying && player.isConnected) player.play();
 });
 
-client.login('TOKEN');
+client.login("TOKEN");
 ```
 
 ## Need Help?
