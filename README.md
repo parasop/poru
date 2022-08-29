@@ -54,8 +54,8 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const { Poru } = require("poru");
 const nodes = [
   {
-    id: "main_node",
-    hostname: "localhost",
+    name: "main_node",
+    host: "localhost",
     port: 8080,
     password: "iloveyou3000",
   },
