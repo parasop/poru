@@ -21,25 +21,19 @@ class Player extends EventEmitter {
 
     this.textChannel = options.textChannel || null;
 
-    this.shardId = options.shardId || 1;
-
     this.isConnected = false;
 
     this.isPlaying = false;
 
     this.isPaused = false;
 
-    this.trackRepeat = false;
-
-    this.queueRepeat = false;
-
-    this.loop = 0;
+    this.loop = "NONE";
 
     this.position = 0;
 
     this.volume = 100;
 
-    this.currentTrack = {};
+    this.currentTrack = null;
 
     this.previousTrack = null;
 
@@ -50,7 +44,16 @@ class Player extends EventEmitter {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position);
       this.manager.emit("playerUpdate", this, packet);
+
     });
+
+    this.manager.emit("playerCreate", this);
+    this.manager.emit(
+      "debug",
+      this.guildId,
+      `[Poru Player] SuccessFully player created`
+    );
+
   }
 
   async play(options = {}) {
@@ -72,6 +75,14 @@ class Player extends EventEmitter {
       noReplace: options.noReplace || true,
     });
     this.position = 0;
+
+    this.manager.emit(
+      "debug",
+      this.guildId,
+      `[Poru Player] Track :\n ${this.currentTrack.info.title} is started to playing`
+    );
+
+
     return this;
   }
 
@@ -125,26 +136,37 @@ class Player extends EventEmitter {
     return this;
   }
 
-  TrackRepeat() {
-    this.loop = 1;
-    this.trackRepeat = true;
-    this.queueRepeat = false;
-    return this;
-  }
 
-  QueueRepeat() {
-    this.loop = 2;
-    this.queueRepeat = true;
-    this.trackRepeat = false;
-    return this;
-  }
+setLoop(mode){
 
-  DisableRepeat() {
-    this.loop = 0;
-    this.trackRepeat = false;
-    this.queueRepeat = false;
-    return this;
+if(!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`)
+
+if(!['NONE','TRACK','QUEUE'].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`)
+
+switch(mode){
+  case "NONE":
+  {
+    this.loop = "NONE";
+    break;
   }
+  case "TRACK":
+  {
+    this.loop = "TRACK";
+    break;
+  }
+  case "QUEUE":
+  {
+    this.loop ="QUEUE";
+    break;
+  }
+ }
+
+ return this;
+}
+
+
+
+
 
   setTextChannel(channel) {
     if (typeof channel !== "string")
@@ -154,13 +176,16 @@ class Player extends EventEmitter {
   }
 
   setVoiceChannel(channel) {
+
     if (typeof channel !== "string")
       throw new RangeError("Channel must be a string.");
+      
     this.voiceChannel = channel;
     return this;
   }
 
-  connect(options) {
+  connect(options = this) {
+
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send(
       {
@@ -171,7 +196,14 @@ class Player extends EventEmitter {
       },
       true
     );
+    
     this.isConnected = true;
+    this.manager.emit(
+      "debug",
+      this.guildID,
+      `[Poru Player] Player has been connected`
+    );
+
   }
 
   updateSession(data) {
@@ -218,9 +250,17 @@ class Player extends EventEmitter {
       op: "destroy",
       guildId: this.guildId,
     });
+
     this.manager.emit("playerDestroy", this);
+    this.manager.emit(
+      "debug",
+      this.guildId,
+      `[Poru Player] destroyed the player`
+    );
+
     this.manager.players.delete(this.guildId);
   }
+
 
   restart() {
     this.filters.updateFilters();
@@ -289,11 +329,11 @@ class Player extends EventEmitter {
       TrackEndEvent() {
         this.previousTrack = this.currentTrack;
 
-        if (this.currentTrack && this.loop === 1) {
+        if (this.currentTrack && this.loop === "TRACK") {
           this.queue.unshift(this.previousTrack);
           this.manager.emit("trackEnd", this, this.currentTrack, data);
           return this.play();
-        } else if (this.currentTrack && this.loop === 2) {
+        } else if (this.currentTrack && this.loop === "QUEUE") {
           this.queue.push(this.previousTrack);
           this.manager.emit("trackEnd", this, this.currentTrack, data);
 

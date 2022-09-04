@@ -11,10 +11,12 @@ class Node {
     this.secure = options.secure || false;
     this.url = `${this.secure ? "wss" : "ws"}://${this.host}:${this.port}/`;
     this.ws = null;
-    this.reconnectTime = node.reconnectTime || 5000;
+    this.reconnectTimeout = node.reconnectTimeout || 5000;
+    this.reconnectTries = node.reconnectTries|| 5;
+    this.reconnectAttempt = null;
+    this.attempt = 0;
     this.resumeKey = node.resumeKey || null;
     this.resumeTimeout = node.resumeTimeout || 60;
-    this.reconnectAttempt;
     this.reconnects = 0;
     this.isConnected = false;
     this.destroyed = null;
@@ -61,6 +63,63 @@ class Node {
     this.isConnected = false;
   }
 
+
+  destroy() {
+    if (!this.isConnected) return;
+
+    const players = this.manager.players.filter((p) => p.node == this);
+    if (players.size) players.forEach((p) => p.destroy());
+    this.ws.close(1000, "destroy");
+    this.ws.removeAllListeners();
+    this.ws = null;
+    this.reconnect = 1;
+    this.destroyed = true;
+    this.manager.nodes.delete(this.host);
+    this.manager.emit("nodeDestroy", this);
+  }
+
+  reconnect() {
+    this.reconnectAttempt = setTimeout(() => {
+
+      if(this.attempt > this.reconnectTries){
+
+        throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`)
+A
+      }
+      this.isConnected = false;
+      this.ws.removeAllListeners();
+      this.ws = null;
+      this.manager.emit("nodeReconnect", this);
+      this.connect();
+      this.attempt++;
+      
+    }, this.reconnectTimeout);
+  }
+
+  send(payload) {
+    const data = JSON.stringify(payload);
+    this.ws.send(data, (error) => {
+      if (error) return error;
+      return null;
+    });
+    this.manager.emit("raw", data, this.name);
+  }
+
+  get penalties() {
+    let penalties = 0;
+    if (!this.isConnected) return penalties;
+    penalties += this.stats.players;
+    penalties += Math.round(
+      Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10
+    );
+    if (this.stats.frameStats) {
+      penalties += this.stats.frameStats.deficit;
+      penalties += this.stats.frameStats.nulled * 2;
+    }
+    return penalties;
+  }
+
+
   #open() {
     if (this.reconnectAttempt) {
       clearTimeout(this.reconnectAttempt);
@@ -97,6 +156,8 @@ class Node {
     }
   }
 
+  
+
   #message(payload) {
     const packet = JSON.parse(payload);
     if (!packet.op) return;
@@ -112,10 +173,10 @@ class Node {
       this.name,
       `[Web Socket] Lavalink Node Update : ${packet.op}  `
     );
-    this.manager.emit("raw", packet);
-  }
+   }
 
   #close(event) {
+
     this.disconnect();
     this.manager.emit("nodeDisconnect", this, event);
     this.manager.emit(
@@ -125,68 +186,22 @@ class Node {
         event || "Unknown code"
       }`
     );
-    if (event !== 1000) {
-    }
+    if (event !== 1000) this.reconnect();
   }
 
   #error(event) {
-    if (!event) return "Unknown event";
+     if (!event) return "Unknown event";
 
     this.manager.emit(
       "debug",
       this.name,
-      `[Web Socket] Connection for Lavalink node has error code: ${event.code}`
+      `[Web Socket] Connection for Lavalink node has error code: ${event.code||event}`
     );
     this.manager.emit("nodeError", this, event);
-    return this.reconnect();
   }
 
-  destroy() {
-    if (!this.isConnected) return;
-
-    const players = this.manager.players.filter((p) => p.node == this);
-    if (players.size) players.forEach((p) => p.destroy());
-    this.ws.close(1000, "destroy");
-    this.ws.removeAllListeners();
-    this.ws = null;
-    this.reconnect = 1;
-    this.destroyed = true;
-    this.manager.nodes.delete(this.host);
-    this.manager.emit("nodeDestroy", this);
-  }
-
-  reconnect() {
-    this.reconnectAttempt = setTimeout(() => {
-      this.isConnected = false;
-      this.ws.removeAllListeners();
-      this.ws = null;
-      this.manager.emit("nodeReconnect", this);
-      this.connect();
-    }, this.reconnectTime);
-  }
-
-  send(payload) {
-    const data = JSON.stringify(payload);
-    this.ws.send(data, (error) => {
-      if (error) return error;
-      return null;
-    });
-    this.manager.emit("raw", data, this.name);
-  }
-
-  get penalties() {
-    let penalties = 0;
-    if (!this.isConnected) return penalties;
-    penalties += this.stats.players;
-    penalties += Math.round(
-      Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10
-    );
-    if (this.stats.frameStats) {
-      penalties += this.stats.frameStats.deficit;
-      penalties += this.stats.frameStats.nulled * 2;
-    }
-    return penalties;
-  }
+  
 }
+
 
 module.exports = Node;

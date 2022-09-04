@@ -24,7 +24,6 @@ class Poru extends EventEmitter {
     this.isReady = false;
     this.user = null;
     this.options = options;
-    this.shards = options.shards || 1;
     this.sendData = null;
     this.version = config.version;
     this.spotify = new Spotify(this, this.options);
@@ -41,12 +40,13 @@ class Poru extends EventEmitter {
       const guild = client.guilds.cache.get(data.d.guild_id);
       if (guild) guild.shard.send(data);
     };
-
+  
     client.on("raw", async (packet) => {
       await this.packetUpdate(packet);
     });
 
     this._nodes.forEach((node) => this.addNode(node));
+    this.isReady = true;
   }
 
   //create a node and connect it with lavalink
@@ -90,7 +90,8 @@ class Poru extends EventEmitter {
 
   getNode(identifier = "best") {
     if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
-    if (identifier === "best") return this.leastUsedNodes();
+
+    if (identifier === "best") return this.leastUsedNodes;
 
     const node = this.nodes.get(indetifier);
     if (!node) throw new Error("The node identifier you provided is not found");
@@ -98,26 +99,9 @@ class Poru extends EventEmitter {
     return node;
   }
 
-  createConnection(options) {
-    this.checkConnection(options);
-    const player = this.players.get(options.guildId);
-    if (player) return player;
-
-    if (this.leastUsedNodes.length === 0)
-      throw new Error("[Poru Error] No nodes are avaliable");
-    const node = this.nodes.get(
-      this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
-    );
-    if (!node) throw new Error("[Poru Error] No nodes are avalible");
-
-    return this.#createPlayer(node, options);
-  }
-
-  removeConnection(guildId) {
-    this.players.get(guildId)?.destroy();
-  }
 
   checkConnection(options) {
+
     let { guildId, voiceChannel, textChannel, shardId } = options;
     if (!guildId)
       throw new Error(`[Poru Connection] you have to Provide guildId`);
@@ -140,6 +124,31 @@ class Poru extends EventEmitter {
     //   if(typeof shardId !=="number") throw new Error(`[Poru Connection] shardId must be provided as a number`);
   }
 
+
+
+  createConnection(options) {
+
+    this.checkConnection(options);
+    const player = this.players.get(options.guildId);
+    if (player) return player;
+
+    if (this.leastUsedNodes.length === 0)
+      throw new Error("[Poru Error] No nodes are avaliable");
+    const node = this.nodes.get(
+      this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
+    );
+    if (!node) throw new Error("[Poru Error] No nodes are avalible");
+
+    return this.#createPlayer(node, options);
+  }
+
+  removeConnection(guildId) {
+    this.players.get(guildId)?.destroy();
+  }
+
+
+
+
   #createPlayer(node, options) {
     if (this.players.has(options.guildId))
       return this.players.get(options.guildId);
@@ -150,6 +159,7 @@ class Poru extends EventEmitter {
     return player;
   }
 
+  
   setServersUpdate(data) {
     let guild = data.guild_id;
     this.voiceServers.set(guild, data);
@@ -190,8 +200,7 @@ class Poru extends EventEmitter {
   }
 
   packetUpdate(packet) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
-      return;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
 
@@ -202,6 +211,8 @@ class Poru extends EventEmitter {
       this.setStateUpdate(packet.d);
     }
   }
+
+  
 
   async resolve(query, source) {
     const node = this.leastUsedNodes[0];
@@ -267,8 +278,7 @@ class Poru extends EventEmitter {
 
   #fetch(node, endpoint, param) {
     return fetch(
-      `http${node.secure ? "s" : ""}://${node.host}:${
-        node.port
+      `http${node.secure ? "s" : ""}://${node.host}:${node.port
       }/${endpoint}?${param}`,
       {
         headers: {

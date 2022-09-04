@@ -14,7 +14,10 @@ class Spotify {
       albumLimit: manager.options.albumLimit,
       artistLimit: manager.options.artistLimit,
       searchMarket: manager.options.searchMarket,
+      clientID: manager.options.clientID || null,
+      clientSecret: manager.options.clientSecret || null
     };
+
     this.authorization = Buffer.from(
       `${this.options.clientID}:${this.options.clientSecret}`
     ).toString("base64");
@@ -25,7 +28,7 @@ class Spotify {
     return spotifyPattern.test(url);
   }
 
-  async requestToken() {
+  async requestAnonymousToken() {
     try {
       const data = await fetch(
         "https://open.spotify.com/get_access_token?reason=transport&productType=embed",
@@ -47,9 +50,11 @@ class Spotify {
     }
   }
 
-  /*
+
   async requestToken() {
-    
+
+    if (!this.options.clientID && !this.options.clientSecret) return this.requestAnonymousToken()
+
     try {
       const data = await fetch('https://accounts.spotify.com/api/token?grant_type=client_credentials', {
         method: 'POST',
@@ -69,7 +74,9 @@ class Spotify {
       }
     }
   }
-*/
+
+
+
   async renew() {
     if (Date.now() >= this.interval) {
       await this.requestToken();
@@ -198,6 +205,7 @@ class Spotify {
     try {
       const data = await this.requestData(`/tracks/${id}`);
       const unresolvedTrack = await this.buildUnresolved(data);
+
       return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
     } catch (e) {
       return this.buildResponse(
@@ -209,13 +217,13 @@ class Spotify {
     }
   }
 
+  
   async fetch(query) {
     try {
       if (this.check(query)) return this.resolve(query);
 
       const data = await this.requestData(
-        `/search/?q="${query}"&type=artist,album,track&market=${
-          this.options.searchMarket ?? "US"
+        `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"
         }`
       );
 

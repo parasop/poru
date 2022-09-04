@@ -27,7 +27,7 @@ class PoruTrack {
     if (!result || !result.tracks.length) return;
 
     if (this.info.author) {
-      const author = [this.info.author, `${this.info.author} - Topic`];
+      const author = [this.info.author, `Best of ${this.info.author} `];
       const officialAudio = result.tracks.find(
         (track) =>
           author.some((name) =>
