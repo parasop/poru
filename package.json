@@ -1,6 +1,6 @@
 {
   "name": "poru",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A stable and powerfull lavalink client around node.js",
   "main": "index.js",
   "scripts": {

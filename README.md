@@ -42,7 +42,7 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 - Object-oriented
 - 100% Customizable
 - Easy to setup
-
+- Inbuilt support for spotify,apple music and deezer
 ## Implementation
 
 [Poru Music](https://github.com/parasop/poru-example) **Example bot as guide for beginning.**
