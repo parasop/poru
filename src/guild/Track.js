@@ -12,7 +12,7 @@ class Track {
       title: data.info.title,
       uri: data.info.uri,
       image:
-        `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` ||
+        `https://i.ytimg.com/vi/${data.info.identifier}/1.jpg` ||
         null,
     };
   }
@@ -41,7 +41,7 @@ class Track {
       );
       if (officialAudio) {
         this.info.identifier = officialAudio.info.identifier;
-        this.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
+        this.image = `https://i.ytimg.com/vi/${this.info.identifier}/1.jpg`;
         this.track = officialAudio.track;
         return this;
       }
@@ -54,13 +54,13 @@ class Track {
       );
       if (sameDuration) {
         this.info.identifier = sameDuration.info.identifier;
-        this.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
+        this.image = `https://i.ytimg.com/vi/${this.info.identifier}/1.jpg`;
         this.track = sameDuration.track;
         return this;
       }
     }
     this.info.identifier = result.tracks[0].info.identifier;
-    this.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
+    this.image = `https://i.ytimg.com/vi/${this.info.identifier}/1.jpg`;
     this.track = result.tracks[0].track;
     return this;
   }
