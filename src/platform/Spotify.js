@@ -15,7 +15,7 @@ class Spotify {
       artistLimit: manager.options.artistLimit,
       searchMarket: manager.options.searchMarket,
       clientID: manager.options.clientID || null,
-      clientSecret: manager.options.clientSecret || null
+      clientSecret: manager.options.clientSecret || null,
     };
 
     this.authorization = Buffer.from(
@@ -50,19 +50,21 @@ class Spotify {
     }
   }
 
-
   async requestToken() {
-
-    if (!this.options.clientID && !this.options.clientSecret) return this.requestAnonymousToken()
+    if (!this.options.clientID && !this.options.clientSecret)
+      return this.requestAnonymousToken();
 
     try {
-      const data = await fetch('https://accounts.spotify.com/api/token?grant_type=client_credentials', {
-        method: 'POST',
-        headers: {
-          Authorization: `Basic ${this.authorization}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      });
+      const data = await fetch(
+        "https://accounts.spotify.com/api/token?grant_type=client_credentials",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Basic ${this.authorization}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
+      );
 
       const body = await data.json();
 
@@ -70,12 +72,10 @@ class Spotify {
       this.interval = body.expires_in * 1000;
     } catch (e) {
       if (e.status === 400) {
-        throw new Error('Invalid Spotify client.');
+        throw new Error("Invalid Spotify client.");
       }
     }
   }
-
-
 
   async renew() {
     if (Date.now() >= this.interval) {
@@ -217,13 +217,13 @@ class Spotify {
     }
   }
 
-  
   async fetch(query) {
     try {
       if (this.check(query)) return this.resolve(query);
 
       const data = await this.requestData(
-        `/search/?q="${query}"&type=artist,album,track&market=${this.options.searchMarket ?? "US"
+        `/search/?q="${query}"&type=artist,album,track&market=${
+          this.options.searchMarket ?? "US"
         }`
       );
 

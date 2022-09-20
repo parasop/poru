@@ -33,6 +33,8 @@ class Player extends EventEmitter {
 
     this.volume = 100;
 
+    this.ping = 0;
+
     this.currentTrack = null;
 
     this.previousTrack = null;
@@ -42,9 +44,9 @@ class Player extends EventEmitter {
     this.on("event", (data) => this.lavalinkEvent(data).bind(this)());
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
-        (this.position = packet.state.position);
+        (this.position = packet.state.position),
+        (this.ping = packet.state.ping);
       this.manager.emit("playerUpdate", this, packet);
-
     });
 
     this.manager.emit("playerCreate", this);
@@ -53,7 +55,6 @@ class Player extends EventEmitter {
       this.guildId,
       `[Poru Player] SuccessFully player created`
     );
-
   }
 
   async play(options = {}) {
@@ -81,7 +82,6 @@ class Player extends EventEmitter {
       this.guildId,
       `[Poru Player] Track :\n ${this.currentTrack.info.title} is started to playing`
     );
-
 
     return this;
   }
@@ -136,37 +136,34 @@ class Player extends EventEmitter {
     return this;
   }
 
+  setLoop(mode) {
+    if (!mode)
+      throw new Error(
+        `[Poru Player] You must have to provide loop mode as argument of setLoop`
+      );
 
-setLoop(mode){
+    if (!["NONE", "TRACK", "QUEUE"].includes(mode))
+      throw new Error(
+        `[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`
+      );
 
-if(!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`)
+    switch (mode) {
+      case "NONE": {
+        this.loop = "NONE";
+        break;
+      }
+      case "TRACK": {
+        this.loop = "TRACK";
+        break;
+      }
+      case "QUEUE": {
+        this.loop = "QUEUE";
+        break;
+      }
+    }
 
-if(!['NONE','TRACK','QUEUE'].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`)
-
-switch(mode){
-  case "NONE":
-  {
-    this.loop = "NONE";
-    break;
+    return this;
   }
-  case "TRACK":
-  {
-    this.loop = "TRACK";
-    break;
-  }
-  case "QUEUE":
-  {
-    this.loop ="QUEUE";
-    break;
-  }
- }
-
- return this;
-}
-
-
-
-
 
   setTextChannel(channel) {
     if (typeof channel !== "string")
@@ -176,16 +173,14 @@ switch(mode){
   }
 
   setVoiceChannel(channel) {
-
     if (typeof channel !== "string")
       throw new RangeError("Channel must be a string.");
-      
+
     this.voiceChannel = channel;
     return this;
   }
 
   connect(options = this) {
-
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send(
       {
@@ -196,14 +191,13 @@ switch(mode){
       },
       true
     );
-    
+
     this.isConnected = true;
     this.manager.emit(
       "debug",
       this.guildID,
       `[Poru Player] Player has been connected`
     );
-
   }
 
   updateSession(data) {
@@ -260,7 +254,6 @@ switch(mode){
 
     this.manager.players.delete(this.guildId);
   }
-
 
   restart() {
     this.filters.updateFilters();

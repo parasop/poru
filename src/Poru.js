@@ -40,7 +40,7 @@ class Poru extends EventEmitter {
       const guild = client.guilds.cache.get(data.d.guild_id);
       if (guild) guild.shard.send(data);
     };
-  
+
     client.on("raw", async (packet) => {
       await this.packetUpdate(packet);
     });
@@ -99,16 +99,14 @@ class Poru extends EventEmitter {
     return node;
   }
 
-
   checkConnection(options) {
-
     let { guildId, voiceChannel, textChannel, shardId } = options;
     if (!guildId)
       throw new Error(`[Poru Connection] you have to Provide guildId`);
     if (!voiceChannel)
       throw new Error(`[Poru Connection] you have to  Provide voiceChannel`);
     if (!textChannel)
-      throw new Error(`[Poru Connection] you have to  Provide texteChannel`);
+      throw new Error(`[Poru Connection] you have to  Provide textChannel`);
     //  if(shardId == null) throw new Error(`[Poru Connection] You must have to Provide shardId`);
 
     if (typeof guildId !== "string")
@@ -124,10 +122,7 @@ class Poru extends EventEmitter {
     //   if(typeof shardId !=="number") throw new Error(`[Poru Connection] shardId must be provided as a number`);
   }
 
-
-
   createConnection(options) {
-
     this.checkConnection(options);
     const player = this.players.get(options.guildId);
     if (player) return player;
@@ -146,9 +141,6 @@ class Poru extends EventEmitter {
     this.players.get(guildId)?.destroy();
   }
 
-
-
-
   #createPlayer(node, options) {
     if (this.players.has(options.guildId))
       return this.players.get(options.guildId);
@@ -159,7 +151,6 @@ class Poru extends EventEmitter {
     return player;
   }
 
-  
   setServersUpdate(data) {
     let guild = data.guild_id;
     this.voiceServers.set(guild, data);
@@ -200,7 +191,8 @@ class Poru extends EventEmitter {
   }
 
   packetUpdate(packet) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
+      return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
 
@@ -212,21 +204,19 @@ class Poru extends EventEmitter {
     }
   }
 
-  
-
   async resolve(query, source) {
     const node = this.leastUsedNodes[0];
     if (!node) throw new Error("No nodes are available.");
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
-      return this.fetchURL(node, query, source);
+      return this.fetchURL(node, query);
     } else {
       return this.fetchTrack(node, query, source);
     }
   }
 
-  async fetchURL(node, track, source) {
+  async fetchURL(node, track) {
     if (this.spotify.check(track)) {
       return await this.spotify.resolve(track);
     } else if (this.apple.check(track)) {
@@ -278,7 +268,8 @@ class Poru extends EventEmitter {
 
   #fetch(node, endpoint, param) {
     return fetch(
-      `http${node.secure ? "s" : ""}://${node.host}:${node.port
+      `http${node.secure ? "s" : ""}://${node.host}:${
+        node.port
       }/${endpoint}?${param}`,
       {
         headers: {
