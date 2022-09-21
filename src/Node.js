@@ -12,7 +12,7 @@ class Node {
     this.url = `${this.secure ? "wss" : "ws"}://${this.host}:${this.port}/`;
     this.ws = null;
     this.reconnectTimeout = node.reconnectTimeout || 5000;
-    this.reconnectTries = node.reconnectTries|| 5;
+    this.reconnectTries = node.reconnectTries || 5;
     this.reconnectAttempt = null;
     this.attempt = 0;
     this.resumeKey = node.resumeKey || null;
@@ -63,7 +63,6 @@ class Node {
     this.isConnected = false;
   }
 
-
   destroy() {
     if (!this.isConnected) return;
 
@@ -80,11 +79,11 @@ class Node {
 
   reconnect() {
     this.reconnectAttempt = setTimeout(() => {
-
-      if(this.attempt > this.reconnectTries){
-
-        throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`)
-A
+      if (this.attempt > this.reconnectTries) {
+        throw new Error(
+          `[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`
+        );
+        A;
       }
       this.isConnected = false;
       this.ws.removeAllListeners();
@@ -92,7 +91,6 @@ A
       this.manager.emit("nodeReconnect", this);
       this.connect();
       this.attempt++;
-      
     }, this.reconnectTimeout);
   }
 
@@ -118,7 +116,6 @@ A
     }
     return penalties;
   }
-
 
   #open() {
     if (this.reconnectAttempt) {
@@ -156,8 +153,6 @@ A
     }
   }
 
-  
-
   #message(payload) {
     const packet = JSON.parse(payload);
     if (!packet.op) return;
@@ -173,10 +168,9 @@ A
       this.name,
       `[Web Socket] Lavalink Node Update : ${packet.op}  `
     );
-   }
+  }
 
   #close(event) {
-
     this.disconnect();
     this.manager.emit("nodeDisconnect", this, event);
     this.manager.emit(
@@ -190,18 +184,17 @@ A
   }
 
   #error(event) {
-     if (!event) return "Unknown event";
+    if (!event) return "Unknown event";
 
     this.manager.emit(
       "debug",
       this.name,
-      `[Web Socket] Connection for Lavalink node has error code: ${event.code||event}`
+      `[Web Socket] Connection for Lavalink node has error code: ${
+        event.code || event
+      }`
     );
     this.manager.emit("nodeError", this, event);
   }
-
-  
 }
-
 
 module.exports = Node;
