@@ -38,10 +38,12 @@ yarn add poru
 To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) instance.
 
 - Stable client
+- support typescript
 - 100% Compatible with Lavalink
 - Object-oriented
 - 100% Customizable
 - Easy to setup
+- Inbuilt Queue System
 - Inbuilt support for spotify,apple music and deezer
 ## Implementation
 
