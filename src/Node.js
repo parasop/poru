@@ -86,7 +86,7 @@ class Node {
         A;
       }
       this.isConnected = false;
-      this.ws.removeAllListeners();
+      this.ws?.removeAllListeners();
       this.ws = null;
       this.manager.emit("nodeReconnect", this);
       this.connect();
