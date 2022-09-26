@@ -11,7 +11,7 @@ class Track {
       sourceName: data.info.sourceName,
       title: data.info.title,
       uri: data.info.uri,
-      image: `https://i.ytimg.com/vi/${data.info.identifier}/1.jpg` || null,
+      image: `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
     };
   }
 
