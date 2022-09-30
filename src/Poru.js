@@ -93,7 +93,7 @@ class Poru extends EventEmitter {
 
     if (identifier === "best") return this.leastUsedNodes;
 
-    const node = this.nodes.get(indetifier);
+    const node = this.nodes.get(identifier);
     if (!node) throw new Error("The node identifier you provided is not found");
     if (!node.isConnected) node.connect();
     return node;
