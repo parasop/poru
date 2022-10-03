@@ -334,11 +334,13 @@ class Player extends EventEmitter {
         }
 
         if (this.queue.length === 0) {
+          this.isPlaying = false;
           return this.manager.emit("queueEnd", this, this.track, data);
         } else if (this.queue.length > 0) {
           this.manager.emit("trackEnd", this, this.currentTrack, data);
           return this.play();
         }
+           this.isPlaying = false;
         this.manager.emit("queueEnd", this, this.currentTrack, data);
       },
       TrackStuckEvent() {
