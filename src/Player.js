@@ -64,6 +64,8 @@ class Player extends EventEmitter {
 
     this.currentTrack = this.queue.shift();
 
+    try{
+
     if (!this.currentTrack.track) {
       this.currentTrack = await this.currentTrack.resolve(this.manager);
     }
@@ -84,6 +86,12 @@ class Player extends EventEmitter {
     );
 
     return this;
+
+    }catch(e){
+
+      this.manager.emit("trackError", this, this.currentTrack, null);
+   
+    }
   }
 
   stop() {
