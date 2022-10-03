@@ -88,7 +88,6 @@ class Player extends EventEmitter {
 
   stop() {
     this.position = 0;
-    this.isConnected = false;
     this.isPlaying = false;
     this.node.send({
       op: "stop",
