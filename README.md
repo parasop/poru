@@ -35,7 +35,7 @@ yarn add poru
 
 # About
 
-To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) instance.
+To use you need a configured [Lavalink](https://github.com/freyacodes/Lavalink) instance.
 
 - Stable client
 - support typescript
@@ -48,6 +48,23 @@ To use you need a configured [Lavalink](https://github.com/Frederikam/Lavalink) 
 ## Implementation
 
 [Poru Music](https://github.com/parasop/poru-example) **Example bot as guide for beginning.**
+
+
+## Implementation Repo:
+Note : Send pr to add your repo here
+
+URL | Features  | Additional Information
+-------|----------|-----------------
+[Poru Music](https://github.com/parasop/poru-example) | Basic example | works with latest djs version
+
+
+
+
+
+
+
+
+
 
 ## Example usage basic bot
 
