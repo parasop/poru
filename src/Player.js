@@ -202,7 +202,7 @@ class Player extends EventEmitter {
     this.isConnected = true;
     this.manager.emit(
       "debug",
-      this.guildID,
+      this.guildId,
       `[Poru Player] Player has been connected`
     );
   }

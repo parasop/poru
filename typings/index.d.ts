@@ -192,6 +192,10 @@ interface PoruEvents {
     }
   ) => void;
   queueEnd: (player: Player, track: Track, payload: LavalinkEvents) => void;
+  playerCreate: (player: Player) => void;
+  playerDestroy: (player: Player) => void;
+  nodeDestroy: (node: Node) => void;
+  nodeReconnect: (node: Node) => void;
 }
 
 export class Poru extends EventEmitter {
