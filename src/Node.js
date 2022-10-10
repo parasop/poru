@@ -69,7 +69,7 @@ class Node {
     const players = this.manager.players.filter((p) => p.node == this);
     if (players.size) players.forEach((p) => p.destroy());
     this.ws.close(1000, "destroy");
-    this.ws.removeAllListeners();
+    this.ws?.removeAllListeners();
     this.ws = null;
     this.reconnect = 1;
     this.destroyed = true;

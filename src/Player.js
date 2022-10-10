@@ -64,6 +64,8 @@ class Player extends EventEmitter {
 
     this.currentTrack = this.queue.shift();
 
+    try{
+
     if (!this.currentTrack.track) {
       this.currentTrack = await this.currentTrack.resolve(this.manager);
     }
@@ -84,11 +86,16 @@ class Player extends EventEmitter {
     );
 
     return this;
+
+    }catch(e){
+
+      this.manager.emit("trackError", this, this.currentTrack, null);
+   
+    }
   }
 
   stop() {
     this.position = 0;
-    this.isConnected = false;
     this.isPlaying = false;
     this.node.send({
       op: "stop",
@@ -334,11 +341,13 @@ class Player extends EventEmitter {
         }
 
         if (this.queue.length === 0) {
+          this.isPlaying = false;
           return this.manager.emit("queueEnd", this, this.track, data);
         } else if (this.queue.length > 0) {
           this.manager.emit("trackEnd", this, this.currentTrack, data);
           return this.play();
         }
+           this.isPlaying = false;
         this.manager.emit("queueEnd", this, this.currentTrack, data);
       },
       TrackStuckEvent() {
