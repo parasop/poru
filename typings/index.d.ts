@@ -5,6 +5,12 @@ export interface PlaylistInfo {
   selectedTrack: number;
 }
 
+export interface IvoiceServer {
+  token : string;
+  guild_id: string;
+  endpoint : string | null;
+}
+
 export interface ResolveResponse {
   loadType:
     | "TRACK_LOADED"
@@ -133,6 +139,22 @@ export interface PoruOptions {
   searchMarket?: string;
 }
 
+
+export class voiceConnection {
+
+  constructor (player:Player):this;
+
+    player:Player;
+    sessionId: string | null;;
+    region = string | null;
+    muted = boolean | false;
+    deafened = boolean | false;
+    voiceServer = IvoiceServer | null;
+
+}
+
+
+
 export class Node implements INode {
   constructor(manager: Poru, options: NodeOptions, node: PoruOptions): this;
   name: string | null;
@@ -210,9 +232,7 @@ export class Poru extends EventEmitter {
   _nodes: Node[];
   nodes: Map<string, Node>;
   players: Map<string, Player>;
-  voiceStates: Map<string, any>;
-  voiceServers: Map<string, any>;
-  isReady: boolean;
+  isActive: boolean;
   user: string | null;
   options: PoruOptions;
   sendData: null;
@@ -238,12 +258,6 @@ export class Poru extends EventEmitter {
     mute?: boolean;
   }) => Player;
   removeConnection: (guildId: string) => void;
-  setServersUpdate: (data: { guild_id: string }) => boolean;
-  setStateUpdate: (data: {
-    user_id?: string;
-    channel_id?: string;
-    guild_id: string;
-  }) => void;
   packetUpdate: (packet: {
     t: string;
     d: {
@@ -300,7 +314,7 @@ export class Player extends EventEmitter {
   volume: number;
   currentTrack: Track | null;
   previousTracks: Track;
-  voiceUpdateState: any;
+  connection: voiceConnection
 
   play: (options?: { noReplace?: boolean }) => Promise<Player>;
   stop: () => Player;
@@ -316,7 +330,6 @@ export class Player extends EventEmitter {
     deaf: boolean;
     mute: boolean;
   }) => void;
-  updateSession: (data: any) => Player;
   reconnect: () => Player;
   disconnect: () => Player;
   destroy: () => void;

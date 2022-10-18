@@ -19,23 +19,23 @@ class Poru extends EventEmitter {
     this._nodes = nodes;
     this.nodes = new Map();
     this.players = new Map();
-    this.voiceStates = new Map();
-    this.voiceServers = new Map();
-    this.isReady = false;
+    this.isActive = false;
     this.user = null;
     this.options = options;
-    this.sendData = null;
     this.version = config.version;
+
     this.spotify = new Spotify(this, this.options);
     this.apple = new AppleMusic(this, this.options);
-    this.apple.requestToken();
     this.deezer = new Deezer(this, this.options);
+    this.sendData = null;
+    
   }
 
   init(client) {
     if (this.isReady) return this;
 
     this.user = client.user.id;
+    this.apple.requestToken();
     this.sendData = (data) => {
       const guild = client.guilds.cache.get(data.d.guild_id);
       if (guild) guild.shard.send(data);
@@ -46,10 +46,9 @@ class Poru extends EventEmitter {
     });
 
     this._nodes.forEach((node) => this.addNode(node));
-    this.isReady = true;
+    this.isActive = true;
   }
 
-  //create a node and connect it with lavalink
   addNode(options) {
     const node = new Node(this, options, this.options);
     if (options.name) {
@@ -62,7 +61,6 @@ class Poru extends EventEmitter {
     return node;
   }
 
-  //remove node and destroy web socket connection
   removeNode(identifier) {
     if (!identifier)
       throw new Error(
@@ -107,8 +105,7 @@ class Poru extends EventEmitter {
       throw new Error(`[Poru Connection] you have to  Provide voiceChannel`);
     if (!textChannel)
       throw new Error(`[Poru Connection] you have to  Provide textChannel`);
-    //  if(shardId == null) throw new Error(`[Poru Connection] You must have to Provide shardId`);
-
+    
     if (typeof guildId !== "string")
       throw new Error(`[Poru Connection] guildId must be provided as a string`);
     if (typeof voiceChannel !== "string")
@@ -119,7 +116,6 @@ class Poru extends EventEmitter {
       throw new Error(
         `[Poru Connection] textChannel must be provided as a string`
       );
-    //   if(typeof shardId !=="number") throw new Error(`[Poru Connection] shardId must be provided as a number`);
   }
 
   createConnection(options) {
@@ -151,56 +147,18 @@ class Poru extends EventEmitter {
     return player;
   }
 
-  setServersUpdate(data) {
-    let guild = data.guild_id;
-    this.voiceServers.set(guild, data);
-    const server = this.voiceServers.get(guild);
-    const state = this.voiceStates.get(guild);
-    if (!server) return false;
-    const player = this.players.get(guild);
-    if (!player) return false;
-
-    player.updateSession({
-      sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
-      event: server,
-    });
-
-    return true;
-  }
-
-  setStateUpdate(data) {
-    if (data.user_id !== this.user) return;
-    if (data.channel_id) {
-      const guild = data.guild_id;
-
-      this.voiceStates.set(data.guild_id, data);
-      const server = this.voiceServers.get(guild);
-      const state = this.voiceStates.get(guild);
-      if (!server) return false;
-      const player = this.players.get(guild);
-      if (!player) return false;
-      player.updateSession({
-        sessionId: state ? state.session_id : player.voiceUpdateState.sessionId,
-        event: server,
-      });
-
-      return true;
-    }
-    this.voiceServers.delete(data.guild_id);
-    this.voiceStates.delete(data.guild_id);
-  }
-
+  
   packetUpdate(packet) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
-      return;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
-
+    
     if (packet.t === "VOICE_SERVER_UPDATE") {
-      this.setServersUpdate(packet.d);
+      player.connection.setServersUpdate(packet.d);
     }
-    if (packet.t === "VOICE_STATE_UPDATE") {
-      this.setStateUpdate(packet.d);
+    if(packet.t === "VOICE_STATE_UPDATE"){
+      if (packet.d.user_id !== this.user) return;
+      player.connection.setStateUpdate(packet.d);
     }
   }
 
@@ -215,6 +173,7 @@ class Poru extends EventEmitter {
       return this.fetchTrack(node, query, source);
     }
   }
+
 
   async fetchURL(node, track) {
     if (this.spotify.check(track)) {
@@ -268,8 +227,7 @@ class Poru extends EventEmitter {
 
   #fetch(node, endpoint, param) {
     return fetch(
-      `http${node.secure ? "s" : ""}://${node.host}:${
-        node.port
+      `http${node.secure ? "s" : ""}://${node.host}:${node.port
       }/${endpoint}?${param}`,
       {
         headers: {

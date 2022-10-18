@@ -155,14 +155,16 @@ class Node {
 
   #message(payload) {
     const packet = JSON.parse(payload);
-    if (!packet.op) return;
+    if (!packet?.op) return;
 
-    if (packet.op && packet.op === "stats") {
+    if (packet.op === "stats") {
       this.stats = { ...packet };
+      delete this.stats.op;
     }
     const player = this.manager.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
-    packet.node = this;
+     packet.node = this;
+
     this.manager.emit(
       "debug",
       this.name,

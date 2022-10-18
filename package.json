@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/parasop/poru#readme",
   "dependencies": {
-    "undici": "^5.7.0",
+    "undici": "^5.11.0",
     "ws": "^8.8.0"
   },
   "engines": {

@@ -1,23 +1,24 @@
 const { EventEmitter } = require("events");
 const Queue = require("./guild/Queue");
 const Filters = require("./guild/Filter");
+const Connection = require("./voiceConnection");
 class Player extends EventEmitter {
-  constructor(manager, node, options) {
+  constructor(poru, node, options) {
     super();
 
-    this.manager = manager;
+    this.poru = poru;
 
     this.queue = new Queue();
 
     this.node = node;
 
-    this.options = options;
-
     this.filters = new Filters(this, this.node);
+
+    this.connection = new Connection(this);
 
     this.guildId = options.guildId;
 
-    this.voiceChannel = options.voiceChannel.id || options.voiceChannel;
+    this.voiceChannel = options.voiceChannel;
 
     this.textChannel = options.textChannel || null;
 
@@ -39,60 +40,45 @@ class Player extends EventEmitter {
 
     this.previousTrack = null;
 
-    this.voiceUpdateState = null;
 
     this.on("event", (data) => this.lavalinkEvent(data).bind(this)());
+
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position),
         (this.ping = packet.state.ping);
-      this.manager.emit("playerUpdate", this, packet);
     });
 
-    this.manager.emit("playerCreate", this);
-    this.manager.emit(
-      "debug",
-      this.guildId,
-      `[Poru Player] SuccessFully player created`
-    );
+    this.poru.emit("playerCreate", this);
+    this.poru.emit("debug", this.guildId, `[Poru Player] SuccessFully player created`);
   }
 
   async play(options = {}) {
-    if (!this.queue.length) {
-      return null;
-    }
-
+    if (!this.queue.length) return;
     this.currentTrack = this.queue.shift();
 
-    try{
+    try {
 
-    if (!this.currentTrack.track) {
-      this.currentTrack = await this.currentTrack.resolve(this.manager);
-    }
+      if (!this.currentTrack.track) this.currentTrack = await this.currentTrack.resolve(this.poru);
+      this.isPlaying = true;
+      this.position = 0;
 
-    this.isPlaying = true;
-    this.node.send({
-      op: "play",
-      guildId: this.guildId,
-      track: this.currentTrack.track,
-      noReplace: options.noReplace || true,
-    });
-    this.position = 0;
+      this.node.send({
+        op: "play",
+        guildId: this.guildId,
+        track: this.currentTrack.track,
+        noReplace: options.noReplace || true,
+      });
 
-    this.manager.emit(
-      "debug",
-      this.guildId,
-      `[Poru Player] Track :\n ${this.currentTrack.info.title} is started to playing`
-    );
+      this.poru.emit("debug", this.guildId, `[Poru Player] Track :\n ${this.currentTrack.info.title} is started to playing`);
 
-    return this;
+      return this;
 
-    }catch(e){
-
-      this.manager.emit("trackError", this, this.currentTrack, null);
-   
+    } catch (e) {
+      this.poru.emit("trackError", this, this.currentTrack, null);
     }
   }
+
 
   stop() {
     this.position = 0;
@@ -120,8 +106,8 @@ class Player extends EventEmitter {
   }
 
   async seekTo(position) {
-    if (Number.isNaN(position))
-      throw new RangeError("[Poru Error] Position must be a number.");
+    if (Number.isNaN(position)) throw new RangeError("[Poru Error] Position must be a number.");
+
     this.position = position;
     this.node.send({
       op: "seek",
@@ -182,45 +168,30 @@ class Player extends EventEmitter {
   setVoiceChannel(channel) {
     if (typeof channel !== "string")
       throw new RangeError("Channel must be a string.");
-
     this.voiceChannel = channel;
     return this;
   }
 
   connect(options = this) {
     let { guildId, voiceChannel, deaf, mute } = options;
-    this.send(
-      {
-        guild_id: guildId,
-        channel_id: voiceChannel,
-        self_deaf: deaf || true,
-        self_mute: mute || false,
-      },
-      true
-    );
+    this.send({
+      guild_id: guildId,
+      channel_id: voiceChannel,
+      self_deaf: deaf || true,
+      self_mute: mute || false,
+    }, true);
 
     this.isConnected = true;
-    this.manager.emit(
+    this.poru.emit(
       "debug",
       this.guildId,
       `[Poru Player] Player has been connected`
     );
   }
 
-  updateSession(data) {
-    if (data) {
-      this.voiceUpdateState = data;
-      this.node.send({
-        op: "voiceUpdate",
-        guildId: this.guildId,
-        ...data,
-      });
-    }
-    return this;
-  }
 
   reconnect() {
-    if (this.voiceChannel === null) return null;
+    if (!this.voiceChannel) return;
     this.send({
       guild_id: this.guildId,
       channel_id: this.voiceChannel,
@@ -252,14 +223,14 @@ class Player extends EventEmitter {
       guildId: this.guildId,
     });
 
-    this.manager.emit("playerDestroy", this);
-    this.manager.emit(
+    this.poru.emit("playerDestroy", this);
+    this.poru.emit(
       "debug",
       this.guildId,
       `[Poru Player] destroyed the player`
     );
 
-    this.manager.players.delete(this.guildId);
+    this.poru.players.delete(this.guildId);
   }
 
   restart() {
@@ -280,94 +251,85 @@ class Player extends EventEmitter {
   async autoplay(option = false) {
     if (!option) return false;
     try {
-      let data = `https://www.youtube.com/watch?v=${
-        this.previousTrack.info.identifier || this.currentTrack.info.identifier
-      }&list=RD${
-        this.previousTrack.info.identifier || this.currentTrack.info.identifier
-      }`;
+      let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier
+        }&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier
+        }`;
 
-      let response = await this.manager.resolve(
+      let response = await this.poru.resolve(
         data,
-        this.manager.options.defaultPlatform || "ytsearch"
+        this.poru.options.defaultPlatform || "ytsearch"
       );
 
-      if (
-        !response ||
-        !response.tracks ||
-        ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)
-      )
-        return this.stop();
+      if (!response ||!response.tracks ||["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
 
-      let track =
-        response.tracks[
-          Math.floor(Math.random() * Math.floor(response.tracks.length))
-        ];
-
+      let track =response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
       this.queue.push(track);
-
       this.play();
 
       return this;
+
     } catch (e) {
-      console.log(`[Poru Autoplay] error : ${e}`);
+      console.log(`[Poru Autoplay] error : ${e.message}`);
       return this.stop();
     }
   }
 
   send(data) {
-    this.manager.sendData({ op: 4, d: data });
+    this.poru.sendData({ op: 4, d: data });
   }
+  
 
   lavalinkEvent(data) {
     const events = {
       TrackStartEvent() {
         this.isPlaying = true;
         this.isPaused = false;
-        this.manager.emit("trackStart", this, this.currentTrack, data);
+        this.poru.emit("trackStart", this, this.currentTrack, data);
       },
-      // eslint-disable-next-line consistent-return
+
       TrackEndEvent() {
         this.previousTrack = this.currentTrack;
 
         if (this.currentTrack && this.loop === "TRACK") {
           this.queue.unshift(this.previousTrack);
-          this.manager.emit("trackEnd", this, this.currentTrack, data);
+          this.poru.emit("trackEnd", this, this.currentTrack, data);
           return this.play();
         } else if (this.currentTrack && this.loop === "QUEUE") {
           this.queue.push(this.previousTrack);
-          this.manager.emit("trackEnd", this, this.currentTrack, data);
+          this.poru.emit("trackEnd", this, this.currentTrack, data);
 
           return this.play();
         }
 
         if (this.queue.length === 0) {
           this.isPlaying = false;
-          return this.manager.emit("queueEnd", this, this.track, data);
+          return this.poru.emit("queueEnd", this, this.track, data);
         } else if (this.queue.length > 0) {
-          this.manager.emit("trackEnd", this, this.currentTrack, data);
+          this.poru.emit("trackEnd", this, this.currentTrack, data);
           return this.play();
         }
-           this.isPlaying = false;
-        this.manager.emit("queueEnd", this, this.currentTrack, data);
+        this.isPlaying = false;
+        this.poru.emit("queueEnd", this, this.currentTrack, data);
       },
+
       TrackStuckEvent() {
-        this.manager.emit("trackError", this, this.currentTrack, data);
+        this.poru.emit("trackError", this, this.currentTrack, data);
         this.stop();
       },
       TrackExceptionEvent() {
-        this.manager.emit("trackError", this, this.track, data);
+        this.poru.emit("trackError", this, this.track, data);
         this.stop();
       },
       WebSocketClosedEvent() {
         if ([4015, 4009].includes(data.code)) {
           this.send({
             guild_id: data.guildId,
-            channel_id: this.voiceChannel.id || this.voiceChannel,
+            channel_id: this.voiceChannel,
             self_mute: this.options.mute || false,
             self_deaf: this.options.deaf || false,
           });
         }
-        this.manager.emit("socketClosed", this, data);
+        this.poru.emit("socketClosed", this, data);
       },
       default() {
         throw new Error(`An unknown event: ${data}`);

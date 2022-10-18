@@ -1,7 +1,7 @@
 module.exports = {
   clientName: "Poru",
   autoResume: true,
-  version: "2.0",
+  version: "4.0",
   OPCodes: {
     CONFIGURE_RESUMING: "configureResuming",
     DESTROY: "destroy",
@@ -16,4 +16,11 @@ module.exports = {
     VOICE_UPDATE: "voiceUpdate",
     VOLUME: "volume",
   },
+  
+  Error:{
+    sessionEndpoint:"[Poru Connection] Session endpoint missing.",
+    noSessionID : "[Poru Connection] Session ID missing."
+
+
+  }
 };
