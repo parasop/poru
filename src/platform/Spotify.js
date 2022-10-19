@@ -260,6 +260,8 @@ class Spotify {
   async buildUnresolved(track) {
     if (!track)
       throw new ReferenceError("The Spotify track object was not provided");
+    
+let arrayOfArtist = artist.artists.map((artist) => `${artist.name}`) || "Unknown Artist":
 
     return new PoruTrack({
       track: "",
@@ -267,7 +269,7 @@ class Spotify {
         sourceName: "spotify",
         identifier: track.id,
         isSeekable: true,
-        author: track.artists[0] ? track.artists[0].name : "Unknown",
+        author: arrayOfArtist.join(","),
         length: track.duration_ms,
         isStream: false,
         title: track.name,
