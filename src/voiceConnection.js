@@ -24,7 +24,7 @@ class voiceConnection {
         this.voiceServer = data;
        
         if (!this.sessionId) {
-            this.emit('error', Error.noSessionID);
+            this.player.poru.emit('error', Error.noSessionID);
             return;
         }
 
