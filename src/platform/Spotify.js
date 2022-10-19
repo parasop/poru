@@ -261,7 +261,7 @@ class Spotify {
     if (!track)
       throw new ReferenceError("The Spotify track object was not provided");
     
-let arrayOfArtist = artist.artists.map((artist) => `${artist.name}`) || "Unknown Artist":
+let arrayOfArtist = artist.artists.map((artist) => `${artist.name}`) || "Unknown Artist";
 
     return new PoruTrack({
       track: "",
