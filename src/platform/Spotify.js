@@ -226,10 +226,10 @@ class Spotify {
           this.options.searchMarket ?? "US"
         }`
       );
-
-      const unresolvedTrack = await this.buildUnresolved(data.tracks.items[0]);
-
-      return this.buildResponse("TRACK_LOADED", [unresolvedTrack]);
+      const unresolvedTracks = await Promise.all(
+        data.tracks.items.map((x) => this.buildUnresolved(x))
+      );
+      return this.buildResponse("TRACK_LOADED", unresolvedTracks);
     } catch (e) {
       return this.buildResponse(
         e.body?.error.message === "invalid id" ? "NO_MATCHES" : "LOAD_FAILED",
@@ -239,6 +239,7 @@ class Spotify {
       );
     }
   }
+
 
   async fetchPlaylistTracks(spotifyPlaylist) {
     let nextPage = spotifyPlaylist.tracks.next;
