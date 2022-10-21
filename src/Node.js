@@ -1,9 +1,10 @@
 const WebSocket = require("ws");
 const config = require("./config");
+const { fetch } = require("undici");
 
 class Node {
-  constructor(manager, options, node) {
-    this.manager = manager;
+  constructor(poru, options, node) {
+    this.poru = poru;
     this.name = options.name || null;
     this.host = options.host || "localhost";
     this.port = options.port || 2333;
@@ -42,8 +43,8 @@ class Node {
     if (this.ws) this.ws.close();
     const headers = {
       Authorization: this.password,
-      "Num-Shards": this.manager.shards || 1,
-      "User-Id": this.manager.user,
+      "Num-Shards": this.poru.shards || 1,
+      "User-Id": this.poru.user,
       "Client-Name": config.clientName,
     };
     if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
@@ -66,15 +67,15 @@ class Node {
   destroy() {
     if (!this.isConnected) return;
 
-    const players = this.manager.players.filter((p) => p.node == this);
+    const players = this.poru.players.filter((p) => p.node == this);
     if (players.size) players.forEach((p) => p.destroy());
     this.ws.close(1000, "destroy");
     this.ws?.removeAllListeners();
     this.ws = null;
     this.reconnect = 1;
     this.destroyed = true;
-    this.manager.nodes.delete(this.host);
-    this.manager.emit("nodeDestroy", this);
+    this.poru.nodes.delete(this.host);
+    this.poru.emit("nodeDestroy", this);
   }
 
   reconnect() {
@@ -88,7 +89,7 @@ class Node {
       this.isConnected = false;
       this.ws?.removeAllListeners();
       this.ws = null;
-      this.manager.emit("nodeReconnect", this);
+      this.poru.emit("nodeReconnect", this);
       this.connect();
       this.attempt++;
     }, this.reconnectTimeout);
@@ -100,7 +101,7 @@ class Node {
       if (error) return error;
       return null;
     });
-    this.manager.emit("raw", data, this.name);
+    this.poru.emit("raw", data, this.name);
   }
 
   get penalties() {
@@ -129,23 +130,23 @@ class Node {
         key: this.resumeKey.toString(),
         timeout: this.resumeTimeout,
       });
-      this.manager.emit(
+      this.poru.emit(
         "debug",
         this.name,
         `[Web Socket]  Resuming configured on Lavalink`
       );
     }
 
-    this.manager.emit("nodeConnect", this);
+    this.poru.emit("nodeConnect", this);
     this.isConnected = true;
-    this.manager.emit(
+    this.poru.emit(
       "debug",
       this.name,
       `[Web Socket] Connection ready ${this.url}`
     );
 
     if (config.autoResume) {
-      for (const player of this.manager.players.values()) {
+      for (const player of this.poru.players.values()) {
         if (player.node === this) {
           player.restart();
         }
@@ -161,11 +162,11 @@ class Node {
       this.stats = { ...packet };
       delete this.stats.op;
     }
-    const player = this.manager.players.get(packet.guildId);
+    const player = this.poru.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
-     packet.node = this;
+    packet.node = this;
 
-    this.manager.emit(
+    this.poru.emit(
       "debug",
       this.name,
       `[Web Socket] Lavalink Node Update : ${packet.op}  `
@@ -174,12 +175,11 @@ class Node {
 
   #close(event) {
     this.disconnect();
-    this.manager.emit("nodeDisconnect", this, event);
-    this.manager.emit(
+    this.poru.emit("nodeDisconnect", this, event);
+    this.poru.emit(
       "debug",
       this.name,
-      `[Web Socket] Connection with Lavalink closed with Error code : ${
-        event || "Unknown code"
+      `[Web Socket] Connection with Lavalink closed with Error code : ${event || "Unknown code"
       }`
     );
     if (event !== 1000) this.reconnect();
@@ -188,15 +188,65 @@ class Node {
   #error(event) {
     if (!event) return "Unknown event";
 
-    this.manager.emit(
+    this.poru.emit(
       "debug",
       this.name,
-      `[Web Socket] Connection for Lavalink node has error code: ${
-        event.code || event
+      `[Web Socket] Connection for Lavalink node has error code: ${event.code || event
       }`
     );
-    this.manager.emit("nodeError", this, event);
+    this.poru.emit("nodeError", this, event);
   }
+
+
+  async getRoutePlannerStatus() {
+
+    return await this.makeRequest({
+
+      endpoint: "/routeplanner/status",
+      headers: {
+        Authorization: this.password,
+        "User-Agent": config.clientName,
+      }
+
+    });
+  }
+  async unmarkFailedAddress(address) {
+
+
+    return await this.makeRequest({
+      endpoint: "/routeplanner/free/address",
+      method: "POST",
+      headers: {
+        Authorization: this.password,
+        "User-Agent": config.clientName,
+        'Content-Type': 'application/json',
+
+      },
+      body: { address }
+    });
+
+  }
+  async makeRequest(data) {
+
+    const url = new URL(`${this.url}${data.endpoint}`)
+
+    return await fetch(url.toString(), {
+      method: data.method || "GET",
+      headers: data.headers,
+      ...data?.body ? { body: JSON.stringify(data.body) } : {}
+    })
+      .then((r) => r.json())
+      .catch((e) => {
+        throw new Error(
+          `[Poru Error] Something went worng while trying to make request to ${this.name} node.\n  error: ${e}`
+        );
+      });
+  }
+
+
+
 }
+
+
 
 module.exports = Node;
