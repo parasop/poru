@@ -11,6 +11,7 @@ class Node {
     this.password = options.password || "youshallnotpass";
     this.secure = options.secure || false;
     this.url = `${this.secure ? "wss" : "ws"}://${this.host}:${this.port}/`;
+    this.regions = options?.regions || [];
     this.ws = null;
     this.reconnectTimeout = node.reconnectTimeout || 5000;
     this.reconnectTries = node.reconnectTries || 5;
@@ -227,7 +228,7 @@ class Node {
 
   }
   async makeRequest(data) {
- 
+
     const url = new URL(`http${this.secure ? "s" : ""}://${this.host}:${this.port}${data.endpoint}`)
 
     return await fetch(url.toString(), {

@@ -28,7 +28,7 @@ class Poru extends EventEmitter {
     this.apple = new AppleMusic(this, this.options);
     this.deezer = new Deezer(this, this.options);
     this.sendData = null;
-    
+
   }
 
   init(client) {
@@ -86,6 +86,22 @@ class Poru extends EventEmitter {
       });
   }
 
+
+  getNodeByRegion() {
+    return [...this.nodes.values()]
+      .filter((node) => node.isConnected && node.regions.includes(region.toLowerCase()))
+      .sort((a, b) => {
+        const aLoad = a.stats.cpu
+          ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
+          : 0;
+        const bLoad = b.stats.cpu
+          ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
+          : 0;
+        return aLoad - bLoad;
+      });
+  }
+
+
   getNode(identifier = "best") {
     if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
 
@@ -97,6 +113,7 @@ class Poru extends EventEmitter {
     return node;
   }
 
+
   checkConnection(options) {
     let { guildId, voiceChannel, textChannel, shardId } = options;
     if (!guildId)
@@ -105,7 +122,7 @@ class Poru extends EventEmitter {
       throw new Error(`[Poru Connection] you have to  Provide voiceChannel`);
     if (!textChannel)
       throw new Error(`[Poru Connection] you have to  Provide textChannel`);
-    
+
     if (typeof guildId !== "string")
       throw new Error(`[Poru Connection] guildId must be provided as a string`);
     if (typeof voiceChannel !== "string")
@@ -119,15 +136,22 @@ class Poru extends EventEmitter {
   }
 
   createConnection(options) {
+
     this.checkConnection(options);
     const player = this.players.get(options.guildId);
     if (player) return player;
 
     if (this.leastUsedNodes.length === 0)
       throw new Error("[Poru Error] No nodes are avaliable");
-    const node = this.nodes.get(
-      this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
-    );
+    let node;
+    if (options.region) {
+
+      node = this.getNodeByRegion(options.region)
+    } else {
+      node = this.nodes.get(
+        this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
+      );
+    }
     if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
     return this.#createPlayer(node, options);
@@ -147,16 +171,16 @@ class Poru extends EventEmitter {
     return player;
   }
 
-  
+
   packetUpdate(packet) {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
-    
+
     if (packet.t === "VOICE_SERVER_UPDATE") {
       player.connection.setServersUpdate(packet.d);
     }
-    if(packet.t === "VOICE_STATE_UPDATE"){
+    if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.user) return;
       player.connection.setStateUpdate(packet.d);
     }
