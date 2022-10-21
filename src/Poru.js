@@ -87,7 +87,7 @@ class Poru extends EventEmitter {
   }
 
 
-  getNodeByRegion() {
+  getNodeByRegion(region) {
     return [...this.nodes.values()]
       .filter((node) => node.isConnected && node.regions.includes(region.toLowerCase()))
       .sort((a, b) => {
@@ -146,8 +146,9 @@ class Poru extends EventEmitter {
     let node;
     if (options.region) {
 
-      node = this.getNodeByRegion(options.region)
-    } else {
+     const region = this.getNodeByRegion(options.region)[0];
+       node = this.nodes.get(region.name)
+     } else {
       node = this.nodes.get(
         this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
       );
