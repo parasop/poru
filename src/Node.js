@@ -227,8 +227,8 @@ class Node {
 
   }
   async makeRequest(data) {
-
-    const url = new URL(`${this.url}${data.endpoint}`)
+ 
+    const url = new URL(`http${this.secure ? "s" : ""}://${this.host}:${this.port}${data.endpoint}`)
 
     return await fetch(url.toString(), {
       method: data.method || "GET",
@@ -237,6 +237,7 @@ class Node {
     })
       .then((r) => r.json())
       .catch((e) => {
+        console.log(e)
         throw new Error(
           `[Poru Error] Something went worng while trying to make request to ${this.name} node.\n  error: ${e}`
         );
