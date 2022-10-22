@@ -121,7 +121,7 @@ class Player extends EventEmitter {
  
       volume = Math.min(5, Math.max(0, volume));
       this.filters.volume = volume;
-      this.updateFilters();
+      this.filters.updateFilters();
 
       return this; }
 
