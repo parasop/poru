@@ -6,18 +6,18 @@ export interface PlaylistInfo {
 }
 
 export interface IvoiceServer {
-  token : string;
+  token: string;
   guild_id: string;
-  endpoint : string | null;
+  endpoint: string | null;
 }
 
 export interface ResolveResponse {
   loadType:
-    | "TRACK_LOADED"
-    | "PLAYLIST_LOADED"
-    | "SEARCH_RESULT"
-    | "NO_MATCHES"
-    | "LOAD_FAILED";
+  | "TRACK_LOADED"
+  | "PLAYLIST_LOADED"
+  | "SEARCH_RESULT"
+  | "NO_MATCHES"
+  | "LOAD_FAILED";
   tracks: Track[];
   playlistInfo: PlaylistInfo;
 }
@@ -142,14 +142,14 @@ export interface PoruOptions {
 
 export class voiceConnection {
 
-  constructor (player:Player):this;
+  constructor(player: Player): this;
 
-    player:Player;
-    sessionId: string | null;;
-    region = string | null;
-    muted = boolean | false;
-    deafened = boolean | false;
-    voiceServer = IvoiceServer | null;
+  player: Player;
+  sessionId: string | null;;
+  region = string | null;
+  muted = boolean | false;
+  deafened = boolean | false;
+  voiceServer = IvoiceServer | null;
 
 }
 
@@ -286,10 +286,10 @@ export type LavalinkEvents =
 export interface PlayerOptions {
   guildId: string;
   voiceChannel:
-    | {
-        id: string;
-      }
-    | string;
+  | {
+    id: string;
+  }
+  | string;
   textChannel?: string;
   mute?: boolean;
   deaf?: boolean;
@@ -305,6 +305,7 @@ export class Player extends EventEmitter {
   guildId: string;
   voiceChannel: string;
   textChannel: string;
+  private readonly data = {};
   isConnected: boolean;
   isPlaying: boolean;
   isPaused: boolean;
@@ -320,6 +321,7 @@ export class Player extends EventEmitter {
   stop: () => Player;
   pause: (pause: boolean) => Player;
   seekTo: (position: number) => Promise<Player>;
+  set: (key: string | number, value: any) => String;
   setVolume: (volume: number) => Player;
   setLoop: (mode: PlayerLoopModes) => Player;
   setTextChannel: (channel: string) => Player;

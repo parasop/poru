@@ -22,6 +22,8 @@ class Player extends EventEmitter {
 
     this.textChannel = options.textChannel || null;
 
+    this.data = {};
+
     this.isConnected = false;
 
     this.isPlaying = false;
@@ -115,6 +117,18 @@ class Player extends EventEmitter {
       position,
     });
     return this;
+  }
+
+  set(key, value) {
+    if (!key || !value) throw new RangeError(`Please provide valid parameters, set(key, value)`);
+
+    return this.data[key] = value;
+  }
+
+  get(key) {
+    if (!this.data[key]) return false;
+
+    return this.data[key]
   }
 
   setVolume(volume) {
@@ -260,9 +274,9 @@ class Player extends EventEmitter {
         this.poru.options.defaultPlatform || "ytsearch"
       );
 
-      if (!response ||!response.tracks ||["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
+      if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
 
-      let track =response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
+      let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
       this.queue.push(track);
       this.play();
 
@@ -277,7 +291,7 @@ class Player extends EventEmitter {
   send(data) {
     this.poru.sendData({ op: 4, d: data });
   }
-  
+
 
   lavalinkEvent(data) {
     const events = {
