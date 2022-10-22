@@ -32,8 +32,6 @@ class Player extends EventEmitter {
 
     this.position = 0;
 
-    this.volume = 100;
-
     this.ping = 0;
 
     this.currentTrack = null;
@@ -120,14 +118,12 @@ class Player extends EventEmitter {
   setVolume(volume) {
     if (Number.isNaN(volume))
       throw new RangeError("Volume level must be a number.");
-    this.volume = volume;
-    this.node.send({
-      op: "volume",
-      guildId: this.guildId,
-      volume: this.volume,
-    });
-    return this;
-  }
+ 
+      volume = Math.min(5, Math.max(0, volume));
+      this.filters.volume = volume;
+      this.updateFilters();
+
+      return this; }
 
   setLoop(mode) {
     if (!mode)

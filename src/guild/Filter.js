@@ -4,6 +4,7 @@ class Filters {
     this.bassboost = options.bassboost || null;
     this.player = player;
     this.node = player.node;
+    this.volume = 1.0;
     this.equalizer = options.equalizer || [];
     this.karaoke = options.karaoke || null;
     this.timescale = options.timescale || null;
@@ -169,11 +170,12 @@ class Filters {
       rotation,
       distortion,
       channelMix,
-      lowPass,
+      lowPass,volume
     } = this;
     this.node.send({
       op: "filters",
       guildId: this.player.guildId,
+      volume,
       equalizer,
       karaoke,
       timescale,
