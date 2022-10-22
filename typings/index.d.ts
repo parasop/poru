@@ -305,7 +305,7 @@ export class Player extends EventEmitter {
   guildId: string;
   voiceChannel: string;
   textChannel: string;
-  private readonly data = {};
+  private readonly data;
   isConnected: boolean;
   isPlaying: boolean;
   isPaused: boolean;
@@ -321,7 +321,8 @@ export class Player extends EventEmitter {
   stop: () => Player;
   pause: (pause: boolean) => Player;
   seekTo: (position: number) => Promise<Player>;
-  set: (key: string | number, value: any) => String;
+  set(key: string, value: unknown): void;
+  get<D>(key: string): D;
   setVolume: (volume: number) => Player;
   setLoop: (mode: PlayerLoopModes) => Player;
   setTextChannel: (channel: string) => Player;
