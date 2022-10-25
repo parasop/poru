@@ -147,7 +147,7 @@ class Poru extends EventEmitter {
     if (options.region) {
 
      const region = this.getNodeByRegion(options.region)[0];
-       node = this.nodes.get(region.name)
+       node = this.nodes.get(region.name || this.leastUsedNodes[0].name || this.leastUsedNodes[0].host)
      } else {
       node = this.nodes.get(
         this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
