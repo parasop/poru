@@ -6,18 +6,18 @@ export interface PlaylistInfo {
 }
 
 export interface IvoiceServer {
-  token : string;
+  token: string;
   guild_id: string;
-  endpoint : string | null;
+  endpoint: string | null;
 }
 
 export interface ResolveResponse {
   loadType:
-    | "TRACK_LOADED"
-    | "PLAYLIST_LOADED"
-    | "SEARCH_RESULT"
-    | "NO_MATCHES"
-    | "LOAD_FAILED";
+  | "TRACK_LOADED"
+  | "PLAYLIST_LOADED"
+  | "SEARCH_RESULT"
+  | "NO_MATCHES"
+  | "LOAD_FAILED";
   tracks: Track[];
   playlistInfo: PlaylistInfo;
 }
@@ -67,40 +67,6 @@ export interface FiltersOptions {
   lowPass?: boolean;
 }
 
-export class Filters {
-  constructor(player: Player, options: FiltersOptions): this;
-  _8d: boolean | null;
-  bassboost: number | null;
-  player: Player;
-  node: Node;
-  equalizer: { bands: number; gain: number }[] | null;
-  karaoke: boolean | null;
-  timescale: boolean | null;
-  tremolo: boolean | null;
-  vibrato: boolean | null;
-  rotation: boolean | null;
-  distortion: boolean | null;
-  channelMix: boolean | null;
-  lowPass: boolean | null;
-
-  setEqualizer: (bands: number, gain: number) => void;
-  setKaraoke: (value: boolean) => Filters;
-  setTimescale: (value: boolean) => Filters;
-  setTremolo: (value: boolean) => Filters;
-  setVibrato: (value: boolean) => Filters;
-  setRotation: (value: boolean) => Filters;
-  setDistortion: (value: boolean) => Filters;
-  setChannelMix: (value: boolean) => Filters;
-  setLowPass: (value: boolean) => Filters;
-  setFilters: (options: any) => Filters;
-  clearFilters: () => Filters;
-  setNightcore: (value: boolean) => boolean;
-  setSlowmode: (value: boolean) => void;
-  setVaporwave: (value: boolean) => void;
-  set8D: (value: boolean) => void;
-  setBassboost: (value: number) => void;
-  updateFilters: () => void;
-}
 
 export interface NodeStats {
   players: number;
@@ -128,11 +94,12 @@ export interface NodeOptions {
 }
 
 export interface PoruOptions {
+  defaultPlatform?: string;
+  library?: string,
   reconnectTimeout?: number;
   reconnectTries?: number;
   resumeKey?: string;
   resumeTimeout?: number;
-  defaultPlatform?: string;
   playlistLimit?: number;
   albumLimit?: number;
   artistLimit?: number;
@@ -142,14 +109,14 @@ export interface PoruOptions {
 
 export class voiceConnection {
 
-  constructor (player:Player):this;
+  constructor(player: Player): this;
 
-    player:Player;
-    sessionId: string | null;;
-    region = string | null;
-    muted = boolean | false;
-    deafened = boolean | false;
-    voiceServer = IvoiceServer | null;
+  player: Player;
+  sessionId: string | null;;
+  region = string | null;
+  muted = boolean | false;
+  deafened = boolean | false;
+  voiceServer = IvoiceServer | null;
 
 }
 
@@ -286,10 +253,10 @@ export type LavalinkEvents =
 export interface PlayerOptions {
   guildId: string;
   voiceChannel:
-    | {
-        id: string;
-      }
-    | string;
+  | {
+    id: string;
+  }
+  | string;
   textChannel?: string;
   mute?: boolean;
   deaf?: boolean;
@@ -311,7 +278,6 @@ export class Player extends EventEmitter {
   loop: PlayerLoopModes;
   position: number;
   ping: number;
-  volume: number;
   currentTrack: Track | null;
   previousTracks: Track;
   connection: voiceConnection
@@ -337,4 +303,41 @@ export class Player extends EventEmitter {
   autoplay: (option: boolean) => void;
   send: (payload: any) => void;
   lavalinkEvent: (data: LavalinkEvents) => void;
+}
+
+
+export class Filters {
+  constructor(player: Player, options: FiltersOptions): this;
+  _8d: boolean | null;
+  volume: number;
+  bassboost: number | null;
+  player: Player;
+  node: Node;
+  equalizer: { bands: number; gain: number }[] | null;
+  karaoke: boolean | null;
+  timescale: boolean | null;
+  tremolo: boolean | null;
+  vibrato: boolean | null;
+  rotation: boolean | null;
+  distortion: boolean | null;
+  channelMix: boolean | null;
+  lowPass: boolean | null;
+
+  setEqualizer: (bands: number, gain: number) => void;
+  setKaraoke: (value: boolean) => Filters;
+  setTimescale: (value: boolean) => Filters;
+  setTremolo: (value: boolean) => Filters;
+  setVibrato: (value: boolean) => Filters;
+  setRotation: (value: boolean) => Filters;
+  setDistortion: (value: boolean) => Filters;
+  setChannelMix: (value: boolean) => Filters;
+  setLowPass: (value: boolean) => Filters;
+  setFilters: (options: any) => Filters;
+  clearFilters: () => Filters;
+  setNightcore: (value: boolean) => boolean;
+  setSlowmode: (value: boolean) => void;
+  setVaporwave: (value: boolean) => void;
+  set8D: (value: boolean) => void;
+  setBassboost: (value: number) => void;
+  updateFilters: () => void;
 }

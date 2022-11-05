@@ -32,20 +32,49 @@ class Poru extends EventEmitter {
   }
 
   init(client) {
-    if (this.isReady) return this;
-
+    if (this.isActive) return this;
     this.user = client.user.id;
     this.apple.requestToken();
+if(!this.options.libraries) this.options.libraries = "discord.js";
+
+    if(config.libraries.discordjs.includes(this.options.library)){
     this.sendData = (data) => {
       const guild = client.guilds.cache.get(data.d.guild_id);
-      if (guild) guild.shard.send(data);
+      if (guild) guild.shard?.send(data);
     };
 
-    client.on("raw", async (packet) => {
+    client.on("rawWS", async (packet) => {
       await this.packetUpdate(packet);
     });
 
-    this._nodes.forEach((node) => this.addNode(node));
+}else if(config.libraries.eris.includes(this.options.library)){
+
+  this.sendData = (data) => {
+    const guild = client.guilds.get(data.d.guild_id);
+    if (guild) guild.shard.send(data);
+  };
+
+  client.on("raw", async (packet) => {
+    await this.packetUpdate(packet);
+  });
+  
+}else if(config.libraries.oceanic.includes(this.options.library)){
+
+  this.sendData = (data) => {
+    const guild = client.guilds.get(data.d.guild_id);
+    if (guild) guild.shard.send(data);
+  };
+
+  client.on("packet", async (packet) => {
+    await this.packetUpdate(packet);
+  });
+
+
+}
+
+
+
+this._nodes.forEach((node) => this.addNode(node));
     this.isActive = true;
   }
 

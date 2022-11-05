@@ -16,10 +16,15 @@ module.exports = {
     VOICE_UPDATE: "voiceUpdate",
     VOLUME: "volume",
   },
-  
-  Error:{
-    sessionEndpoint:"[Poru Connection] Session endpoint missing. \n Kindly double check your client intents",
-    noSessionID : "[Poru Connection] Session ID missing."
+  libraries: {
+    eris: ["eris", "ERIS", "eris.js", "ERIS.JS"],
+    discordjs: ["discord.js", "DISCORD.JS", "djs", "discordjs", "DISCORDJS"],
+    oceanic:['Oceanic',"oceanic","oceanic.js","Oceanic,js","OCEANIC","OCEANIC.JS"]
+  },
+
+  Error: {
+    sessionEndpoint: "[Poru Connection] Session endpoint missing. \n Kindly double check your client intents",
+    noSessionID: "[Poru Connection] Session ID missing."
 
 
   }
