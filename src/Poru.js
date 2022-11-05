@@ -35,7 +35,7 @@ class Poru extends EventEmitter {
     if (this.isActive) return this;
     this.user = client.user.id;
     this.apple.requestToken();
-if(!this.options.libraries) this.options.libraries = "discord.js";
+if(!this.options.library) this.options.library = "discord.js";
 
     if(config.libraries.discordjs.includes(this.options.library)){
     this.sendData = (data) => {
