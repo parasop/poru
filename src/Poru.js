@@ -51,7 +51,7 @@ if(!this.options.library) this.options.library = "discord.js";
 
   this.sendData = (data) => {
     const guild = client.guilds.get(data.d.guild_id);
-    if (guild) guild.shard.sendWS(data);
+    if (guild) guild.shard.sendWS(data?.op,data?.d);
   };
 
   client.on("rawWS", async (packet) => {
