@@ -43,7 +43,7 @@ if(!this.options.library) this.options.library = "discord.js";
       if (guild) guild.shard?.send(data);
     };
 
-    client.on("rawWS", async (packet) => {
+    client.on("raw", async (packet) => {
       await this.packetUpdate(packet);
     });
 
@@ -54,7 +54,7 @@ if(!this.options.library) this.options.library = "discord.js";
     if (guild) guild.shard.send(data);
   };
 
-  client.on("raw", async (packet) => {
+  client.on("rawWS", async (packet) => {
     await this.packetUpdate(packet);
   });
   
