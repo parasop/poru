@@ -51,6 +51,7 @@ export class Queue extends Array<Track> {
 }
 
 export interface FiltersOptions {
+   volume: number;
   _8d?: boolean;
   bassboost?: number;
   equalizer?: {
