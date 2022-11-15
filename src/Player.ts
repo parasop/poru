@@ -1,16 +1,22 @@
- export class Player {
+import { Poru } from "./Poru";
+import { Node } from "./Node";
+export class Player {
+  emit(op: any, packet: any) {
+    throw new Error("Method not implemented.");
+  }
 
-    public connection : Map<string, this>;
-  
-    constructor(){
+  public connection: Map<string, this>;
 
+  public poru: Poru;
+  public node: Node;
 
-        this.connection = new Map();
-    }
+  constructor(poru, node, options) {
+    this.poru = poru;
+    this.node = node;
+    this.connection = new Map();
+  }
 
-
-
-    public destroy(){
-        
-    }
- }
+  public restart() {}
+  public destroy() {}
+  public move() {}
+}

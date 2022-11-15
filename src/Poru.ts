@@ -7,17 +7,19 @@ export interface NodeGroup {
   name: string;
   host: string;
   port: number;
+  password: string;
   secure?: boolean;
   region?: any;
 }
 
 export interface PoruOptions {
+  autoResume: boolean;
   library: string;
   defaultPlatform: string;
-  resumeKey? : string;
-  resumeTimeout? : number
-  reconnectTimeout? : number | null;
-  reconnectTries? : number | null;
+  resumeKey?: string;
+  resumeTimeout?: number;
+  reconnectTimeout?: number | null;
+  reconnectTries?: number | null;
 }
 
 export class Poru extends EventEmitter {
@@ -86,10 +88,11 @@ export class Poru extends EventEmitter {
   }
 
   private packetUpdate(packet: any) {
-    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t)) return;
+    if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
+      return;
     const player = this.players.get(packet.d.guild_id);
     if (!player) return;
-    
+
     if (packet.t === "VOICE_SERVER_UPDATE") {
       //  player.connection.setServersUpdate(packet.d);
     }
@@ -109,7 +112,7 @@ export class Poru extends EventEmitter {
   public removeNode(identifier: string) {
     const node = this.nodes.get(identifier);
     if (!node) return;
-    node.destroy();
+    node.disconnect();
     this.nodes.delete(identifier);
   }
 
