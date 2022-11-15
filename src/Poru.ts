@@ -14,6 +14,10 @@ export interface NodeGroup {
 export interface PoruOptions {
   library: string;
   defaultPlatform: string;
+  resumeKey? : string;
+  resumeTimeout? : number
+  reconnectTimeout? : number | null;
+  reconnectTries? : number | null;
 }
 
 export class Poru extends EventEmitter {
