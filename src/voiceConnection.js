@@ -17,7 +17,7 @@ class voiceConnection {
     setServersUpdate(data){
        
         if(!data.endpoint){
-             this.player.poru.emit(`error`,player,Error.sessionEndpoint) 
+             this.player.poru.emit(`error`,Error.sessionEndpoint) 
              return;
         }
 
