@@ -35,46 +35,46 @@ class Poru extends EventEmitter {
     if (this.isActive) return this;
     this.user = client.user.id;
     this.apple.requestToken();
-if(!this.options.library) this.options.library = "discord.js";
+    if (!this.options.library) this.options.library = "discord.js";
 
-    if(config.libraries.discordjs.includes(this.options.library)){
-    this.sendData = (data) => {
-      const guild = client.guilds.cache.get(data.d.guild_id);
-      if (guild) guild.shard?.send(data);
-    };
+    if (config.libraries.discordjs.includes(this.options.library)) {
+      this.sendData = (data) => {
+        const guild = client.guilds.cache.get(data.d.guild_id);
+        if (guild) guild.shard?.send(data);
+      };
 
-    client.on("raw", async (packet) => {
-      await this.packetUpdate(packet);
-    });
+      client.on("raw", async (packet) => {
+        await this.packetUpdate(packet);
+      });
 
-}else if(config.libraries.eris.includes(this.options.library)){
+    } else if (config.libraries.eris.includes(this.options.library)) {
 
-  this.sendData = (data) => {
-    const guild = client.guilds.get(data.d.guild_id);
-    if (guild) guild.shard.sendWS(data?.op,data?.d);
-  };
+      this.sendData = (data) => {
+        const guild = client.guilds.get(data.d.guild_id);
+        if (guild) guild.shard.sendWS(data?.op, data?.d);
+      };
 
-  client.on("rawWS", async (packet) => {
-    await this.packetUpdate(packet);
-  });
-  
-}else if(config.libraries.oceanic.includes(this.options.library)){
+      client.on("rawWS", async (packet) => {
+        await this.packetUpdate(packet);
+      });
 
-  this.sendData = (data) => {
-    const guild = client.guilds.get(data.d.guild_id);
-    if (guild) guild.shard.send(data);
-  };
+    } else if (config.libraries.oceanic.includes(this.options.library)) {
 
-  client.on("packet", async (packet) => {
-    await this.packetUpdate(packet);
-  });
+      this.sendData = (data) => {
+        const guild = client.guilds.get(data.d.guild_id);
+        if (guild) guild.shard.send(data);
+      };
 
-
-}
+      client.on("packet", async (packet) => {
+        await this.packetUpdate(packet);
+      });
 
 
+    }
 
-this._nodes.forEach((node) => this.addNode(node));
+
+
+    this._nodes.forEach((node) => this.addNode(node));
     this.isActive = true;
   }
 
@@ -104,30 +104,14 @@ this._nodes.forEach((node) => this.addNode(node));
   get leastUsedNodes() {
     return [...this.nodes.values()]
       .filter((node) => node.isConnected)
-      .sort((a, b) => {
-        const aLoad = a.stats.cpu
-          ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
-          : 0;
-        const bLoad = b.stats.cpu
-          ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
-          : 0;
-        return aLoad - bLoad;
-      });
+      .sort((a, b) => a.penalties - b.penalties)
   }
 
 
   getNodeByRegion(region) {
     return [...this.nodes.values()]
       .filter((node) => node.isConnected && node.regions.includes(region.toLowerCase()))
-      .sort((a, b) => {
-        const aLoad = a.stats.cpu
-          ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
-          : 0;
-        const bLoad = b.stats.cpu
-          ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
-          : 0;
-        return aLoad - bLoad;
-      });
+      .sort((a, b) => a.penalties - b.penalties)
   }
 
 
@@ -175,9 +159,9 @@ this._nodes.forEach((node) => this.addNode(node));
     let node;
     if (options.region) {
 
-     const region = this.getNodeByRegion(options.region)[0];
-       node = this.nodes.get(region.name || this.leastUsedNodes[0].name || this.leastUsedNodes[0].host)
-     } else {
+      const region = this.getNodeByRegion(options.region)[0];
+      node = this.nodes.get(region.name || this.leastUsedNodes[0].name || this.leastUsedNodes[0].host)
+    } else {
       node = this.nodes.get(
         this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
       );
