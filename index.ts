@@ -1,1 +1,1 @@
-export * as Poru from './src/Poru'
+export * from './src/Poru'

@@ -2,7 +2,8 @@ import { Node } from "./Node";
 import { Player } from "./Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
-
+import { fetch } from "undici";
+import { Response } from "./guild/Response";
 export interface NodeGroup {
   name: string;
   host: string;
@@ -12,7 +13,7 @@ export interface NodeGroup {
   region?: any;
 }
 
-export interface PoruOptions {
+export interface PoruOptions {  
   autoResume: boolean;
   library: string;
   defaultPlatform: string;
@@ -22,7 +23,14 @@ export interface PoruOptions {
   reconnectTries?: number | null;
 }
 
+export interface PlayerOptions {
+
+}
+
 export class Poru extends EventEmitter {
+    emit(arg0: string, name: string, arg2: string) {
+        throw new Error("Method not implemented.");
+    }
   public readonly client: any;
   public readonly _nodes: NodeGroup[];
 
@@ -63,6 +71,7 @@ export class Poru extends EventEmitter {
         client.on("raw", async (packet: any) => {
           await this.packetUpdate(packet);
         });
+        break;
       }
       case "eris": {
         this.send = (packet: any) => {
@@ -73,6 +82,7 @@ export class Poru extends EventEmitter {
         client.on("rawWS", async (packet: any) => {
           await this.packetUpdate(packet);
         });
+        break;
       }
       case "oceanic": {
         this.send = (packet: any) => {
@@ -83,6 +93,7 @@ export class Poru extends EventEmitter {
         client.on("packet", async (packet: any) => {
           await this.packetUpdate(packet);
         });
+        break;
       }
     }
   }
@@ -116,9 +127,12 @@ export class Poru extends EventEmitter {
     this.nodes.delete(identifier);
   }
 
-  /*public getNodeByRegion(region) {
+  public getNodeByRegion(region) {
     return [...this.nodes.values()]
-      .filter((node) => node.isConnected && node.regions.includes(region.toLowerCase()))
+      .filter(
+        (node) =>
+          node.isConnected && node.regions.includes(region.toLowerCase())
+      )
       .sort((a, b) => {
         const aLoad = a.stats.cpu
           ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
@@ -129,7 +143,6 @@ export class Poru extends EventEmitter {
         return aLoad - bLoad;
       });
   }
-*/
 
   getNode(identifier: string = "auto") {
     if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
@@ -142,9 +155,7 @@ export class Poru extends EventEmitter {
     return node;
   }
 
-  /*
-public createConnection(options) {
-
+  public createConnection(options) {
     const player = this.players.get(options.guildId);
     if (player) return player;
 
@@ -152,40 +163,108 @@ public createConnection(options) {
       throw new Error("[Poru Error] No nodes are avaliable");
     let node;
     if (options.region) {
-
-     const region = this.getNodeByRegion(options.region)[0];
-       node = this.nodes.get(region.name || this.leastUsedNodes[0].name || this.leastUsedNodes[0].host)
-     } else {
+      const region = this.getNodeByRegion(options.region)[0];
       node = this.nodes.get(
-        this.leastUsedNodes[0].name || this.leastUsedNodes[0].host
-      );
+        region.name ||
+          this.leastUsedNodes[0].name);
+    } else {
+      node = this.nodes.get(
+        this.leastUsedNodes[0].name);
     }
     if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
-    return this.#createPlayer(node, options);
+    return this.createPlayer(node, options);
   }
-
-*/
+  private createPlayer(node, options) {
+    const player = new Player(this, node, options);
+    this.players.set(options.guildId, player);
+    player.connect(options);
+    return player;
+  
+  
+  }
 
   public removeConnection(guildId) {
     this.players.get(guildId)?.destroy();
   }
 
-  /*
-get leastUsedNodes() {
+  get leastUsedNodes() {
     return [...this.nodes.values()]
       .filter((node) => node.isConnected)
-      .sort((a, b) => {
-        const aLoad = a.stats.cpu
-          ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
-          : 0;
-        const bLoad = b.stats.cpu
-          ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
-          : 0;
-        return aLoad - bLoad;
-      });
+      .sort((a, b) => a.penalties - b.penalties);
   }
 
+
+
+
+async resolve(query, source) {
+  const node = this.leastUsedNodes[0];
+  if (!node) throw new Error("No nodes are available.");
+  const regex = /^https?:\/\//;
+
+  if (regex.test(query)) {
+    return this.fetchURL(node, query);
+  } else {
+    return this.fetchTrack(node, query, source);
+  }
 }
-*/
+
+
+
+async fetchURL(node, track) {
+    const result = await this.#fetch(
+      node,
+      "loadtracks",
+      `identifier=${encodeURIComponent(track)}`
+    );
+    if (!result) throw new Error("[Poru Error] No tracks found.");
+    return new Response(result);
+  
 }
+
+async fetchTrack(node, query, source) {
+      let track = `${source || "ytsearch"}:${query}`;
+      const result = await this.#fetch(
+        node,
+        "loadtracks",
+        `identifier=${encodeURIComponent(track)}`
+      );
+      if (!result) throw new Error("[Poru Error] No tracks found.");
+      return new Response(result);
+  
+}
+
+
+#fetch(node, endpoint, param) {
+  return fetch(
+    `http${node.secure ? "s" : ""}://${node.host}:${node.port
+    }/${endpoint}?${param}`,
+    {
+      headers: {
+        Authorization: node.password,
+      },
+    }
+  )
+    .then((r) => r.json())
+    .catch((e) => {
+      throw new Error(
+        `[Poru Error] Failed to fetch from the lavalink.\n  error: ${e}`
+      );
+    });
+}
+
+get(guildId) {
+  return this.players.get(guildId);
+}
+
+
+
+
+
+
+
+
+
+}
+
+

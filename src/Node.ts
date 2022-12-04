@@ -2,6 +2,7 @@ import { Poru, PoruOptions, NodeGroup } from "./Poru";
 import WebSocket from "ws";
 import { fetch } from "undici";
 import { Config as config } from "./config";
+import { Rest } from "./Rest";
 
 export interface NodeStats {
   players: number;
@@ -27,12 +28,14 @@ export interface NodeStats {
 
 export class Node {
   public isConnected: boolean;
-  public readonly poru: Poru;
+  public poru: Poru;
   public readonly name: string;
   public readonly url: string;
-  private password: string;
+  public password: string;
   public readonly secure: boolean;
   public readonly regions: Array<string>;
+  public readonly sessionId: string;
+  public rest: Rest;
   public ws: WebSocket | null;
   public readonly resumeKey: string | null;
   public readonly resumeTimeout: number;
@@ -42,14 +45,18 @@ export class Node {
   public reconnectAttempt: any;
   public attempt: number;
   public stats: NodeStats | null;
+  public options:NodeGroup;
 
   constructor(poru: Poru, node: NodeGroup, options: PoruOptions) {
     this.poru = poru;
     this.name = node.name;
+    this.options = node;
     this.url = `${node.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
     this.password = node.password || "youshallnotpass";
     this.secure = node.secure || false;
     this.regions = node.region || null;
+    this.sessionId = null;
+    this.rest = new Rest(poru,this);
     this.ws = null;
     this.resumeKey = options.resumeKey || null;
     this.resumeTimeout = options.resumeTimeout || 60;
@@ -130,7 +137,6 @@ export class Node {
     return penalties;
   }
 
-  
   private open() {
     if (this.reconnectAttempt) {
       clearTimeout(this.reconnectAttempt);
@@ -166,13 +172,23 @@ export class Node {
       }
     }
   }
-  private message(payload: any): void {
+
+  private setStats(packet: NodeStats) {
+    this.stats = packet;
+  }
+
+  private async message(payload: any) {
     const packet = JSON.parse(payload);
     if (!packet?.op) return;
 
     if (packet.op === "stats") {
-      this.stats = { ...packet };
+      delete packet.op;
+      this.setStats(packet);
     }
+    if (packet.op === "ready") {
+      this.rest.setSessionId(packet.sessionId)
+    }
+    //  console.log(packet)
     const player = this.poru.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
     packet.node = this;
