@@ -50,9 +50,8 @@ class Poru extends EventEmitter {
     } else if (config.libraries.eris.includes(this.options.library)) {
 
       this.sendData = (data) => {
-        console.log(JSON.stringify(data));
         const guild = client.guilds.get(data.d.guild_id);
-        if (guild) guild.shard.ws.send(data?.op, data?.d);
+        if (guild) guild.shard.ws.send(JSON.stringify({ op: data?.op, d: data?.d}));
       };
 
       client.on("rawWS", async (packet) => {
