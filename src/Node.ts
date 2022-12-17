@@ -30,7 +30,8 @@ export class Node {
   public isConnected: boolean;
   public poru: Poru;
   public readonly name: string;
-  public readonly url: string;
+  public readonly restURL: string;
+  public readonly socketURL: string;
   public password: string;
   public readonly secure: boolean;
   public readonly regions: Array<string>;
@@ -45,18 +46,19 @@ export class Node {
   public reconnectAttempt: any;
   public attempt: number;
   public stats: NodeStats | null;
-  public options:NodeGroup;
+  public options: NodeGroup;
 
   constructor(poru: Poru, node: NodeGroup, options: PoruOptions) {
     this.poru = poru;
     this.name = node.name;
     this.options = node;
-    this.url = `${node.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
+    this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
+    this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
     this.password = node.password || "youshallnotpass";
     this.secure = node.secure || false;
     this.regions = node.region || null;
     this.sessionId = null;
-    this.rest = new Rest(poru,this);
+    this.rest = new Rest(poru, this);
     this.ws = null;
     this.resumeKey = options.resumeKey || null;
     this.resumeTimeout = options.resumeTimeout || 60;
@@ -77,7 +79,7 @@ export class Node {
       "Client-Name": config.clientName,
     };
     if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
-    this.ws = new WebSocket(this.url, { headers });
+    this.ws = new WebSocket(this.socketURL, { headers });
     this.ws.on("open", this.open.bind(this));
     this.ws.on("error", this.error.bind(this));
     this.ws.on("message", this.message.bind(this));
@@ -161,7 +163,7 @@ export class Node {
     this.poru.emit(
       "debug",
       this.name,
-      `[Web Socket] Connection ready ${this.url}`
+      `[Web Socket] Connection ready ${this.socketURL}`
     );
 
     if (this.autoResume) {
@@ -186,13 +188,11 @@ export class Node {
       this.setStats(packet);
     }
     if (packet.op === "ready") {
-      this.rest.setSessionId(packet.sessionId)
+      this.rest.setSessionId(packet.sessionId);
     }
-    //  console.log(packet)
     const player = this.poru.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
-    packet.node = this;
-
+   
     this.poru.emit(
       "debug",
       this.name,
@@ -249,7 +249,7 @@ export class Node {
   }
   private async makeRequest(data) {
     const url = new URL(
-      `http${this.secure ? "s" : ""}://${this.url}${data.endpoint}`
+      `http${this.secure ? "s" : ""}://${this.restURL}${data.endpoint}`
     );
 
     return await fetch(url.toString(), {

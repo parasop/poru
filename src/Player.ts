@@ -1,15 +1,18 @@
 import { Poru } from "./Poru";
 import { Node } from "./Node";
-import { trackData } from "./guild/Track";
+import { Track, trackData } from "./guild/Track";
 import { Connection } from "./Connection";
+import Queue from "./guild/Queue";
+import { EventEmitter } from "events";
+import { Filters } from "./Filters";
+import { ForkOptions } from "child_process";
 
-export class Player {
-  emit(op: any, packet: any) {
-    throw new Error("Method not implemented.");
-  }
+type Loop = "NONE" | "TRACK" | "QUEUE";
 
+export class Player extends EventEmitter {
   public poru: Poru;
   public node: Node;
+  public queue: Queue;
   public guildId: string;
   public volume: number;
   public isPaused: boolean;
@@ -17,38 +20,66 @@ export class Player {
   public connection: Connection;
   public voiceChannel: string;
   public isConnected: boolean;
+  public isPlaying: boolean;
   public mute: boolean;
   public deaf: boolean;
-  constructor(poru, node, options) {
+  public ping: number;
+  public timestamp: number;
+  public textChannel: string;
+  public currentTrack: Track;
+  public previousTrack: Track;
+  public loop: Loop;
+  public filters :Filters;
+  constructor(poru: Poru, node: Node, options) {
+    super();
     this.poru = poru;
     this.node = node;
-    this.guildId = null;
-    this.voiceChannel = null;
-    this.deaf = options.deaf;
-    this.mute = options.mute;
+    this.queue = new Queue();
     this.connection = new Connection(this);
+    this.guildId = options.guildId;
+    this.filters = new Filters(this);
+    this.voiceChannel = options.voiceChannel;
+    this.textChannel = options.textChannel;
+    this.deaf = options.deaf || false;
+    this.mute = options.mute || false;
     this.volume = 100;
+    this.isPlaying = false;
     this.isPaused = false;
     this.position = 0;
+    this.ping = 0;
+    this.timestamp = null;
     this.isConnected = false;
+    this.loop = "NONE";
+    this.currentTrack = null;
+    this.previousTrack = null;
+
+    this.on("playerUpdate", (packet) => {
+      (this.isConnected = packet.state.connected),
+        (this.position = packet.state.position),
+        (this.ping = packet.state.ping);
+      this.timestamp = packet.state.time;
+    });
+    this.on("event", (data) => this.eventHandler(data));
   }
 
-  public play(track: trackData) {
-    let player = this.node.rest.updatePlayer({
+
+
+  public async play() {
+    if (!this.queue.length) return;
+    this.currentTrack = this.queue.shift();
+    if (!this.currentTrack.track)
+      this.currentTrack = await this.currentTrack.resolve(this.poru);
+    this.isPlaying = true;
+    this.position = 0;
+
+    this.node.rest.updatePlayer({
       guildId: this.guildId,
       data: {
-        encodedTrack: track.track,
-        identifier: track.info.identifier,
-        startTime: 0,
-        endTime: track.info.length,
-        volume: this.volume,
-        position: this.position,
-        paused: this.isPaused,
-        filters: {},
-        voice: this.connection.voiceServer,
+        encodedTrack: this.currentTrack.track,
       },
     });
   }
+
   public connect(options: this = this) {
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send({
@@ -66,9 +97,175 @@ export class Player {
     );
   }
 
+  public stop() {
+    this.position = 0;
+    this.isPlaying = false;
+    this.node.rest.updatePlayer({
+      guildId: this.guildId,
+      data: { encodedTrack: null },
+    });
+
+    return this;
+  }
+
+  public pause(toggle:boolean = true) {
+   
+    this.node.rest.updatePlayer({guildId: this.guildId,data: {paused: toggle}});
+    this.isPlaying = !toggle;
+    this.isPaused = toggle;
+
+    return this;
+  }
+
+  public seekTo(position:number):void {
+
+    if(this.position + position >= this.currentTrack.info.length) position = this.currentTrack.info.length;
+    this.node.rest.updatePlayer({guildId: this.guildId,data: {position}});
+  }
+
+
+ public setVolume(volume :number) {
+   
+    if(volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000")
+    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume}});
+ 
+      return this; 
+    }
+
+
+    public setLoop(mode:Loop) {
+      if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
+  
+      if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
+  
+      switch (mode) {
+        case "NONE": {
+          this.loop = "NONE";
+          break;
+        }
+        case "TRACK": {
+          this.loop = "TRACK";
+          break;
+        }
+        case "QUEUE": {
+          this.loop = "QUEUE";
+          break;
+        }
+        default :
+        {
+          this.loop = "NONE";
+        }
+      }
+  
+      return this;
+    }
+  
+
+    public setTextChannel(channel:string) {
+      this.textChannel = channel;
+      return this;
+    }
+  
+    public setVoiceChannel(channel:string) {
+      this.voiceChannel = channel;
+      return this;
+    }
+
+    public disconnect() {
+      if (!this.voiceChannel) return;
+      this.pause(true);
+      this.isConnected = false;
+      this.send({
+        guild_id: this.guildId,
+        channel_id: null,
+        self_mute: false,
+        self_deaf: false,
+      });
+      this.voiceChannel = null;
+      return this;
+    }
+  
+
+   public destroy() {
+      this.disconnect();
+      this.node.rest.destroyPlayer(this.guildId)
+      this.poru.emit("playerDisconnect", this);
+      this.poru.emit("debug",this.guildId,`[Poru Player] destroyed the player`);
+  
+      this.poru.players.delete(this.guildId);
+    }
+
+
+
+
+
+
+
+
   public restart() {}
-  public destroy() {}
-  public move() {}
+   public move() {}
+
+  public eventHandler(data) {
+    switch (data.type) {
+      case "TrackStartEvent": {
+        this.isPlaying = true;
+        this.poru.emit("playerStart", this, this.currentTrack, data);
+        break;
+      }
+      case "TrackEndEvent": {
+        this.previousTrack = this.currentTrack;
+        if (this.loop === "TRACK") {
+          this.queue.unshift(this.previousTrack);
+          this.poru.emit("playerEnd", this, this.currentTrack);
+          return this.play();
+        } else if (this.currentTrack && this.loop === "QUEUE") {
+          this.queue.push(this.previousTrack);
+          this.poru.emit("playerEnd", this, this.currentTrack, data);
+          return this.play();
+        }
+
+        if (this.queue.length === 0) {
+          this.isPlaying = false;
+          return this.poru.emit("playerDisconnect", this);
+        } else if (this.queue.length > 0) {
+          this.poru.emit("playerEnd", this, this.currentTrack);
+          return this.play();
+        }
+
+        this.isPlaying = false;
+        this.poru.emit("playerDisconnect", this);
+        break;
+      }
+
+      case "TrackStuckEvent": {
+        this.poru.emit("playerError", this, this.currentTrack, data);
+        this.stop();
+        break;
+      }
+      case "TrackExceptionEvent": {
+        this.poru.emit("playerError", this, this.currentTrack, data);
+        this.stop();
+        break;
+      }
+      case " WebSocketClosedEvent": {
+        if ([4015, 4009].includes(data.code)) {
+          this.send({
+            guild_id: data.guildId,
+            channel_id: this.voiceChannel,
+            self_mute: this.mute,
+            self_deaf: this.deaf,
+          });
+        }
+        this.poru.emit("playerClose", this, this.currentTrack, data);
+
+        break;
+      }
+      default:
+        {
+        throw new Error(`An unknown event: ${data}`);
+      }
+    }
+  }
 
   public send(data) {
     this.poru.send({ op: 4, d: data });

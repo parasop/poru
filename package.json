@@ -10,7 +10,7 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     }
-  }, 
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npm run build:esm && npm run build:docs",
@@ -29,8 +29,8 @@
   },
   "homepage": "https://github.com/parasop/poru#readme",
   "dependencies": {
-    "undici": "^5.11.0",
-    "ws": "^8.8.0"
+    "undici": "^5.14.0",
+    "ws": "^8.11.0"
   },
   "engines": {
     "node": ">=16.9.0"

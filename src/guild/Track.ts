@@ -1,5 +1,5 @@
 import { Poru } from "../Poru";
-
+import { LavalinkResponse } from "./Response";
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export interface trackData {
     track :string;
@@ -21,6 +21,7 @@ export interface trackInfo {
     
 }
 
+
 export class Track {
     public track : string;
     public info : trackInfo;
@@ -41,15 +42,13 @@ export class Track {
   }
 
 
- public async resolve(manager:Poru) {
+ public async resolve(poru:Poru) {
     const query = [this.info.author, this.info.title]
       .filter((x) => !!x)
       .join(" - ");
 
-    const result = await manager.resolve(
-      query,
-      manager.options.defaultPlatform || "ytsearch"
-    );
+    const result:any = await poru.resolve(query,
+      poru.options.defaultPlatform || "ytsearch");
     if (!result || !result.tracks.length) return;
 
     if (this.info.author) {

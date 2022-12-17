@@ -5,17 +5,17 @@ import { IVoiceServer } from "./Connection";
 
 export interface playOptions {
   guildId: string;
-data :{  
-encodedTrack: string;
-  identifier: string;
-  startTime: number;
-  endTime: number;
-  volume: number;
-  position: number;
-  paused: Boolean;
-  filters: Object;
-  voice: IVoiceServer;
-}
+  data: {
+    encodedTrack?: string;
+    identifier?: string;
+    startTime?: number;
+    endTime?: number;
+    volume?: number;
+    position?: number;
+    paused?: Boolean;
+    filters?: Object;
+    voice?: any;
+  };
 }
 
 export class Rest {
@@ -37,29 +37,56 @@ export class Rest {
     this.sessionId = sessionId;
   }
 
+  getAllPlayers() {
+    return this.get(`/v3/${this.sessionId}/players`);
+  }
+
   public async updatePlayer(options: playOptions) {
- 
-    let req = await fetch(
-      this.url + `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=true`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: this.password,
-        },
-        body: JSON.stringify(options.data),
-      }
+    return this.patch(
+      this.url +
+        `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
+      options.data
     );
+  }
+
+  public async destroyPlayer(guildId: string) {
+    this.delete(this.url + `/v3/sessions/${this.sessionId}/players/${guildId}`);
+  }
+
+  public async resolveQuery(endpoint){
+
+    return this.get(endpoint)
+
+  }
+
+  public async patch(url: string, options) {
+    let req = await fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: this.password,
+      },
+      body: JSON.stringify(options),
+    });
 
     return await req.json();
   }
 
-  getAllPlayers() {
-    return this.get(`/v3/${this.sessionId}/players`, "GET");
+  public async delete(url: string) {
+    let req = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: this.password,
+      },
+    });
+
+    return await req.json();
   }
 
-  public async get(path: string, method: string) {
+  public async get(path: string) {
     let req = await fetch(this.url + path, {
-      method: method,
+      method: "GET",
       headers: {
         Authorization: this.password,
       },

@@ -28,9 +28,6 @@ export interface PlayerOptions {
 }
 
 export class Poru extends EventEmitter {
-    emit(arg0: string, name: string, arg2: string) {
-        throw new Error("Method not implemented.");
-    }
   public readonly client: any;
   public readonly _nodes: NodeGroup[];
 
@@ -105,11 +102,11 @@ export class Poru extends EventEmitter {
     if (!player) return;
 
     if (packet.t === "VOICE_SERVER_UPDATE") {
-      //  player.connection.setServersUpdate(packet.d);
+        player.connection.setServersUpdate(packet.d);
     }
     if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.userId) return;
-      // player.connection.setStateUpdate(packet.d);
+       player.connection.setStateUpdate(packet.d);
     }
   }
 
@@ -175,6 +172,7 @@ export class Poru extends EventEmitter {
 
     return this.createPlayer(node, options);
   }
+
   private createPlayer(node, options) {
     const player = new Player(this, node, options);
     this.players.set(options.guildId, player);
@@ -203,9 +201,10 @@ async resolve(query, source) {
   const regex = /^https?:\/\//;
 
   if (regex.test(query)) {
-    return this.fetchURL(node, query);
+    return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`)
   } else {
-    return this.fetchTrack(node, query, source);
+    let track = `${source || "ytsearch"}:${query}`;
+    return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`)
   }
 }
 
@@ -226,7 +225,7 @@ async fetchTrack(node, query, source) {
       let track = `${source || "ytsearch"}:${query}`;
       const result = await this.#fetch(
         node,
-        "loadtracks",
+        "v3/loadtracks",
         `identifier=${encodeURIComponent(track)}`
       );
       if (!result) throw new Error("[Poru Error] No tracks found.");
@@ -237,8 +236,7 @@ async fetchTrack(node, query, source) {
 
 #fetch(node, endpoint, param) {
   return fetch(
-    `http${node.secure ? "s" : ""}://${node.host}:${node.port
-    }/${endpoint}?${param}`,
+    `${node.restURL}/${endpoint}?${param}`,
     {
       headers: {
         Authorization: node.password,

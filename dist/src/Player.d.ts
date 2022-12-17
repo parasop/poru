@@ -1,0 +1,48 @@
+/// <reference types="node" />
+import { Poru } from "./Poru";
+import { Node } from "./Node";
+import { Track } from "./guild/Track";
+import { Connection } from "./Connection";
+import Queue from "./guild/Queue";
+import { EventEmitter } from "events";
+import { Filters } from "./Filters";
+declare type Loop = "NONE" | "TRACK" | "QUEUE";
+export declare class Player extends EventEmitter {
+    poru: Poru;
+    node: Node;
+    queue: Queue;
+    guildId: string;
+    volume: number;
+    isPaused: boolean;
+    position: number;
+    connection: Connection;
+    voiceChannel: string;
+    isConnected: boolean;
+    isPlaying: boolean;
+    mute: boolean;
+    deaf: boolean;
+    ping: number;
+    timestamp: number;
+    textChannel: string;
+    currentTrack: Track;
+    previousTrack: Track;
+    loop: Loop;
+    filters: Filters;
+    constructor(poru: Poru, node: Node, options: any);
+    play(): Promise<void>;
+    connect(options?: this): void;
+    stop(): this;
+    pause(toggle?: boolean): this;
+    seekTo(position: number): void;
+    setVolume(volume: number): this;
+    setLoop(mode: Loop): this;
+    setTextChannel(channel: string): this;
+    setVoiceChannel(channel: string): this;
+    disconnect(): this;
+    destroy(): void;
+    restart(): void;
+    move(): void;
+    eventHandler(data: any): boolean | Promise<void>;
+    send(data: any): void;
+}
+export {};
