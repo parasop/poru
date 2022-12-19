@@ -8,6 +8,7 @@ const Connection_1 = require("./Connection");
 const Queue_1 = __importDefault(require("./guild/Queue"));
 const events_1 = require("events");
 const Filters_1 = require("./Filters");
+const Response_1 = require("./guild/Response");
 class Player extends events_1.EventEmitter {
     poru;
     node;
@@ -224,6 +225,18 @@ class Player extends events_1.EventEmitter {
                 {
                     throw new Error(`An unknown event: ${data}`);
                 }
+        }
+    }
+    async resolve({ query, source, requester }) {
+        const regex = /^https?:\/\//;
+        if (regex.test(query)) {
+            let response = await this.node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            return new Response_1.Response(response, requester);
+        }
+        else {
+            let track = `${source || "ytsearch"}:${query}`;
+            let response = await this.node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            return new Response_1.Response(response, requester);
         }
     }
     send(data) {

@@ -1,4 +1,4 @@
-import { Poru } from "./Poru";
+import { Poru, ResolveOptions } from "./Poru";
 import { Node } from "./Node";
 import { Track, trackData } from "./guild/Track";
 import { Connection } from "./Connection";
@@ -6,6 +6,7 @@ import Queue from "./guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { ForkOptions } from "child_process";
+import { Response } from "./guild/Response";
 
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
@@ -269,6 +270,24 @@ export class Player extends EventEmitter {
         {
         throw new Error(`An unknown event: ${data}`);
       }
+    }
+  }
+
+
+ async resolve({ query, source,  requester }: ResolveOptions) {
+    const regex = /^https?:\/\//;
+
+    if (regex.test(query)) {
+      let response = await this.node.rest.get(
+        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+      );
+      return new Response(response, requester);
+    } else {
+      let track = `${source || "ytsearch"}:${query}`;
+      let response = await this.node.rest.get(
+        `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
+      );
+      return new Response(response,requester);
     }
   }
 
