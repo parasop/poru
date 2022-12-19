@@ -48,8 +48,7 @@ export class Track {
     const query = [this.info.author, this.info.title]
       .filter((x) => !!x)
       .join(" - ");
-
-    const result:any = await poru.resolve({query,source:poru.options.defaultPlatform || "ytsearch"});
+    const result:any = await poru.resolve({query,source:poru.options.defaultPlatform || "ytsearch",requester:this.info.requester});
     if (!result || !result.tracks.length) return;
 
     if (this.info.author) {
