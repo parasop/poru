@@ -146,25 +146,14 @@ export class Node {
     }
 
     if (this.resumeKey) {
-      this.send({
-        op: "configureResuming",
-        key: this.resumeKey.toString(),
-        timeout: this.resumeTimeout,
-      });
-      this.poru.emit(
-        "debug",
-        this.name,
-        `[Web Socket]  Resuming configured on Lavalink`
+      this.rest.patch(`/v3/sessions/${this.sessionId}`,{resumingKey:this.resumeKey,timeout:this.resumeTimeout})
+      this.poru.emit("debug",this.name,`[Lavalink Resr\t]  Resuming configured on Lavalink`
       );
     }
 
     this.poru.emit("nodeConnect", this);
     this.isConnected = true;
-    this.poru.emit(
-      "debug",
-      this.name,
-      `[Web Socket] Connection ready ${this.socketURL}`
-    );
+    this.poru.emit("debug",this.name,`[Web Socket] Connection ready ${this.socketURL}`);
 
     if (this.autoResume) {
       for (const player of this.poru.players.values()) {
@@ -193,8 +182,7 @@ export class Node {
     const player = this.poru.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
    
-    this.poru.emit(
-      "debug",
+    this.poru.emit("debug",
       this.name,
       `[Web Socket] Lavalink Node Update : ${packet.op}  `
     );
@@ -226,42 +214,12 @@ export class Node {
   }
 
   public async getRoutePlannerStatus(): Promise<any> {
-    return await this.makeRequest({
-      endpoint: "/routeplanner/status",
-      headers: {
-        Authorization: this.password,
-        "User-Agent": config.clientName,
-      },
-    });
+    return this.rest.get(` /v3/routeplanner/status`)
   }
 
   public async unmarkFailedAddress(address: string): Promise<any> {
-    return await this.makeRequest({
-      endpoint: "/routeplanner/free/address",
-      method: "POST",
-      headers: {
-        Authorization: this.password,
-        "User-Agent": config.clientName,
-        "Content-Type": "application/json",
-      },
-      body: { address },
-    });
+    return this.rest.post(`${this.restURL}/v3/routeplanner/free/address`,{address})
+  
   }
-  private async makeRequest(data) {
-    const url = new URL(
-      `http${this.secure ? "s" : ""}://${this.restURL}${data.endpoint}`
-    );
-
-    return await fetch(url.toString(), {
-      method: data.method || "GET",
-      headers: data.headers,
-      ...(data?.body ? { body: JSON.stringify(data.body) } : {}),
-    })
-      .then((r) => r.json())
-      .catch((e) => {
-        throw new Error(
-          `[Poru Error] Something went worng while trying to make request to ${this.name} node.\n  error: ${e}`
-        );
-      });
-  }
+  
 }

@@ -5,8 +5,8 @@ const Node_1 = require("./Node");
 const Player_1 = require("./Player");
 const events_1 = require("events");
 const config_1 = require("./config");
-const undici_1 = require("undici");
 const Response_1 = require("./guild/Response");
+const Plugin_1 = require("./Plugin");
 class Poru extends events_1.EventEmitter {
     client;
     _nodes;
@@ -35,6 +35,13 @@ class Poru extends events_1.EventEmitter {
         this.userId = client.user.id;
         this._nodes.forEach((node) => this.addNode(node));
         this.isActivated = true;
+        if (this.options.plugins) {
+            this.options.plugins.forEach(plugin => {
+                if (!(plugin instanceof Plugin_1.Plugin))
+                    throw new RangeError(`Some of your Plugin does not extend Poru's Plugin.`);
+                plugin.load(this);
+            });
+        }
         switch (this.options.library) {
             case "discord.js": {
                 this.send = (packet) => {
@@ -115,7 +122,8 @@ class Poru extends events_1.EventEmitter {
     getNode(identifier = "auto") {
         if (!this.nodes.size)
             throw new Error(`No nodes avaliable currently`);
-        //  if (identifier === "auto") return this.leastUsedNodes;
+        if (identifier === "auto")
+            return this.leastUsedNodes;
         const node = this.nodes.get(identifier);
         if (!node)
             throw new Error("The node identifier you provided is not found");
@@ -132,8 +140,7 @@ class Poru extends events_1.EventEmitter {
         let node;
         if (options.region) {
             const region = this.getNodeByRegion(options.region)[0];
-            node = this.nodes.get(region.name ||
-                this.leastUsedNodes[0].name);
+            node = this.nodes.get(region.name || this.leastUsedNodes[0].name);
         }
         else {
             node = this.nodes.get(this.leastUsedNodes[0].name);
@@ -156,43 +163,46 @@ class Poru extends events_1.EventEmitter {
             .filter((node) => node.isConnected)
             .sort((a, b) => a.penalties - b.penalties);
     }
-    async resolve(query, source) {
-        const node = this.leastUsedNodes[0];
+    async resolve({ query, source, requester }, node) {
+        if (!node)
+            node = this.leastUsedNodes[0];
         if (!node)
             throw new Error("No nodes are available.");
         const regex = /^https?:\/\//;
         if (regex.test(query)) {
-            return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            return new Response_1.Response(response, requester);
         }
         else {
             let track = `${source || "ytsearch"}:${query}`;
-            return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            return new Response_1.Response(response, requester);
         }
     }
-    async fetchURL(node, track) {
-        const result = await this.#fetch(node, "loadtracks", `identifier=${encodeURIComponent(track)}`);
-        if (!result)
-            throw new Error("[Poru Error] No tracks found.");
-        return new Response_1.Response(result);
+    async decodeTrack(track, node) {
+        if (!node)
+            node = this.leastUsedNodes[0];
+        return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
     }
-    async fetchTrack(node, query, source) {
-        let track = `${source || "ytsearch"}:${query}`;
-        const result = await this.#fetch(node, "v3/loadtracks", `identifier=${encodeURIComponent(track)}`);
-        if (!result)
-            throw new Error("[Poru Error] No tracks found.");
-        return new Response_1.Response(result);
+    async decodeTracks(tracks, node) {
+        return await node.rest.post(`/v3/decodetracks`, tracks);
     }
-    #fetch(node, endpoint, param) {
-        return (0, undici_1.fetch)(`${node.restURL}/${endpoint}?${param}`, {
-            headers: {
-                Authorization: node.password,
-            },
-        })
-            .then((r) => r.json())
-            .catch((e) => {
-            throw new Error(`[Poru Error] Failed to fetch from the lavalink.\n  error: ${e}`);
-        });
+    async getLavalinkInfo(name) {
+        let node = this.nodes.get(name);
+        return await node.rest.get(`/v3/info`);
     }
+    async getLavalinkStatus(name) {
+        let node = this.nodes.get(name);
+        return await node.rest.get(`/v3/stats`);
+    }
+    /* Temp removed
+  
+  async getLavalinkVersion(name:string){
+    let node = this.nodes.get(name)
+    return await node.rest.get(`/version`)
+  
+  }
+  */
     get(guildId) {
         return this.players.get(guildId);
     }

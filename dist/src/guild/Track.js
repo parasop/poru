@@ -5,7 +5,7 @@ const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 class Track {
     track;
     info;
-    constructor(data) {
+    constructor(data, requester) {
         this.track = data.track;
         this.info = {
             identifier: data.info.identifier,
@@ -16,14 +16,15 @@ class Track {
             sourceName: data.info.sourceName,
             title: data.info.title,
             uri: data.info.uri,
-            image: `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
+            image: data.info.image || `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
+            requester
         };
     }
     async resolve(poru) {
         const query = [this.info.author, this.info.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result = await poru.resolve(query, poru.options.defaultPlatform || "ytsearch");
+        const result = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch" });
         if (!result || !result.tracks.length)
             return;
         if (this.info.author) {

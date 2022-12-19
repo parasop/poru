@@ -24,8 +24,8 @@ export declare class Rest {
     getAllPlayers(): Promise<unknown>;
     updatePlayer(options: playOptions): Promise<unknown>;
     destroyPlayer(guildId: string): Promise<void>;
-    resolveQuery(endpoint: any): Promise<unknown>;
-    patch(url: string, options: any): Promise<unknown>;
-    delete(url: string): Promise<unknown>;
     get(path: string): Promise<unknown>;
+    patch(endpoint: string, options: any): Promise<unknown>;
+    post(endpoint: string, options: any): Promise<unknown>;
+    delete(endpoint: string): Promise<unknown>;
 }

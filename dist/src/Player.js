@@ -11,24 +11,24 @@ const Filters_1 = require("./Filters");
 class Player extends events_1.EventEmitter {
     poru;
     node;
-    queue;
-    guildId;
-    volume;
-    isPaused;
-    position;
     connection;
+    queue;
+    filters;
+    guildId;
     voiceChannel;
-    isConnected;
-    isPlaying;
-    mute;
-    deaf;
-    ping;
-    timestamp;
     textChannel;
     currentTrack;
     previousTrack;
+    isPlaying;
+    isPaused;
+    isConnected;
     loop;
-    filters;
+    position;
+    ping;
+    timestamp;
+    mute;
+    deaf;
+    volume;
     constructor(poru, node, options) {
         super();
         this.poru = poru;
@@ -39,6 +39,8 @@ class Player extends events_1.EventEmitter {
         this.filters = new Filters_1.Filters(this);
         this.voiceChannel = options.voiceChannel;
         this.textChannel = options.textChannel;
+        this.currentTrack = null;
+        this.previousTrack = null;
         this.deaf = options.deaf || false;
         this.mute = options.mute || false;
         this.volume = 100;
@@ -49,8 +51,6 @@ class Player extends events_1.EventEmitter {
         this.timestamp = null;
         this.isConnected = false;
         this.loop = "NONE";
-        this.currentTrack = null;
-        this.previousTrack = null;
         this.on("playerUpdate", (packet) => {
             (this.isConnected = packet.state.connected),
                 (this.position = packet.state.position),

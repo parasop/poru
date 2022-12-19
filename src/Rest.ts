@@ -43,24 +43,29 @@ export class Rest {
 
   public async updatePlayer(options: playOptions) {
     return this.patch(
-      this.url +
-        `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
+      `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
       options.data
     );
   }
 
   public async destroyPlayer(guildId: string) {
-    this.delete(this.url + `/v3/sessions/${this.sessionId}/players/${guildId}`);
+    this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
   }
 
-  public async resolveQuery(endpoint){
-
-    return this.get(endpoint)
-
+ 
+  public async get(path: string) {
+    let req = await fetch(this.url + path, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: this.password,
+      },
+    });
+    return await req.json();
   }
 
-  public async patch(url: string, options) {
-    let req = await fetch(url, {
+  public async patch(endpoint: string, options) {
+    let req = await fetch(this.url + endpoint, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
@@ -71,9 +76,21 @@ export class Rest {
 
     return await req.json();
   }
+  public async post(endpoint: string, options) {
+    let req = await fetch(this.url + endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: this.password,
+      },
+      body: JSON.stringify(options),
+    });
 
-  public async delete(url: string) {
-    let req = await fetch(url, {
+    return await req.json();
+  }
+
+  public async delete(endpoint: string) {
+    let req = await fetch(this.url + endpoint, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -84,14 +101,5 @@ export class Rest {
     return await req.json();
   }
 
-  public async get(path: string) {
-    let req = await fetch(this.url + path, {
-      method: "GET",
-      headers: {
-        Authorization: this.password,
-      },
-    });
-
-    return await req.json();
-  }
+  
 }

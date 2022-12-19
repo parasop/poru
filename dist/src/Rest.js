@@ -20,17 +20,23 @@ class Rest {
         return this.get(`/v3/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
-        return this.patch(this.url +
-            `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
+        return this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
-        this.delete(this.url + `/v3/sessions/${this.sessionId}/players/${guildId}`);
+        this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
     }
-    async resolveQuery(endpoint) {
-        return this.get(endpoint);
+    async get(path) {
+        let req = await (0, undici_1.fetch)(this.url + path, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: this.password,
+            },
+        });
+        return await req.json();
     }
-    async patch(url, options) {
-        let req = await (0, undici_1.fetch)(url, {
+    async patch(endpoint, options) {
+        let req = await (0, undici_1.fetch)(this.url + endpoint, {
             method: "PATCH",
             headers: {
                 "Content-Type": "application/json",
@@ -40,20 +46,22 @@ class Rest {
         });
         return await req.json();
     }
-    async delete(url) {
-        let req = await (0, undici_1.fetch)(url, {
-            method: "DELETE",
+    async post(endpoint, options) {
+        let req = await (0, undici_1.fetch)(this.url + endpoint, {
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.password,
             },
+            body: JSON.stringify(options),
         });
         return await req.json();
     }
-    async get(path) {
-        let req = await (0, undici_1.fetch)(this.url + path, {
-            method: "GET",
+    async delete(endpoint) {
+        let req = await (0, undici_1.fetch)(this.url + endpoint, {
+            method: "DELETE",
             headers: {
+                "Content-Type": "application/json",
                 Authorization: this.password,
             },
         });

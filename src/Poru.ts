@@ -2,18 +2,26 @@ import { Node } from "./Node";
 import { Player } from "./Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
-import { fetch } from "undici";
 import { Response } from "./guild/Response";
+import { Plugin } from "./Plugin";
+
 export interface NodeGroup {
   name: string;
   host: string;
   port: number;
   password: string;
   secure?: boolean;
-  region?: any;
+  region?: string[];
 }
 
-export interface PoruOptions {  
+export interface ResolveOptions {
+  query: string;
+  source?: string;
+  requester?: any;
+}
+
+export interface PoruOptions {
+  plugins?: Plugin[];
   autoResume: boolean;
   library: string;
   defaultPlatform: string;
@@ -23,9 +31,6 @@ export interface PoruOptions {
   reconnectTries?: number | null;
 }
 
-export interface PlayerOptions {
-
-}
 
 export class Poru extends EventEmitter {
   public readonly client: any;
@@ -58,6 +63,16 @@ export class Poru extends EventEmitter {
     this.userId = client.user.id;
     this._nodes.forEach((node) => this.addNode(node));
     this.isActivated = true;
+
+    if(this.options.plugins){
+       this.options.plugins.forEach(plugin=> {
+        if (!(plugin instanceof Plugin))
+          throw new RangeError(`Some of your Plugin does not extend Poru's Plugin.`);
+          
+        plugin.load(this);
+        
+       });
+    }
 
     switch (this.options.library) {
       case "discord.js": {
@@ -102,11 +117,11 @@ export class Poru extends EventEmitter {
     if (!player) return;
 
     if (packet.t === "VOICE_SERVER_UPDATE") {
-        player.connection.setServersUpdate(packet.d);
+      player.connection.setServersUpdate(packet.d);
     }
     if (packet.t === "VOICE_STATE_UPDATE") {
       if (packet.d.user_id !== this.userId) return;
-       player.connection.setStateUpdate(packet.d);
+      player.connection.setStateUpdate(packet.d);
     }
   }
 
@@ -144,7 +159,7 @@ export class Poru extends EventEmitter {
   getNode(identifier: string = "auto") {
     if (!this.nodes.size) throw new Error(`No nodes avaliable currently`);
 
-    //  if (identifier === "auto") return this.leastUsedNodes;
+    if (identifier === "auto") return this.leastUsedNodes;
 
     const node = this.nodes.get(identifier);
     if (!node) throw new Error("The node identifier you provided is not found");
@@ -161,12 +176,9 @@ export class Poru extends EventEmitter {
     let node;
     if (options.region) {
       const region = this.getNodeByRegion(options.region)[0];
-      node = this.nodes.get(
-        region.name ||
-          this.leastUsedNodes[0].name);
+      node = this.nodes.get(region.name || this.leastUsedNodes[0].name);
     } else {
-      node = this.nodes.get(
-        this.leastUsedNodes[0].name);
+      node = this.nodes.get(this.leastUsedNodes[0].name);
     }
     if (!node) throw new Error("[Poru Error] No nodes are avalible");
 
@@ -178,8 +190,6 @@ export class Poru extends EventEmitter {
     this.players.set(options.guildId, player);
     player.connect(options);
     return player;
-  
-  
   }
 
   public removeConnection(guildId) {
@@ -192,77 +202,55 @@ export class Poru extends EventEmitter {
       .sort((a, b) => a.penalties - b.penalties);
   }
 
+  async resolve({ query, source,  requester }: ResolveOptions, node?: Node) {
+    if (!node) node = this.leastUsedNodes[0];
+    if (!node) throw new Error("No nodes are available.");
+    const regex = /^https?:\/\//;
 
+    if (regex.test(query)) {
+      let response = await node.rest.get(
+        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+      );
+      return new Response(response, requester);
+    } else {
+      let track = `${source || "ytsearch"}:${query}`;
+      let response = await node.rest.get(
+        `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
+      );
+      return new Response(response,requester);
+    }
+  }
 
+  async decodeTrack(track: string, node: Node) {
+    if (!node) node = this.leastUsedNodes[0];
 
-async resolve(query, source) {
-  const node = this.leastUsedNodes[0];
-  if (!node) throw new Error("No nodes are available.");
-  const regex = /^https?:\/\//;
+    return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+  }
 
-  if (regex.test(query)) {
-    return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`)
-  } else {
-    let track = `${source || "ytsearch"}:${query}`;
-    return node.rest.resolveQuery(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`)
+  async decodeTracks(tracks: string[], node: Node) {
+    return await node.rest.post(`/v3/decodetracks`, tracks);
+  }
+
+  async getLavalinkInfo(name: string) {
+    let node = this.nodes.get(name);
+    return await node.rest.get(`/v3/info`);
+  }
+
+  async getLavalinkStatus(name: string) {
+    let node = this.nodes.get(name);
+    return await node.rest.get(`/v3/stats`);
+  }
+
+  /* Temp removed
+
+async getLavalinkVersion(name:string){
+  let node = this.nodes.get(name)
+  return await node.rest.get(`/version`)
+
+}
+*/
+
+  get(guildId) {
+    return this.players.get(guildId);
   }
 }
-
-
-
-async fetchURL(node, track) {
-    const result = await this.#fetch(
-      node,
-      "loadtracks",
-      `identifier=${encodeURIComponent(track)}`
-    );
-    if (!result) throw new Error("[Poru Error] No tracks found.");
-    return new Response(result);
-  
-}
-
-async fetchTrack(node, query, source) {
-      let track = `${source || "ytsearch"}:${query}`;
-      const result = await this.#fetch(
-        node,
-        "v3/loadtracks",
-        `identifier=${encodeURIComponent(track)}`
-      );
-      if (!result) throw new Error("[Poru Error] No tracks found.");
-      return new Response(result);
-  
-}
-
-
-#fetch(node, endpoint, param) {
-  return fetch(
-    `${node.restURL}/${endpoint}?${param}`,
-    {
-      headers: {
-        Authorization: node.password,
-      },
-    }
-  )
-    .then((r) => r.json())
-    .catch((e) => {
-      throw new Error(
-        `[Poru Error] Failed to fetch from the lavalink.\n  error: ${e}`
-      );
-    });
-}
-
-get(guildId) {
-  return this.players.get(guildId);
-}
-
-
-
-
-
-
-
-
-
-}
-
-

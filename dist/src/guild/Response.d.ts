@@ -16,6 +16,6 @@ export declare class Response {
     tracks: Track[];
     loadType: LoadType;
     playlistInfo: PlaylistInfo;
-    constructor(data: any);
+    constructor(data: any, requester: any);
 }
 export {};

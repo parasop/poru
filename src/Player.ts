@@ -12,25 +12,30 @@ type Loop = "NONE" | "TRACK" | "QUEUE";
 export class Player extends EventEmitter {
   public poru: Poru;
   public node: Node;
-  public queue: Queue;
-  public guildId: string;
-  public volume: number;
-  public isPaused: boolean;
-  public position: number;
   public connection: Connection;
+  public queue: Queue;
+  public filters :Filters;
+  public guildId: string;
   public voiceChannel: string;
-  public isConnected: boolean;
-  public isPlaying: boolean;
-  public mute: boolean;
-  public deaf: boolean;
-  public ping: number;
-  public timestamp: number;
   public textChannel: string;
   public currentTrack: Track;
   public previousTrack: Track;
+  public isPlaying: boolean
+  public isPaused: boolean;
+  public isConnected: boolean;
   public loop: Loop;
-  public filters :Filters;
-  constructor(poru: Poru, node: Node, options) {
+  public position: number;
+  public ping: number;
+  
+  public timestamp: number;
+  
+  
+  public mute: boolean;
+  public deaf: boolean;
+  public volume: number;
+  
+  constructor(poru: Poru, node: 
+    Node, options) {
     super();
     this.poru = poru;
     this.node = node;
@@ -40,6 +45,8 @@ export class Player extends EventEmitter {
     this.filters = new Filters(this);
     this.voiceChannel = options.voiceChannel;
     this.textChannel = options.textChannel;
+    this.currentTrack = null;
+    this.previousTrack = null;
     this.deaf = options.deaf || false;
     this.mute = options.mute || false;
     this.volume = 100;
@@ -50,9 +57,7 @@ export class Player extends EventEmitter {
     this.timestamp = null;
     this.isConnected = false;
     this.loop = "NONE";
-    this.currentTrack = null;
-    this.previousTrack = null;
-
+ 
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position),

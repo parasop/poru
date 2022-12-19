@@ -20,8 +20,8 @@ export class Response {
         public tracks:Track[]
         public loadType : LoadType
         public playlistInfo :PlaylistInfo
-    constructor(data) {
-      this.tracks = data?.tracks?.map((track) => new Track(track));
+    constructor(data,requester) {
+      this.tracks = data?.tracks?.map((track) => new Track(track,requester));
       this.loadType = data?.loadType;
       this.playlistInfo = data?.playlistInfo;
     }

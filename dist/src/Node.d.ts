@@ -56,5 +56,4 @@ export declare class Node {
     private error;
     getRoutePlannerStatus(): Promise<any>;
     unmarkFailedAddress(address: string): Promise<any>;
-    private makeRequest;
 }

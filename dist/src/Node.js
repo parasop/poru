@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Node = void 0;
 const ws_1 = __importDefault(require("ws"));
-const undici_1 = require("undici");
 const config_1 = require("./config");
 const Rest_1 = require("./Rest");
 class Node {
@@ -121,12 +120,8 @@ class Node {
             delete this.reconnectAttempt;
         }
         if (this.resumeKey) {
-            this.send({
-                op: "configureResuming",
-                key: this.resumeKey.toString(),
-                timeout: this.resumeTimeout,
-            });
-            this.poru.emit("debug", this.name, `[Web Socket]  Resuming configured on Lavalink`);
+            this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+            this.poru.emit("debug", this.name, `[Lavalink Resr\t]  Resuming configured on Lavalink`);
         }
         this.poru.emit("nodeConnect", this);
         this.isConnected = true;
@@ -172,37 +167,10 @@ class Node {
         this.poru.emit("debug", this.name, `[Web Socket] Connection for Lavalink node has error code: ${event.code || event}`);
     }
     async getRoutePlannerStatus() {
-        return await this.makeRequest({
-            endpoint: "/routeplanner/status",
-            headers: {
-                Authorization: this.password,
-                "User-Agent": config_1.Config.clientName,
-            },
-        });
+        return this.rest.get(` /v3/routeplanner/status`);
     }
     async unmarkFailedAddress(address) {
-        return await this.makeRequest({
-            endpoint: "/routeplanner/free/address",
-            method: "POST",
-            headers: {
-                Authorization: this.password,
-                "User-Agent": config_1.Config.clientName,
-                "Content-Type": "application/json",
-            },
-            body: { address },
-        });
-    }
-    async makeRequest(data) {
-        const url = new URL(`http${this.secure ? "s" : ""}://${this.restURL}${data.endpoint}`);
-        return await (0, undici_1.fetch)(url.toString(), {
-            method: data.method || "GET",
-            headers: data.headers,
-            ...(data?.body ? { body: JSON.stringify(data.body) } : {}),
-        })
-            .then((r) => r.json())
-            .catch((e) => {
-            throw new Error(`[Poru Error] Something went worng while trying to make request to ${this.name} node.\n  error: ${e}`);
-        });
+        return this.rest.post(`${this.restURL}/v3/routeplanner/free/address`, { address });
     }
 }
 exports.Node = Node;

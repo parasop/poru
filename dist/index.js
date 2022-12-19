@@ -15,4 +15,10 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./src/Poru"), exports);
+__exportStar(require("./src/Plugin"), exports);
+__exportStar(require("./src/Connection"), exports);
+__exportStar(require("./src/Player"), exports);
+__exportStar(require("./src/Node"), exports);
+__exportStar(require("./src/Rest"), exports);
+__exportStar(require("./src/Filters"), exports);
 //# sourceMappingURL=index.js.map

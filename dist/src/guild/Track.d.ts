@@ -13,10 +13,11 @@ export interface trackInfo {
     uri: string;
     sourceName: string;
     image?: string;
+    requester?: any;
 }
 export declare class Track {
     track: string;
     info: trackInfo;
-    constructor(data: trackData);
+    constructor(data: trackData, requester?: any);
     resolve(poru: Poru): Promise<this>;
 }
