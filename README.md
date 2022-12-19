@@ -73,17 +73,15 @@ const { Client, GatewayIntentBits } = require("discord.js");
 const { Poru } = require("poru");
 const nodes = [
   {
-    name: "main_node",
+    name: "local-node",
     host: "localhost",
-    port: 8080,
-    password: "iloveyou3000",
+    port: 2333,
+    password: "youshallnotpass",
   },
 ];
 const PoruOptions = {
-  reconnectTime: 0,
-  resumeKey: "MyPlayers",
-  resumeTimeout: 60,
-  defaultPlatform: "ytsearch",
+  library:"discord.js"
+  defaultPlatform: "scsearch",
 };
 const client = new Client({
   intents: [
@@ -115,7 +113,7 @@ client.on("interactionCreate", async (interaction) => {
 
   const track = interaction.options.getString("track");
 
-  const res = await client.poru.resolve(track);
+  const res = await client.poru.resolve({query:track,source:"scsearch",requester:interaction.member});
 
   if (res.loadType === "LOAD_FAILED") {
     return interaction.reply("Failed to load track.");

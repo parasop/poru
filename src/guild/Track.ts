@@ -72,7 +72,7 @@ export class Track {
     }
     if (this.info.length) {
       const sameDuration = result.tracks.find(
-        (track) =>
+        (track:trackData) =>
           track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
           track.info.length <= (this.info.length ? this.info.length : 0) + 2000
       );
