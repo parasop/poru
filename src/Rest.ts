@@ -1,7 +1,6 @@
 import { Node } from "./Node";
 import { fetch } from "undici";
 import { Poru } from "./Poru";
-import { IVoiceServer } from "./Connection";
 
 export interface playOptions {
   guildId: string;
@@ -26,9 +25,7 @@ export class Rest {
 
   constructor(poru: Poru, node: Node) {
     this.poru = poru;
-    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${
-      node.options.port
-    }`;
+    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${node.options.port}`;
     this.sessionId = node.sessionId;
     this.password = node.password;
   }

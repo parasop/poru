@@ -7,6 +7,7 @@ import Queue from "./guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "./guild/Response";
+import { ConnectionOptions } from "./Poru";
 declare type Loop = "NONE" | "TRACK" | "QUEUE";
 export declare class Player extends EventEmitter {
     poru: Poru;
@@ -31,7 +32,7 @@ export declare class Player extends EventEmitter {
     volume: number;
     constructor(poru: Poru, node: Node, options: any);
     play(): Promise<void>;
-    connect(options?: this): void;
+    connect(options?: ConnectionOptions): void;
     stop(): this;
     pause(toggle?: boolean): this;
     seekTo(position: number): void;

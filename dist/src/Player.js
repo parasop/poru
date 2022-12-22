@@ -172,7 +172,7 @@ class Player extends events_1.EventEmitter {
         switch (data.type) {
             case "TrackStartEvent": {
                 this.isPlaying = true;
-                this.poru.emit("playerStart", this, this.currentTrack, data);
+                this.poru.emit("playerStart", this, this.currentTrack);
                 break;
             }
             case "TrackEndEvent": {

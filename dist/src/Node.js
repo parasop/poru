@@ -151,12 +151,12 @@ class Node {
         const player = this.poru.players.get(packet.guildId);
         if (packet.guildId && player)
             player.emit(packet.op, packet);
-        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${packet.op}  `);
+        this.poru.emit("debug", `[Web Socket] Lavalink Node Update : ${packet.op} `);
     }
     close(event) {
         this.disconnect();
         this.poru.emit("nodeDisconnect", this, event);
-        this.poru.emit("debug", this.name, `[Web Socket] Connection with Lavalink closed with Error code : ${event || "Unknown code"}`);
+        this.poru.emit("debug", `[Web Socket] Connection with Lavalink Node (${this.name}) closed with Error code : ${event || "Unknown code"}`);
         if (event !== 1000)
             this.reconnect();
     }
@@ -164,13 +164,13 @@ class Node {
         if (!event)
             return;
         this.poru.emit("nodeError", this, event);
-        this.poru.emit("debug", this.name, `[Web Socket] Connection for Lavalink node has error code: ${event.code || event}`);
+        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
     }
     async getRoutePlannerStatus() {
-        return this.rest.get(` /v3/routeplanner/status`);
+        return await this.rest.get(`/v3/routeplanner/status`);
     }
     async unmarkFailedAddress(address) {
-        return this.rest.post(`${this.restURL}/v3/routeplanner/free/address`, { address });
+        return this.rest.post(`/v3/routeplanner/free/address`, { address });
     }
 }
 exports.Node = Node;

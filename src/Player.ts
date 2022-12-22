@@ -5,9 +5,8 @@ import { Connection } from "./Connection";
 import Queue from "./guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
-import { ForkOptions } from "child_process";
 import { Response } from "./guild/Response";
-
+import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
@@ -86,7 +85,7 @@ export class Player extends EventEmitter {
     });
   }
 
-  public connect(options: this = this) {
+  public connect(options: ConnectionOptions  = this) {
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send({
       guild_id: guildId,
@@ -215,7 +214,7 @@ export class Player extends EventEmitter {
     switch (data.type) {
       case "TrackStartEvent": {
         this.isPlaying = true;
-        this.poru.emit("playerStart", this, this.currentTrack, data);
+        this.poru.emit("playerStart", this, this.currentTrack);
         break;
       }
       case "TrackEndEvent": {
