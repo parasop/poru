@@ -95,7 +95,7 @@ export class Rest {
       },
     });
 
-    return await req.json();
+    return {};
   }
 
   
