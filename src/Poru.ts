@@ -283,9 +283,7 @@ export class Poru extends EventEmitter {
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
-      let response = await node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
-      );
+      let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
