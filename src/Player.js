@@ -116,7 +116,7 @@ class Player extends EventEmitter {
   }
 
   setVolume(volume) {
-    if (Number.isNaN(volume))
+    if (isNaN(volume))
       throw new RangeError("Volume level must be a number.");
  
       volume = Math.min(5, Math.max(0, volume));
