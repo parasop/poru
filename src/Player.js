@@ -174,7 +174,7 @@ class Player extends EventEmitter {
         self_mute: false,
       }
     })
-    this.moe.emit(
+    this.poru.emit(
       "debug",
       this.guildId,
       `[Poru Player] Voice channel has been changed to ${channel}`
