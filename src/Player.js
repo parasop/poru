@@ -160,12 +160,25 @@ class Player extends EventEmitter {
     this.textChannel = channel;
     return this;
   }
-
   setVoiceChannel(channel) {
     if (typeof channel !== "string")
       throw new RangeError("Channel must be a string.");
+    if(!this.isConnected) return;
     this.voiceChannel = channel;
-    return this;
+    this.poru.sendData({
+      op: 4,
+      d: {
+        guild_id: this.guildId,
+        channel_id: this.voiceChannel,
+        self_deaf: true,
+        self_mute: false,
+      }
+    })
+    this.moe.emit(
+      "debug",
+      this.guildId,
+      `[Poru Player] Voice channel has been changed to ${channel}`
+    );
   }
 
   connect(options = this) {
