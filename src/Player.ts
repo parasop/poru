@@ -10,11 +10,12 @@ import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
+  private _data: object;
   public poru: Poru;
   public node: Node;
   public connection: Connection;
   public queue: Queue;
-  public filters :Filters;
+  public filters: Filters;
   public guildId: string;
   public voiceChannel: string;
   public textChannel: string;
@@ -26,15 +27,15 @@ export class Player extends EventEmitter {
   public loop: Loop;
   public position: number;
   public ping: number;
-  
+
   public timestamp: number;
-  
-  
+
+
   public mute: boolean;
   public deaf: boolean;
   public volume: number;
-  
-  constructor(poru: Poru, node: 
+
+  constructor(poru: Poru, node:
     Node, options) {
     super();
     this.poru = poru;
@@ -57,7 +58,8 @@ export class Player extends EventEmitter {
     this.timestamp = null;
     this.isConnected = false;
     this.loop = "NONE";
- 
+    this._data = {}
+
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position),
@@ -85,7 +87,7 @@ export class Player extends EventEmitter {
     });
   }
 
-  public connect(options: ConnectionOptions  = this) {
+  public connect(options: ConnectionOptions = this) {
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send({
       guild_id: guildId,
@@ -113,93 +115,116 @@ export class Player extends EventEmitter {
     return this;
   }
 
-  public pause(toggle:boolean = true) {
-   
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {paused: toggle}});
+  public pause(toggle: boolean = true) {
+
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { paused: toggle } });
     this.isPlaying = !toggle;
     this.isPaused = toggle;
 
     return this;
   }
 
-  public seekTo(position:number):void {
+  public seekTo(position: number): void {
 
-    if(this.position + position >= this.currentTrack.info.length) position = this.currentTrack.info.length;
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {position}});
+    if (this.position + position >= this.currentTrack.info.length) position = this.currentTrack.info.length;
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
   }
 
 
- public setVolume(volume :number) {
-   
-    if(volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000")
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume}});
- 
-      return this; 
-    }
+  public setVolume(volume: number) {
+
+    if (volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000")
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+
+    return this;
+  }
 
 
-    public setLoop(mode:Loop) {
-      if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
-  
-      if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
-  
-      switch (mode) {
-        case "NONE": {
-          this.loop = "NONE";
-          break;
-        }
-        case "TRACK": {
-          this.loop = "TRACK";
-          break;
-        }
-        case "QUEUE": {
-          this.loop = "QUEUE";
-          break;
-        }
-        default :
+  public setLoop(mode: Loop) {
+    if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
+
+    if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
+
+    switch (mode) {
+      case "NONE": {
+        this.loop = "NONE";
+        break;
+      }
+      case "TRACK": {
+        this.loop = "TRACK";
+        break;
+      }
+      case "QUEUE": {
+        this.loop = "QUEUE";
+        break;
+      }
+      default:
         {
           this.loop = "NONE";
         }
-      }
-  
-      return this;
-    }
-  
-
-    public setTextChannel(channel:string) {
-      this.textChannel = channel;
-      return this;
-    }
-  
-    public setVoiceChannel(channel:string) {
-      this.voiceChannel = channel;
-      return this;
     }
 
-    public disconnect() {
-      if (!this.voiceChannel) return;
-      this.pause(true);
-      this.isConnected = false;
-      this.send({
-        guild_id: this.guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      });
-      this.voiceChannel = null;
-      return this;
-    }
-  
+    return this;
+  }
 
-   public destroy() {
-      this.disconnect();
-      this.node.rest.destroyPlayer(this.guildId)
-      this.poru.emit("playerDisconnect", this);
-      this.poru.emit("debug",this.guildId,`[Poru Player] destroyed the player`);
-  
-      this.poru.players.delete(this.guildId);
+
+  public setTextChannel(channel: string) {
+    this.textChannel = channel;
+    return this;
+  }
+
+  public setVoiceChannel(channel: string, options?: { mute: boolean; deaf: boolean; }) {
+    if (!this.isConnected) throw new ReferenceError("Player is not Connected To a VoiceChannel");
+
+    this.voiceChannel = channel;
+
+    if (options) {
+      this.mute = options.mute ?? this.mute
+      this.deaf = options.deaf ?? this.deaf
     }
 
+    this.connect({
+      deaf: options.deaf ?? this.deaf,
+      guildId: this.guildId,
+      voiceChannel: this.voiceChannel,
+      textChannel: this.textChannel,
+      mute: options.mute ?? this.mute
+    })
+
+    return this;
+  }
+
+  public set(key: string | number, value: any) {
+    return this._data[key] = value;
+  }
+
+  public get<K>(key: string | number): K {
+    return this._data[key] as K;
+  }
+
+  public disconnect() {
+    if (!this.voiceChannel) return;
+    this.pause(true);
+    this.isConnected = false;
+    this.send({
+      guild_id: this.guildId,
+      channel_id: null,
+      self_mute: false,
+      self_deaf: false,
+    });
+    this.voiceChannel = null;
+    return this;
+  }
+
+
+  public destroy() {
+    this.disconnect();
+    this.node.rest.destroyPlayer(this.guildId)
+    this.poru.emit("playerDisconnect", this);
+    this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
+
+    this.poru.players.delete(this.guildId);
+  }
 
 
 
@@ -207,8 +232,9 @@ export class Player extends EventEmitter {
 
 
 
-  public restart() {}
-   public move() {}
+
+  public restart() { }
+  public move() { }
 
   public eventHandler(data) {
     switch (data.type) {
@@ -252,7 +278,7 @@ export class Player extends EventEmitter {
         this.stop();
         break;
       }
-      case " WebSocketClosedEvent": {
+      case "WebSocketClosedEvent": {
         if ([4015, 4009].includes(data.code)) {
           this.send({
             guild_id: data.guildId,
@@ -267,13 +293,13 @@ export class Player extends EventEmitter {
       }
       default:
         {
-        throw new Error(`An unknown event: ${data}`);
-      }
+          throw new Error(`An unknown event: ${data}`);
+        }
     }
   }
 
 
- async resolve({ query, source,  requester }: ResolveOptions) {
+  async resolve({ query, source, requester }: ResolveOptions) {
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
@@ -286,7 +312,7 @@ export class Player extends EventEmitter {
       let response = await this.node.rest.get(
         `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
       );
-      return new Response(response,requester);
+      return new Response(response, requester);
     }
   }
 
