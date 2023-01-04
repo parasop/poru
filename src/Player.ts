@@ -147,7 +147,7 @@ export class Player extends EventEmitter {
         case "NONE": {
           this.loop = "NONE";
           break;
-   volume
+
         case "TRACK": {
           this.loop = "TRACK";
           break;
