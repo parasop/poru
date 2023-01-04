@@ -10,7 +10,7 @@ import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
-  private _data: object;
+  private readonly data: Record<string, unknown> = {};
   public poru: Poru;
   public node: Node;
   public connection: Connection;
@@ -58,7 +58,7 @@ export class Player extends EventEmitter {
     this.timestamp = null;
     this.isConnected = false;
     this.loop = "NONE";
-    this._data = {}
+    this.data = {}
 
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
@@ -194,12 +194,12 @@ export class Player extends EventEmitter {
     return this;
   }
 
-  public set(key: string | number, value: any) {
-    return this._data[key] = value;
+  public set(key: string, value: unknown) {
+    return this.data[key] = value;
   }
 
-  public get<K>(key: string | number): K {
-    return this._data[key] as K;
+  public get<K>(key: string): K {
+    return this.data[key] as K;
   }
 
   public disconnect() {

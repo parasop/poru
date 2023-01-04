@@ -10,7 +10,7 @@ import { Response } from "./guild/Response";
 import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 export declare class Player extends EventEmitter {
-    private _data;
+    private readonly data;
     poru: Poru;
     node: Node;
     connection: Connection;
@@ -44,8 +44,8 @@ export declare class Player extends EventEmitter {
         mute: boolean;
         deaf: boolean;
     }): this;
-    set(key: string | number, value: any): any;
-    get<K>(key: string | number): K;
+    set(key: string, value: unknown): unknown;
+    get<K>(key: string): K;
     disconnect(): this;
     destroy(): void;
     restart(): void;
