@@ -1,5 +1,5 @@
 import { Track } from "./Track";
-export declare type LoadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED";
+export type LoadType = "TRACK_LOADED" | "PLAYLIST_LOADED" | "SEARCH_RESULT" | "NO_MATCHES" | "LOAD_FAILED";
 export interface LavalinkResponse {
     loadType: LoadType;
     playlistInfo: {

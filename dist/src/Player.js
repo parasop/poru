@@ -10,6 +10,7 @@ const events_1 = require("events");
 const Filters_1 = require("./Filters");
 const Response_1 = require("./guild/Response");
 class Player extends events_1.EventEmitter {
+    _data;
     poru;
     node;
     connection;
@@ -52,6 +53,7 @@ class Player extends events_1.EventEmitter {
         this.timestamp = null;
         this.isConnected = false;
         this.loop = "NONE";
+        this._data = {};
         this.on("playerUpdate", (packet) => {
             (this.isConnected = packet.state.connected),
                 (this.position = packet.state.position),
@@ -141,9 +143,28 @@ class Player extends events_1.EventEmitter {
         this.textChannel = channel;
         return this;
     }
-    setVoiceChannel(channel) {
+    setVoiceChannel(channel, options) {
+        if (!this.isConnected)
+            throw new ReferenceError("Player is not Connected To a VoiceChannel");
         this.voiceChannel = channel;
+        if (options) {
+            this.mute = options.mute ?? this.mute;
+            this.deaf = options.deaf ?? this.deaf;
+        }
+        this.connect({
+            deaf: options.deaf ?? this.deaf,
+            guildId: this.guildId,
+            voiceChannel: this.voiceChannel,
+            textChannel: this.textChannel,
+            mute: options.mute ?? this.mute
+        });
         return this;
+    }
+    set(key, value) {
+        return this._data[key] = value;
+    }
+    get(key) {
+        return this._data[key];
     }
     disconnect() {
         if (!this.voiceChannel)
@@ -209,7 +230,7 @@ class Player extends events_1.EventEmitter {
                 this.stop();
                 break;
             }
-            case " WebSocketClosedEvent": {
+            case "WebSocketClosedEvent": {
                 if ([4015, 4009].includes(data.code)) {
                     this.send({
                         guild_id: data.guildId,
