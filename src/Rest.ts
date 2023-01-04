@@ -58,7 +58,11 @@ export class Rest {
         Authorization: this.password,
       },
     });
-    return await req.json();
+    try {
+      return await req.json();
+    } catch (e: any) {
+      return {};
+    }
   }
 
   public async patch(endpoint: string, options) {
@@ -71,7 +75,11 @@ export class Rest {
       body: JSON.stringify(options),
     });
 
-    return await req.json();
+    try {
+      return await req.json();
+    } catch (e) {
+      return {};
+    }
   }
   public async post(endpoint: string, options) {
     let req = await fetch(this.url + endpoint, {
@@ -83,7 +91,11 @@ export class Rest {
       body: JSON.stringify(options),
     });
 
-    return await req.json();
+    try {
+      return await req.json();
+    } catch (e: any) {
+      return {};
+    }
   }
 
   public async delete(endpoint: string) {
@@ -97,10 +109,8 @@ export class Rest {
 
     try {
       return await req.json();
-    } catch (e) {
+    } catch (e: any) {
       return {};
     }
   }
-
-  
 }
