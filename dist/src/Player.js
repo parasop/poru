@@ -107,8 +107,9 @@ class Player extends events_1.EventEmitter {
         this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
     setVolume(volume) {
-        if (volume < 0 || volume > 1000)
-            throw new Error("[Poru Exception] Volume must be between 0 to 1000");
+        if (volume < 0 || volume > 100)
+            throw new Error("[Poru Exception] Volume must be between 0 to 100");
+        this.volume = volume
         this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
         return this;
     }
@@ -209,7 +210,7 @@ class Player extends events_1.EventEmitter {
                 this.stop();
                 break;
             }
-            case " WebSocketClosedEvent": {
+            case "WebSocketClosedEvent": {
                 if ([4015, 4009].includes(data.code)) {
                     this.send({
                         guild_id: data.guildId,
