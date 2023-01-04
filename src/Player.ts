@@ -131,10 +131,10 @@ export class Player extends EventEmitter {
 
  public setVolume(volume :number) {
    
-    if(volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000")
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume}});
- 
-      return this; 
+    if(volume < 0 || volume > 100) throw new Error("[Poru Exception] Volume must be between 0 to 100");
+    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume*10}});
+     this.volume = volume
+     return this; 
     }
 
 
@@ -147,7 +147,7 @@ export class Player extends EventEmitter {
         case "NONE": {
           this.loop = "NONE";
           break;
-        }
+   volume
         case "TRACK": {
           this.loop = "TRACK";
           break;
