@@ -29,6 +29,11 @@ export class Rest {
     this.sessionId = node.sessionId;
     this.password = node.password;
   }
+  
+  private async parseResponse(req: any) {
+    if (req.body != null) return await req.json();
+    return null;
+  }
 
   public setSessionId(sessionId: string) {
     this.sessionId = sessionId;
@@ -58,11 +63,8 @@ export class Rest {
         Authorization: this.password,
       },
     });
-    try {
-      return await req.json();
-    } catch (e: any) {
-      return {};
-    }
+    
+    return await this.parseResponse(req);
   }
 
   public async patch(endpoint: string, options) {
@@ -75,11 +77,7 @@ export class Rest {
       body: JSON.stringify(options),
     });
 
-    try {
-      return await req.json();
-    } catch (e) {
-      return {};
-    }
+    return await this.parseResponse(req);
   }
   public async post(endpoint: string, options) {
     let req = await fetch(this.url + endpoint, {
@@ -91,11 +89,7 @@ export class Rest {
       body: JSON.stringify(options),
     });
 
-    try {
-      return await req.json();
-    } catch (e: any) {
-      return {};
-    }
+    return await this.parseResponse(req);
   }
 
   public async delete(endpoint: string) {
@@ -107,10 +101,6 @@ export class Rest {
       },
     });
 
-    try {
-      return await req.json();
-    } catch (e: any) {
-      return {};
-    }
+    return await this.parseResponse(req);
   }
 }
