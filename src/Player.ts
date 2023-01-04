@@ -131,34 +131,34 @@ export class Player extends EventEmitter {
   }
 
 
-  public setVolume(volume: number) {
 
-    if (volume < 0 || volume > 1000) throw new Error("[Poru Exception] Volume must be between 0 to 1000")
-    this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+ public setVolume(volume :number) {
+   
+    if(volume < 0 || volume > 100) throw new Error("[Poru Exception] Volume must be between 0 to 100");
+    this.node.rest.updatePlayer({guildId: this.guildId,data: {volume*10}});
+     this.volume = volume
+     return this; 
+    }
 
-    return this;
-  }
-
-
-  public setLoop(mode: Loop) {
-    if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
-
-    if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
-
-    switch (mode) {
-      case "NONE": {
-        this.loop = "NONE";
-        break;
-      }
-      case "TRACK": {
-        this.loop = "TRACK";
-        break;
-      }
-      case "QUEUE": {
-        this.loop = "QUEUE";
-        break;
-      }
-      default:
+    public setLoop(mode:Loop) {
+      if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
+  
+      if (!["NONE", "TRACK", "QUEUE"].includes(mode)) throw new Error(`[Poru Player] setLoop arguments are NONE,TRACK AND QUEUE`);
+  
+      switch (mode) {
+        case "NONE": {
+          this.loop = "NONE";
+          break;
+          }
+        case "TRACK": {
+          this.loop = "TRACK";
+          break;
+        }
+        case "QUEUE": {
+          this.loop = "QUEUE";
+          break;
+        }
+        default :
         {
           this.loop = "NONE";
         }
