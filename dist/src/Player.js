@@ -240,6 +240,8 @@ class Player extends events_1.EventEmitter {
                     });
                 }
                 this.poru.emit("playerClose", this, this.currentTrack, data);
+                this.pause(true);
+                this.poru.emit("debug", `Player -> ${this.guildId}`, "Player paused Cause Channel deleted Or Client was kicked");
                 break;
             }
             default:

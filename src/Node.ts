@@ -165,7 +165,7 @@ export class Node {
     const packet = JSON.parse(payload);
     if (!packet?.op) return;
 
-    this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${packet.op} `);
+    this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
     if (packet.op === "stats") {
       delete packet.op;
