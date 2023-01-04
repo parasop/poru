@@ -10,7 +10,7 @@ import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
-  private readonly data: Record<string, unknown> = {};
+  private readonly data: Record<string, unknown>;
   public poru: Poru;
   public node: Node;
   public connection: Connection;

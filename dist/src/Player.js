@@ -10,7 +10,7 @@ const events_1 = require("events");
 const Filters_1 = require("./Filters");
 const Response_1 = require("./guild/Response");
 class Player extends events_1.EventEmitter {
-    data = {};
+    data;
     poru;
     node;
     connection;

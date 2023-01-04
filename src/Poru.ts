@@ -194,7 +194,7 @@ export class Poru extends EventEmitter {
     }
   }
 
-  protected packetUpdate(packet: any) {
+  public packetUpdate(packet: any) {
     if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
       return;
     const player = this.players.get(packet.d.guild_id);
