@@ -119,10 +119,6 @@ class Node {
             clearTimeout(this.reconnectAttempt);
             delete this.reconnectAttempt;
         }
-        if (this.resumeKey) {
-            this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-            this.poru.emit("debug", this.name, `[Lavalink Resr\t]  Resuming configured on Lavalink`);
-        }
         this.poru.emit("nodeConnect", this);
         this.isConnected = true;
         this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
@@ -141,22 +137,27 @@ class Node {
         const packet = JSON.parse(payload);
         if (!packet?.op)
             return;
+        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
         if (packet.op === "stats") {
             delete packet.op;
             this.setStats(packet);
         }
         if (packet.op === "ready") {
             this.rest.setSessionId(packet.sessionId);
+            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+            if (this.resumeKey) {
+                this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+            }
         }
         const player = this.poru.players.get(packet.guildId);
         if (packet.guildId && player)
             player.emit(packet.op, packet);
-        this.poru.emit("debug", `[Web Socket] Lavalink Node Update : ${packet.op} `);
     }
     close(event) {
         this.disconnect();
         this.poru.emit("nodeDisconnect", this, event);
-        this.poru.emit("debug", `[Web Socket] Connection with Lavalink Node (${this.name}) closed with Error code : ${event || "Unknown code"}`);
+        this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"}`);
         if (event !== 1000)
             this.reconnect();
     }

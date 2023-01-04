@@ -18,15 +18,17 @@ export interface ResolveOptions {
     source?: string;
     requester?: any;
 }
+export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 export interface PoruOptions {
     plugins?: Plugin[];
     autoResume: boolean;
-    library: string;
+    library: supportedLibraries;
     defaultPlatform: string;
     resumeKey?: string;
     resumeTimeout?: number;
     reconnectTimeout?: number | null;
     reconnectTries?: number | null;
+    send: Function | null;
 }
 export interface ConnectionOptions {
     guildId: string;
@@ -41,7 +43,7 @@ export declare interface Poru {
       * Emitted when data useful for debugging is produced
       * @eventProperty
       */
-    on(event: 'debug', listener: (info: string) => void): this;
+    on(event: 'debug', listener: (...args: any) => void): this;
     /**
      * Emitted when lavalink node is connected with poru
      * @eventProperty
@@ -100,7 +102,7 @@ export declare class Poru extends EventEmitter {
     send: Function | null;
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions);
     init(client: any): this;
-    private packetUpdate;
+    packetUpdate(packet: any): void;
     addNode(options: NodeGroup): Node;
     removeNode(identifier: string): void;
     getNodeByRegion(region: string): Node[];

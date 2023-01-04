@@ -8,8 +8,9 @@ import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "./guild/Response";
 import { ConnectionOptions } from "./Poru";
-declare type Loop = "NONE" | "TRACK" | "QUEUE";
+type Loop = "NONE" | "TRACK" | "QUEUE";
 export declare class Player extends EventEmitter {
+    readonly data: Record<string, unknown>;
     poru: Poru;
     node: Node;
     connection: Connection;
@@ -39,7 +40,12 @@ export declare class Player extends EventEmitter {
     setVolume(volume: number): this;
     setLoop(mode: Loop): this;
     setTextChannel(channel: string): this;
-    setVoiceChannel(channel: string): this;
+    setVoiceChannel(channel: string, options?: {
+        mute: boolean;
+        deaf: boolean;
+    }): this;
+    set(key: string, value: unknown): unknown;
+    get<K>(key: string): K;
     disconnect(): this;
     destroy(): void;
     restart(): void;

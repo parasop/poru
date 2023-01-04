@@ -10,11 +10,12 @@ import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
+  public readonly data: Record<string, unknown>;
   public poru: Poru;
   public node: Node;
   public connection: Connection;
   public queue: Queue;
-  public filters :Filters;
+  public filters: Filters;
   public guildId: string;
   public voiceChannel: string;
   public textChannel: string;
@@ -26,15 +27,15 @@ export class Player extends EventEmitter {
   public loop: Loop;
   public position: number;
   public ping: number;
-  
+
   public timestamp: number;
-  
-  
+
+
   public mute: boolean;
   public deaf: boolean;
   public volume: number;
-  
-  constructor(poru: Poru, node: 
+
+  constructor(poru: Poru, node:
     Node, options) {
     super();
     this.poru = poru;
@@ -57,7 +58,8 @@ export class Player extends EventEmitter {
     this.timestamp = null;
     this.isConnected = false;
     this.loop = "NONE";
- 
+    this.data = {}
+
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position),
@@ -85,7 +87,7 @@ export class Player extends EventEmitter {
     });
   }
 
-  public connect(options: ConnectionOptions  = this) {
+  public connect(options: ConnectionOptions = this) {
     let { guildId, voiceChannel, deaf, mute } = options;
     this.send({
       guild_id: guildId,
@@ -113,20 +115,21 @@ export class Player extends EventEmitter {
     return this;
   }
 
-  public pause(toggle:boolean = true) {
-   
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {paused: toggle}});
+  public pause(toggle: boolean = true) {
+
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { paused: toggle } });
     this.isPlaying = !toggle;
     this.isPaused = toggle;
 
     return this;
   }
 
-  public seekTo(position:number):void {
+  public seekTo(position: number): void {
 
-    if(this.position + position >= this.currentTrack.info.length) position = this.currentTrack.info.length;
-    this.node.rest.updatePlayer({guildId: this.guildId,data: {position}});
+    if (this.position + position >= this.currentTrack.info.length) position = this.currentTrack.info.length;
+    this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
   }
+
 
 
  public setVolume(volume :number) {
@@ -136,7 +139,6 @@ export class Player extends EventEmitter {
      this.volume = volume
      return this; 
     }
-
 
     public setLoop(mode:Loop) {
       if (!mode) throw new Error(`[Poru Player] You must have to provide loop mode as argument of setLoop`);
@@ -160,46 +162,69 @@ export class Player extends EventEmitter {
         {
           this.loop = "NONE";
         }
-      }
-  
-      return this;
-    }
-  
-
-    public setTextChannel(channel:string) {
-      this.textChannel = channel;
-      return this;
-    }
-  
-    public setVoiceChannel(channel:string) {
-      this.voiceChannel = channel;
-      return this;
     }
 
-    public disconnect() {
-      if (!this.voiceChannel) return;
-      this.pause(true);
-      this.isConnected = false;
-      this.send({
-        guild_id: this.guildId,
-        channel_id: null,
-        self_mute: false,
-        self_deaf: false,
-      });
-      this.voiceChannel = null;
-      return this;
-    }
-  
+    return this;
+  }
 
-   public destroy() {
-      this.disconnect();
-      this.node.rest.destroyPlayer(this.guildId)
-      this.poru.emit("playerDisconnect", this);
-      this.poru.emit("debug",this.guildId,`[Poru Player] destroyed the player`);
-  
-      this.poru.players.delete(this.guildId);
+
+  public setTextChannel(channel: string) {
+    this.textChannel = channel;
+    return this;
+  }
+
+  public setVoiceChannel(channel: string, options?: { mute: boolean; deaf: boolean; }) {
+    if (this.isConnected && channel == this.voiceChannel) throw new ReferenceError(`Player is already connected to ${channel}`);
+
+    this.voiceChannel = channel;
+
+    if (options) {
+      this.mute = options.mute ?? this.mute
+      this.deaf = options.deaf ?? this.deaf
     }
 
+    this.connect({
+      deaf: this.deaf,
+      guildId: this.guildId,
+      voiceChannel: this.voiceChannel,
+      textChannel: this.textChannel,
+      mute: this.mute
+    })
+
+    return this;
+  }
+
+  public set(key: string, value: unknown) {
+    return this.data[key] = value;
+  }
+
+  public get<K>(key: string): K {
+    return this.data[key] as K;
+  }
+
+  public disconnect() {
+    if (!this.voiceChannel) return;
+    this.pause(true);
+    this.isConnected = false;
+    this.send({
+      guild_id: this.guildId,
+      channel_id: null,
+      self_mute: false,
+      self_deaf: false,
+    });
+    this.voiceChannel = null;
+    return this;
+  }
+
+
+  public destroy() {
+    this.disconnect();
+    this.node.rest.destroyPlayer(this.guildId)
+    this.poru.emit("playerDisconnect", this);
+    this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
+
+    this.poru.players.delete(this.guildId);
+  }
 
 
 
@@ -207,8 +232,9 @@ export class Player extends EventEmitter {
 
 
 
-  public restart() {}
-   public move() {}
+
+  public restart() { }
+  public move() { }
 
   public eventHandler(data) {
     switch (data.type) {
@@ -262,18 +288,19 @@ export class Player extends EventEmitter {
           });
         }
         this.poru.emit("playerClose", this, this.currentTrack, data);
-
+        this.pause(true)
+        this.poru.emit("debug", `Player -> ${this.guildId}`, "Player paused Cause Channel deleted Or Client was kicked")
         break;
       }
       default:
         {
-        throw new Error(`An unknown event: ${data}`);
-      }
+          throw new Error(`An unknown event: ${data}`);
+        }
     }
   }
 
 
- async resolve({ query, source,  requester }: ResolveOptions) {
+  async resolve({ query, source, requester }: ResolveOptions) {
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
@@ -286,7 +313,7 @@ export class Player extends EventEmitter {
       let response = await this.node.rest.get(
         `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
       );
-      return new Response(response,requester);
+      return new Response(response, requester);
     }
   }
 

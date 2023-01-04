@@ -1,6 +1,5 @@
 import { Poru, PoruOptions, NodeGroup } from "./Poru";
 import WebSocket from "ws";
-import { fetch } from "undici";
 import { Config as config } from "./config";
 import { Rest } from "./Rest";
 
@@ -145,15 +144,9 @@ export class Node {
       delete this.reconnectAttempt;
     }
 
-    if (this.resumeKey) {
-      this.rest.patch(`/v3/sessions/${this.sessionId}`,{resumingKey:this.resumeKey,timeout:this.resumeTimeout})
-      this.poru.emit("debug",this.name,`[Lavalink Resr\t]  Resuming configured on Lavalink`
-      );
-    }
-
     this.poru.emit("nodeConnect", this);
     this.isConnected = true;
-    this.poru.emit("debug",this.name,`[Web Socket] Connection ready ${this.socketURL}`);
+    this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
 
     if (this.autoResume) {
       for (const player of this.poru.players.values()) {
@@ -172,23 +165,30 @@ export class Node {
     const packet = JSON.parse(payload);
     if (!packet?.op) return;
 
+    this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+
     if (packet.op === "stats") {
       delete packet.op;
       this.setStats(packet);
     }
     if (packet.op === "ready") {
       this.rest.setSessionId(packet.sessionId);
+      this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
+      if (this.resumeKey) {
+        this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
+        this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
+        );
+      }
+
     }
     const player = this.poru.players.get(packet.guildId);
     if (packet.guildId && player) player.emit(packet.op, packet);
-   
-    this.poru.emit("debug",`[Web Socket] Lavalink Node Update : ${packet.op} `);
   }
 
   private close(event: any): void {
     this.disconnect();
     this.poru.emit("nodeDisconnect", this, event);
-    this.poru.emit("debug",`[Web Socket] Connection with Lavalink Node (${this.name}) closed with Error code : ${event || "Unknown code"
+    this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"
       }`
     );
     if (event !== 1000) this.reconnect();
@@ -198,8 +198,7 @@ export class Node {
     if (!event) return;
     this.poru.emit("nodeError", this, event);
     this.poru.emit(
-      "debug",`[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${
-        event.code || event
+      "debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event
       }`
     );
   }
@@ -209,8 +208,8 @@ export class Node {
   }
 
   public async unmarkFailedAddress(address: string): Promise<any> {
-    return this.rest.post(`/v3/routeplanner/free/address`,{address})
-  
+    return this.rest.post(`/v3/routeplanner/free/address`, { address })
+
   }
-  
+
 }

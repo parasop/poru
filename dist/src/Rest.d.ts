@@ -14,6 +14,14 @@ export interface playOptions {
         voice?: any;
     };
 }
+export type RouteLike = `/${string}`;
+export declare enum RequestMethod {
+    "Get" = "GET",
+    "Delete" = "DELETE",
+    "Post" = "POST",
+    "Patch" = "PATCH",
+    "Put" = "PUT"
+}
 export declare class Rest {
     private sessionId;
     private password;
@@ -24,8 +32,9 @@ export declare class Rest {
     getAllPlayers(): Promise<unknown>;
     updatePlayer(options: playOptions): Promise<unknown>;
     destroyPlayer(guildId: string): Promise<void>;
-    get(path: string): Promise<unknown>;
-    patch(endpoint: string, options: any): Promise<unknown>;
-    post(endpoint: string, options: any): Promise<unknown>;
-    delete(endpoint: string): Promise<unknown>;
+    get(path: RouteLike): Promise<unknown>;
+    patch(endpoint: RouteLike, body: any): Promise<unknown>;
+    post(endpoint: RouteLike, body: any): Promise<unknown>;
+    delete(endpoint: RouteLike): Promise<unknown>;
+    private parseResponse;
 }

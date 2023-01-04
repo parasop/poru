@@ -1,5 +1,5 @@
 import { Node } from "./Node";
-import { fetch } from "undici";
+import { fetch, Response } from "undici";
 import { Poru } from "./Poru";
 
 export interface playOptions {
@@ -16,6 +16,17 @@ export interface playOptions {
     voice?: any;
   };
 }
+
+export type RouteLike = `/${string}`;
+
+export enum RequestMethod  {
+  "Get" = "GET",
+  "Delete" = "DELETE",
+  "Post" = "POST",
+  "Patch" = "PATCH",
+  "Put" = "PUT"
+}
+
 
 export class Rest {
   private sessionId: string;
@@ -39,64 +50,67 @@ export class Rest {
   }
 
   public async updatePlayer(options: playOptions) {
-    return this.patch(
+    return await this.patch(
       `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
-      options.data
+      options.data,
     );
   }
 
   public async destroyPlayer(guildId: string) {
-    this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
+    await this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
   }
 
- 
-  public async get(path: string) {
+
+  public async get(path: RouteLike) {
     let req = await fetch(this.url + path, {
-      method: "GET",
+      method: RequestMethod.Get,
       headers: {
         "Content-Type": "application/json",
         Authorization: this.password,
       },
     });
-    return await req.json();
+    return await this.parseResponse(req)
   }
 
-  public async patch(endpoint: string, options) {
+  public async patch(endpoint: RouteLike, body) {
     let req = await fetch(this.url + endpoint, {
-      method: "PATCH",
+      method: RequestMethod.Patch,
       headers: {
         "Content-Type": "application/json",
         Authorization: this.password,
       },
-      body: JSON.stringify(options),
+      body: JSON.stringify(body),
     });
 
-    return await req.json();
+    return await this.parseResponse(req)
   }
-  public async post(endpoint: string, options) {
+  public async post(endpoint: RouteLike, body) {
     let req = await fetch(this.url + endpoint, {
-      method: "POST",
+      method: RequestMethod.Post,
       headers: {
         "Content-Type": "application/json",
         Authorization: this.password,
       },
-      body: JSON.stringify(options),
+      body: JSON.stringify(body),
     });
 
-    return await req.json();
+    return await this.parseResponse(req)
   }
 
-  public async delete(endpoint: string) {
+  public async delete(endpoint: RouteLike) {
     let req = await fetch(this.url + endpoint, {
-      method: "DELETE",
+      method: RequestMethod.Delete,
       headers: {
         "Content-Type": "application/json",
         Authorization: this.password,
       },
     });
 
-    return await req.json();
+    return await this.parseResponse(req)
   }
 
-  
+  private async parseResponse(req: Response) {
+    if (req.body != null) return await req.json()
+    return null
+  }
 }

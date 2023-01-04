@@ -1,7 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Rest = void 0;
+exports.Rest = exports.RequestMethod = void 0;
 const undici_1 = require("undici");
+var RequestMethod;
+(function (RequestMethod) {
+    RequestMethod["Get"] = "GET";
+    RequestMethod["Delete"] = "DELETE";
+    RequestMethod["Post"] = "POST";
+    RequestMethod["Patch"] = "PATCH";
+    RequestMethod["Put"] = "PUT";
+})(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
 class Rest {
     sessionId;
     password;
@@ -20,52 +28,57 @@ class Rest {
         return this.get(`/v3/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
-        return this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
+        return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
-        this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
+        await this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(path) {
         let req = await (0, undici_1.fetch)(this.url + path, {
-            method: "GET",
+            method: RequestMethod.Get,
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.password,
             },
         });
-        return await req.json();
+        return await this.parseResponse(req);
     }
-    async patch(endpoint, options) {
+    async patch(endpoint, body) {
         let req = await (0, undici_1.fetch)(this.url + endpoint, {
-            method: "PATCH",
+            method: RequestMethod.Patch,
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.password,
             },
-            body: JSON.stringify(options),
+            body: JSON.stringify(body),
         });
-        return await req.json();
+        return await this.parseResponse(req);
     }
-    async post(endpoint, options) {
+    async post(endpoint, body) {
         let req = await (0, undici_1.fetch)(this.url + endpoint, {
-            method: "POST",
+            method: RequestMethod.Post,
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.password,
             },
-            body: JSON.stringify(options),
+            body: JSON.stringify(body),
         });
-        return await req.json();
+        return await this.parseResponse(req);
     }
     async delete(endpoint) {
         let req = await (0, undici_1.fetch)(this.url + endpoint, {
-            method: "DELETE",
+            method: RequestMethod.Delete,
             headers: {
                 "Content-Type": "application/json",
                 Authorization: this.password,
             },
         });
-        return await req.json();
+        return await this.parseResponse(req);
+    }
+    async parseResponse(req) {
+        if (req.body != null)
+            return await req.json();
+        return null;
     }
 }
 exports.Rest = Rest;
