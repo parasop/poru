@@ -95,7 +95,11 @@ export class Rest {
       },
     });
 
-    return {};
+    try {
+      return await req.json();
+    } catch (e) {
+      return {};
+    }
   }
 
   
