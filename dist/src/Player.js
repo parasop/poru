@@ -152,11 +152,11 @@ class Player extends events_1.EventEmitter {
             this.deaf = options.deaf ?? this.deaf;
         }
         this.connect({
-            deaf: options.deaf ?? this.deaf,
+            deaf: this.deaf,
             guildId: this.guildId,
             voiceChannel: this.voiceChannel,
             textChannel: this.textChannel,
-            mute: options.mute ?? this.mute
+            mute: this.mute
         });
         return this;
     }

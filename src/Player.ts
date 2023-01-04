@@ -10,7 +10,7 @@ import { ConnectionOptions } from "./Poru";
 type Loop = "NONE" | "TRACK" | "QUEUE";
 
 export class Player extends EventEmitter {
-  private readonly data: Record<string, unknown>;
+  public readonly data: Record<string, unknown>;
   public poru: Poru;
   public node: Node;
   public connection: Connection;
@@ -184,11 +184,11 @@ export class Player extends EventEmitter {
     }
 
     this.connect({
-      deaf: options.deaf ?? this.deaf,
+      deaf: this.deaf,
       guildId: this.guildId,
       voiceChannel: this.voiceChannel,
       textChannel: this.textChannel,
-      mute: options.mute ?? this.mute
+      mute: this.mute
     })
 
     return this;

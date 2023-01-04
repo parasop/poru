@@ -173,7 +173,7 @@ export class Node {
     }
     if (packet.op === "ready") {
       this.rest.setSessionId(packet.sessionId);
-      this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${packet}`)
+      this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
       if (this.resumeKey) {
         this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
         this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
