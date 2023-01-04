@@ -102,7 +102,7 @@ export declare class Poru extends EventEmitter {
     send: Function | null;
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions);
     init(client: any): this;
-    private packetUpdate;
+    protected packetUpdate(packet: any): void;
     addNode(options: NodeGroup): Node;
     removeNode(identifier: string): void;
     getNodeByRegion(region: string): Node[];
