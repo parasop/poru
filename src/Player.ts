@@ -252,7 +252,7 @@ export class Player extends EventEmitter {
         this.stop();
         break;
       }
-      case " WebSocketClosedEvent": {
+      case "WebSocketClosedEvent": {
         if ([4015, 4009].includes(data.code)) {
           this.send({
             guild_id: data.guildId,
