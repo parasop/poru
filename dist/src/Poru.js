@@ -80,6 +80,7 @@ class Poru extends events_1.EventEmitter {
                 if (!this.send)
                     throw new Error("Send function is required in Poru Options");
                 this.send = this.options.send;
+                break;
             }
         }
     }
