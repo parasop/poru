@@ -10,6 +10,8 @@ class Player extends EventEmitter {
 
     this.queue = new Queue();
 
+    this.data = new Map();
+
     this.node = node;
 
     this.filters = new Filters(this, this.node);
