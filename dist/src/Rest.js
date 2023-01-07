@@ -25,7 +25,7 @@ class Rest {
         this.sessionId = sessionId;
     }
     getAllPlayers() {
-        return this.get(`/v3/${this.sessionId}/players`);
+        return this.get(`/v3/sessions/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
         return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
@@ -76,8 +76,10 @@ class Rest {
         return await this.parseResponse(req);
     }
     async parseResponse(req) {
-        if (req.body != null)
+        if (req.body != null) {
+            this.poru.emit("raw", "Rest", await req.json());
             return await req.json();
+        }
         return null;
     }
 }

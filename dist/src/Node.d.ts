@@ -31,7 +31,7 @@ export declare class Node {
     password: string;
     readonly secure: boolean;
     readonly regions: Array<string>;
-    readonly sessionId: string;
+    sessionId: string;
     rest: Rest;
     ws: WebSocket | null;
     readonly resumeKey: string | null;

@@ -137,6 +137,7 @@ class Node {
         const packet = JSON.parse(payload);
         if (!packet?.op)
             return;
+        this.poru.emit("raw", "Node", packet);
         this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
         if (packet.op === "stats") {
             delete packet.op;
@@ -144,6 +145,7 @@ class Node {
         }
         if (packet.op === "ready") {
             this.rest.setSessionId(packet.sessionId);
+            this.sessionId = packet.sessionId;
             this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
             if (this.resumeKey) {
                 this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });

@@ -34,7 +34,7 @@ export class Node {
   public password: string;
   public readonly secure: boolean;
   public readonly regions: Array<string>;
-  public readonly sessionId: string;
+  public sessionId: string;
   public rest: Rest;
   public ws: WebSocket | null;
   public readonly resumeKey: string | null;
@@ -165,6 +165,7 @@ export class Node {
     const packet = JSON.parse(payload);
     if (!packet?.op) return;
 
+    this.poru.emit("raw", "Node", packet)
     this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
     if (packet.op === "stats") {
@@ -173,6 +174,7 @@ export class Node {
     }
     if (packet.op === "ready") {
       this.rest.setSessionId(packet.sessionId);
+      this.sessionId = packet.sessionId;
       this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
       if (this.resumeKey) {
         this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
