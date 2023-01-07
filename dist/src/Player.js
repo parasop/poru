@@ -109,9 +109,10 @@ class Player extends events_1.EventEmitter {
         this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
     setVolume(volume) {
-        if (volume < 0 || volume > 1000)
-            throw new Error("[Poru Exception] Volume must be between 0 to 1000");
-        this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+        if (volume < 0 || volume > 100)
+            throw new Error("[Poru Exception] Volume must be between 0 to 100");
+        this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume: volume * 10 } });
+        this.volume = volume;
         return this;
     }
     setLoop(mode) {
