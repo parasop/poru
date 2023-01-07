@@ -29,12 +29,12 @@ export declare class Rest {
     poru: Poru;
     constructor(poru: Poru, node: Node);
     setSessionId(sessionId: string): void;
-    getAllPlayers(): Promise<unknown>;
-    updatePlayer(options: playOptions): Promise<unknown>;
+    getAllPlayers(): Promise<any>;
+    updatePlayer(options: playOptions): Promise<any>;
     destroyPlayer(guildId: string): Promise<void>;
-    get(path: RouteLike): Promise<unknown>;
-    patch(endpoint: RouteLike, body: any): Promise<unknown>;
-    post(endpoint: RouteLike, body: any): Promise<unknown>;
-    delete(endpoint: RouteLike): Promise<unknown>;
+    get(path: RouteLike): Promise<any>;
+    patch(endpoint: RouteLike, body: any): Promise<any>;
+    post(endpoint: RouteLike, body: any): Promise<any>;
+    delete(endpoint: RouteLike): Promise<any>;
     private parseResponse;
 }

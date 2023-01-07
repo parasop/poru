@@ -76,9 +76,10 @@ class Rest {
         return await this.parseResponse(req);
     }
     async parseResponse(req) {
+        let body = await req.text();
         if (req.body != null) {
-            this.poru.emit("raw", "Rest", await req.json());
-            return await req.json();
+            this.poru.emit("raw", "Rest", await JSON.parse(body));
+            return await JSON.parse(body);
         }
         return null;
     }

@@ -126,9 +126,9 @@ export declare class Poru extends EventEmitter {
     removeConnection(guildId: string): void;
     get leastUsedNodes(): Node[];
     resolve({ query, source, requester }: ResolveOptions, node?: Node): Promise<Response>;
-    decodeTrack(track: string, node: Node): Promise<unknown>;
-    decodeTracks(tracks: string[], node: Node): Promise<unknown>;
-    getLavalinkInfo(name: string): Promise<unknown>;
-    getLavalinkStatus(name: string): Promise<unknown>;
+    decodeTrack(track: string, node: Node): Promise<any>;
+    decodeTracks(tracks: string[], node: Node): Promise<any>;
+    getLavalinkInfo(name: string): Promise<any>;
+    getLavalinkStatus(name: string): Promise<any>;
     get(guildId: string): Player;
 }
