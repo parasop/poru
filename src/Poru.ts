@@ -44,69 +44,84 @@ export interface ConnectionOptions {
   region?: string;
 }
 
-export declare interface Poru {
-
+export interface PoruEvents {
+  
   /**
     * Emitted when data useful for debugging is produced
     * @eventProperty
     */
-  on(event: 'debug', listener: (...args: any) => void): this;
+  debug: (...args: any) => void
+
+  /**
+   * 
+   * @param topic from what section the event come
+   * @param args 
+   * Emitted when a Response is come
+   * @eventProperty
+   */
+  raw: (topic: string, ...args: unknown[]) => void
 
   /**
    * Emitted when lavalink node is connected with poru
    * @eventProperty
    */
-  on(event: 'nodeConnect', listener: (node: Node) => void): this;
+  nodeConnect: (node: Node) => void
 
   /**
   * Emitted when data useful for debugging is produced
   * @eventProperty
   */
-  on(event: 'nodeDisconnect', listener: (node: Node) => void): this;
+  nodeDisconnect: (node: Node, event?: unknown) => void
 
   /**
  * Emitted when poru try to reconnect with lavalink node while disconnected
  * @eventProperty
  */
-  on(event: 'nodeReconnect', listener: (node: Node) => void): this;
+  nodeReconnect: (node: Node) => void
 
   /**
  * Emitted when lavalink nodes get an error
  * @eventProperty
  */
-  on(event: 'nodeError', listener: (node: Node, event: any) => void): this;
+  nodeError: (node: Node, event: any) => void
 
   /**
   * Emitted whenever player start playing new track
   * @eventProperty
   */
-  on(event: 'playerStart', listener: (player: Player, track: Track) => void): this;
+  playerStart: (player: Player, track: Track) => void
 
   /**
  * Emitted whenever track ends
  * @eventProperty
  */
-  on(event: 'playerEnd', listener: (player: Player, track: Track) => void): this;
+  playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void
 
   /**
   * Emitted when player compelete queue and going to disconnect
   * @eventProperty
   */
-  on(event: 'playerDisconnect', listener: (player: Player) => void): this;
+  playerDisconnect: (player: Player) => void
 
   /**
  * Emitted when a track gets stuck while playing
  * @eventProperty
  */
-  on(event: 'playerError', listener: (player: Player, track: Track, data: any) => void): this;
+  playerError: (player: Player, track: Track, data: any) => void
 
 
   /**
   * Emitted when the websocket connection to Discord voice servers is closed
   * @eventProperty
   */
-  on(event: 'playerClose', listener: (player: Player, track: Track, data: any) => void): this;
+  playerClose: (player: Player, track: Track, data: any) => void
+}
 
+export declare interface Poru {
+  on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
+  once<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
+  emit<K extends keyof PoruEvents>(event: K, ...args: Parameters<PoruEvents[K]>): boolean;
+  off<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
 }
 
 
