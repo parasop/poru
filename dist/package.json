@@ -1,0 +1,54 @@
+{
+  "name": "poru",
+  "version": "4.1.0",
+  "description": "A stable and powerfull lavalink client around node.js",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc && npm run build:esm && npm run build:docs",
+    "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
+    "build:docs": "typedoc --theme default --readme README.md --out docs/ --entryPointStrategy expand src/.",
+    "prepublishOnly": "tsc && npm run build:esm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/parasop/poru.git"
+  },
+  "author": "PARAS",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/parasop/poru/issues"
+  },
+  "homepage": "https://github.com/parasop/poru#readme",
+  "dependencies": {
+    "gen-esm-wrapper": "^1.1.3",
+    "undici": "^5.14.0",
+    "ws": "^8.11.0"
+  },
+  "engines": {
+    "node": ">=16.9.0"
+  },
+  "keywords": [
+    "music",
+    "lavalink",
+    "poru",
+    "bot",
+    "spotify",
+    "apple-music",
+    "soundcloud",
+    "deezer",
+    "discordjs",
+    "eris"
+  ],
+  "devDependencies": {
+    "@types/node": "^18.11.9"
+  }
+}
