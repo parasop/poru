@@ -110,9 +110,10 @@ export class Rest {
   }
 
   private async parseResponse(req: Response) {
+    let body = await req.text();
     if (req.body != null) {
-      this.poru.emit("raw", "Rest", await req.json())
-      return await req.json()
+      this.poru.emit("raw", "Rest", await JSON.parse(body))
+      return await JSON.parse(body)
     }
     return null
   }
