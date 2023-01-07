@@ -46,7 +46,7 @@ export class Rest {
   }
 
   getAllPlayers() {
-    return this.get(`/v3/${this.sessionId}/players`);
+    return this.get(`/v3/sessions/${this.sessionId}/players`);
   }
 
   public async updatePlayer(options: playOptions) {
@@ -110,7 +110,10 @@ export class Rest {
   }
 
   private async parseResponse(req: Response) {
-    if (req.body != null) return await req.json()
+    if (req.body != null) {
+      this.poru.emit("raw", "Rest", await req.json())
+      return await req.json()
+    }
     return null
   }
 }
