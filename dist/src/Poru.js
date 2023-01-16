@@ -69,7 +69,7 @@ class Poru extends events_1.EventEmitter {
                 this.send = (packet) => {
                     const guild = client.guilds.get(packet.d.guild_id);
                     if (guild)
-                        guild.shard.send(packet);
+                        guild.shard.send(packet?.op, packet?.d);
                 };
                 client.on("packet", async (packet) => {
                     await this.packetUpdate(packet);
