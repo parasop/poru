@@ -19,14 +19,13 @@ export interface playOptions {
 
 export type RouteLike = `/${string}`;
 
-export enum RequestMethod  {
+export enum RequestMethod {
   "Get" = "GET",
   "Delete" = "DELETE",
   "Post" = "POST",
   "Patch" = "PATCH",
-  "Put" = "PUT"
+  "Put" = "PUT",
 }
-
 
 export class Rest {
   private sessionId: string;
@@ -36,7 +35,9 @@ export class Rest {
 
   constructor(poru: Poru, node: Node) {
     this.poru = poru;
-    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${node.options.port}`;
+    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${
+      node.options.port
+    }`;
     this.sessionId = node.sessionId;
     this.password = node.password;
   }
@@ -52,14 +53,13 @@ export class Rest {
   public async updatePlayer(options: playOptions) {
     return await this.patch(
       `/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,
-      options.data,
+      options.data
     );
   }
 
   public async destroyPlayer(guildId: string) {
     await this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
   }
-
 
   public async get(path: RouteLike) {
     let req = await fetch(this.url + path, {
@@ -69,7 +69,7 @@ export class Rest {
         Authorization: this.password,
       },
     });
-    return await this.parseResponse(req)
+    return await this.parseResponse(req);
   }
 
   public async patch(endpoint: RouteLike, body) {
@@ -82,7 +82,7 @@ export class Rest {
       body: JSON.stringify(body),
     });
 
-    return await this.parseResponse(req)
+    return await this.parseResponse(req);
   }
   public async post(endpoint: RouteLike, body) {
     let req = await fetch(this.url + endpoint, {
@@ -94,7 +94,7 @@ export class Rest {
       body: JSON.stringify(body),
     });
 
-    return await this.parseResponse(req)
+    return await this.parseResponse(req);
   }
 
   public async delete(endpoint: RouteLike) {
@@ -106,14 +106,15 @@ export class Rest {
       },
     });
 
-    return await this.parseResponse(req)
+    return await this.parseResponse(req);
   }
 
   private async parseResponse(req: Response) {
-    if (req.body != null) {
-      this.poru.emit("raw", "Rest", await req.json())
-      return await req.json()
+    try {
+      this.poru.emit("raw", "Rest", await req.json());
+      return await req.json();
+    } catch (e) {
+      return null;
     }
-    return null
   }
 }

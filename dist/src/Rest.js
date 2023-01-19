@@ -76,11 +76,13 @@ class Rest {
         return await this.parseResponse(req);
     }
     async parseResponse(req) {
-        if (req.body != null) {
+        try {
             this.poru.emit("raw", "Rest", await req.json());
             return await req.json();
         }
-        return null;
+        catch (e) {
+            return null;
+        }
     }
 }
 exports.Rest = Rest;
