@@ -257,8 +257,8 @@ class Player extends EventEmitter {
     }
   }
 
-  async autoplay(option = false) {
-    if (!option) return false;
+  async autoplay(option = false, requester) {
+    if (!option) return false; 
     try {
       let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier
         }&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier
@@ -272,6 +272,7 @@ class Player extends EventEmitter {
       if (!response ||!response.tracks ||["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
 
       let track =response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
+      track.info.requester = requester
       this.queue.push(track);
       this.play();
 
