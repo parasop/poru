@@ -1,4 +1,4 @@
-import {trackInfo}  from "./Track"
+import { Track }  from "./Track"
 export default class Queue extends Array {
     constructor() {
       super(...arguments);
@@ -12,7 +12,7 @@ export default class Queue extends Array {
       return this ? this[0] : 0;
     }
   
-    add(track:trackInfo):Queue {
+    add(track: Track):Queue {
       this.push(track);
       return this;
     }
