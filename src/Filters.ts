@@ -4,6 +4,7 @@ interface Band {
   bands?: number;
   gain?: number;
 }
+
 interface karaokeOptions {
   level?: number;
   monoLevel?: number;
@@ -49,8 +50,9 @@ export interface channelMixOptions {
 }
 
 interface lowPassOptions {
-  smoothing: number;
+  smoothing?: number;
 }
+
 export class Filters {
   public player: Player;
   public volume: number;
