@@ -12,7 +12,7 @@ export interface NodeStats {
     free: number;
     allocated: number;
   };
-  frameStats: {
+  frameStats?: {
     sent: number;
     deficit: number;
     nulled: number;
