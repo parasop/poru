@@ -1,14 +1,14 @@
 import { Player } from "./Player";
 
 interface Band {
-  bands: number;
-  gain: number;
+  bands?: number;
+  gain?: number;
 }
 interface karaokeOptions {
-  level: number;
-  monoLevel: number;
-  filterBand: number;
-  filterWidth: number;
+  level?: number;
+  monoLevel?: number;
+  filterBand?: number;
+  filterWidth?: number;
 }
 
 interface timescaleOptions {
@@ -18,17 +18,17 @@ interface timescaleOptions {
 }
 
 interface tremoloOptions {
-  frequency: number;
-  depth: number;
+  frequency?: number;
+  depth?: number;
 }
 
 interface vibratoOptions {
-  frequency: number;
-  depth: number;
+  frequency?: number;
+  depth?: number;
 }
 
 interface rotationOptions {
-  rotationHz: number;
+  rotationHz?: number;
 }
 interface distortionOptions {
   sinOffset?: number;
@@ -93,7 +93,7 @@ export class Filters {
      * @returns The current filter instance
      */
   public setKaraoke(karaoke?: karaokeOptions): Filters {
-    this.karaoke = karaoke|| null;
+    this.karaoke = karaoke || null;
     this.updateFilters();
     return this;
 }
