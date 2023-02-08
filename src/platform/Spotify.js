@@ -1,5 +1,4 @@
 const { fetch } = require("undici");
-
 let spotifyPattern =
   /^(?:https:\/\/open\.spotify\.com\/(?:user\/[A-Za-z0-9]+\/)?|spotify:)(album|playlist|track|artist)(?:[/:])([A-Za-z0-9]+).*$/;
 
@@ -14,13 +13,8 @@ class Spotify {
       albumLimit: manager.options.albumLimit,
       artistLimit: manager.options.artistLimit,
       searchMarket: manager.options.searchMarket,
-      clientID: manager.options.clientID || null,
-      clientSecret: manager.options.clientSecret || null,
+      clientData: manager.options.clientData || null,
     };
-
-    this.authorization = Buffer.from(
-      `${this.options.clientID}:${this.options.clientSecret}`
-    ).toString("base64");
     this.interval = 0;
   }
 
@@ -43,6 +37,11 @@ class Spotify {
       const body = await data.json();
       this.token = `Bearer ${body.accessToken}`;
       this.interval = body.accessTokenExpirationTimestampMs * 1000;
+      this.manager.emit(
+        "debug",
+        "None",
+        `[Poru Spotify] Token generated | Method : Scraping`
+      );
     } catch (e) {
       if (e.status === 400) {
         throw new Error("Invalid Spotify client.");
@@ -51,30 +50,46 @@ class Spotify {
   }
 
   async requestToken() {
-    if (!this.options.clientID && !this.options.clientSecret)
+    if (
+      !(
+        this.options.clientData &&
+        Array.isArray(this.options.clientData) &&
+        this.options.clientData.length !== 0
+      )
+    )
       return this.requestAnonymousToken();
+    for (let index = 0; index < this.options.clientData.length; index++) {
+      const data = this.options.clientData[index];
+      if (!data.clientID || !data.clientSecret) continue;
+      let authorization = Buffer.from(
+        `${data.clientID}:${data.clientSecret}`
+      ).toString("base64");
 
-    try {
-      const data = await fetch(
-        "https://accounts.spotify.com/api/token?grant_type=client_credentials",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Basic ${this.authorization}`,
-            "Content-Type": "application/x-www-form-urlencoded",
-          },
-        }
-      );
-
-      const body = await data.json();
-
+      let spotifydata =
+        (await fetch(
+          "https://accounts.spotify.com/api/token?grant_type=client_credentials",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Basic ${authorization}`,
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+          }
+        ).catch(() => {})) || false;
+      if (!spotifydata) continue;
+      const body = await spotifydata.json();
+      if (body.error) continue;
+      this.authorization = authorization;
       this.token = `Bearer ${body.access_token}`;
       this.interval = body.expires_in * 1000;
-    } catch (e) {
-      if (e.status === 400) {
-        throw new Error("Invalid Spotify client.");
-      }
+      this.manager.emit(
+        "debug",
+        "None",
+        `[Poru Spotify] Token generated | Method : Api`
+      );
+      break;
     }
+    if (!this.token) return this.requestAnonymousToken();
   }
 
   async renew() {
@@ -240,7 +255,6 @@ class Spotify {
     }
   }
 
-
   async fetchPlaylistTracks(spotifyPlaylist) {
     let nextPage = spotifyPlaylist.tracks.next;
     let pageLoaded = 1;
@@ -261,8 +275,8 @@ class Spotify {
   async buildUnresolved(track) {
     if (!track)
       throw new ReferenceError("The Spotify track object was not provided");
-    
-//let arrayOfArtist = track.artists.map((artist) => `${artist.name}`) || "Unknown Artist";
+
+    //let arrayOfArtist = track.artists.map((artist) => `${artist.name}`) || "Unknown Artist";
 
     return new PoruTrack({
       track: "",
