@@ -1,8 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Poru = void 0;
-const Node_1 = require("./Node");
-const Player_1 = require("./Player");
+const Node_1 = require("./Node/Node");
+const Player_1 = require("./Player/Player");
 const events_1 = require("events");
 const config_1 = require("./config");
 const Response_1 = require("./guild/Response");
@@ -36,12 +36,14 @@ class Poru extends events_1.EventEmitter {
         this._nodes.forEach((node) => this.addNode(node));
         this.isActivated = true;
         if (this.options.plugins) {
-            this.options.plugins.forEach(plugin => {
+            this.options.plugins.forEach((plugin) => {
                 if (!(plugin instanceof Plugin_1.Plugin))
                     throw new RangeError(`Some of your Plugin does not extend Poru's Plugin.`);
                 plugin.load(this);
             });
         }
+        if (!this.options.library)
+            this.options.library = "discord.js";
         switch (this.options.library) {
             case "discord.js": {
                 this.send = (packet) => {
@@ -69,7 +71,7 @@ class Poru extends events_1.EventEmitter {
                 this.send = (packet) => {
                     const guild = client.guilds.get(packet.d.guild_id);
                     if (guild)
-                        guild.shard.send(packet);
+                        guild.shard.sendWS(packet?.op, packet?.d);
                 };
                 client.on("packet", async (packet) => {
                     await this.packetUpdate(packet);
@@ -138,6 +140,8 @@ class Poru extends events_1.EventEmitter {
         return node;
     }
     createConnection(options) {
+        if (!this.isActivated)
+            throw new Error(`You have to init poru in your ready event`);
         const player = this.players.get(options.guildId);
         if (player)
             return player;
@@ -170,6 +174,8 @@ class Poru extends events_1.EventEmitter {
             .sort((a, b) => a.penalties - b.penalties);
     }
     async resolve({ query, source, requester }, node) {
+        if (!this.isActivated)
+            throw new Error(`You have to init poru in your ready event`);
         if (!node)
             node = this.leastUsedNodes[0];
         if (!node)

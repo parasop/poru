@@ -1,5 +1,5 @@
-import { Node } from "./Node";
-import { Player } from "./Player";
+import { Node } from "./Node/Node";
+import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
 import { Response } from "./guild/Response";
@@ -21,7 +21,7 @@ export interface ResolveOptions {
   requester?: any;
 }
 
-export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other"
+export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 
 export interface PoruOptions {
   plugins?: Plugin[];
@@ -32,6 +32,7 @@ export interface PoruOptions {
   resumeTimeout?: number;
   reconnectTimeout?: number | null;
   reconnectTries?: number | null;
+  useCustomFilters?: boolean;
   send: Function | null;
 }
 
@@ -45,85 +46,85 @@ export interface ConnectionOptions {
 }
 
 export interface PoruEvents {
-  
   /**
-    * Emitted when data useful for debugging is produced
-    * @eventProperty
-    */
-  debug: (...args: any) => void
+   * Emitted when data useful for debugging is produced
+   * @eventProperty
+   */
+  debug: (...args: any) => void;
 
   /**
-   * 
+   *
    * @param topic from what section the event come
-   * @param args 
+   * @param args
    * Emitted when a Response is come
    * @eventProperty
    */
-  raw: (topic: string, ...args: unknown[]) => void
+  raw: (topic: string, ...args: unknown[]) => void;
 
   /**
    * Emitted when lavalink node is connected with poru
    * @eventProperty
    */
-  nodeConnect: (node: Node) => void
+  nodeConnect: (node: Node) => void;
 
   /**
-  * Emitted when data useful for debugging is produced
-  * @eventProperty
-  */
-  nodeDisconnect: (node: Node, event?: unknown) => void
+   * Emitted when data useful for debugging is produced
+   * @eventProperty
+   */
+  nodeDisconnect: (node: Node, event?: unknown) => void;
 
   /**
- * Emitted when poru try to reconnect with lavalink node while disconnected
- * @eventProperty
- */
-  nodeReconnect: (node: Node) => void
+   * Emitted when poru try to reconnect with lavalink node while disconnected
+   * @eventProperty
+   */
+  nodeReconnect: (node: Node) => void;
 
   /**
- * Emitted when lavalink nodes get an error
- * @eventProperty
- */
-  nodeError: (node: Node, event: any) => void
+   * Emitted when lavalink nodes get an error
+   * @eventProperty
+   */
+  nodeError: (node: Node, event: any) => void;
 
   /**
-  * Emitted whenever player start playing new track
-  * @eventProperty
-  */
-  playerStart: (player: Player, track: Track) => void
+   * Emitted whenever player start playing new track
+   * @eventProperty
+   */
+  playerStart: (player: Player, track: Track) => void;
 
   /**
- * Emitted whenever track ends
- * @eventProperty
- */
-  playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void
+   * Emitted whenever track ends
+   * @eventProperty
+   */
+  playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
 
   /**
-  * Emitted when player compelete queue and going to disconnect
-  * @eventProperty
-  */
-  playerDisconnect: (player: Player) => void
+   * Emitted when player compelete queue and going to disconnect
+   * @eventProperty
+   */
+  playerDisconnect: (player: Player) => void;
 
   /**
- * Emitted when a track gets stuck while playing
- * @eventProperty
- */
-  playerError: (player: Player, track: Track, data: any) => void
-
+   * Emitted when a track gets stuck while playing
+   * @eventProperty
+   */
+  playerError: (player: Player, track: Track, data: any) => void;
 
   /**
-  * Emitted when the websocket connection to Discord voice servers is closed
-  * @eventProperty
-  */
-  playerClose: (player: Player, track: Track, data: any) => void
+   * Emitted when the websocket connection to Discord voice servers is closed
+   * @eventProperty
+   */
+  playerClose: (player: Player, track: Track, data: any) => void;
 }
 
 export declare interface Poru {
   on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
   once<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
-  emit<K extends keyof PoruEvents>(event: K, ...args: Parameters<PoruEvents[K]>): boolean;
+  emit<K extends keyof PoruEvents>(
+    event: K,
+    ...args: Parameters<PoruEvents[K]>
+  ): boolean;
   off<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
 }
-
 
 export class Poru extends EventEmitter {
   public readonly client: any;
@@ -158,14 +159,16 @@ export class Poru extends EventEmitter {
     this.isActivated = true;
 
     if (this.options.plugins) {
-      this.options.plugins.forEach(plugin => {
+      this.options.plugins.forEach((plugin) => {
         if (!(plugin instanceof Plugin))
-          throw new RangeError(`Some of your Plugin does not extend Poru's Plugin.`);
+          throw new RangeError(
+            `Some of your Plugin does not extend Poru's Plugin.`
+          );
 
         plugin.load(this);
-
       });
     }
+    if (!this.options.library) this.options.library = "discord.js";
 
     switch (this.options.library) {
       case "discord.js": {
@@ -193,7 +196,7 @@ export class Poru extends EventEmitter {
         this.send = (packet: any) => {
           const guild = client.guilds.get(packet.d.guild_id);
           if (guild) guild.shard.sendWS(packet?.op, packet?.d);
-       };
+        };
 
         client.on("packet", async (packet: any) => {
           await this.packetUpdate(packet);
@@ -201,7 +204,8 @@ export class Poru extends EventEmitter {
         break;
       }
       case "other": {
-        if (!this.send) throw new Error("Send function is required in Poru Options")
+        if (!this.send)
+          throw new Error("Send function is required in Poru Options");
 
         this.send = this.options.send;
         break;
@@ -267,6 +271,8 @@ export class Poru extends EventEmitter {
   }
 
   public createConnection(options: ConnectionOptions): Player {
+    if (!this.isActivated)
+      throw new Error(`You have to init poru in your ready event`);
     const player = this.players.get(options.guildId);
     if (player) return player;
 
@@ -302,12 +308,17 @@ export class Poru extends EventEmitter {
   }
 
   async resolve({ query, source, requester }: ResolveOptions, node?: Node) {
+    if (!this.isActivated)
+      throw new Error(`You have to init poru in your ready event`);
+
     if (!node) node = this.leastUsedNodes[0];
     if (!node) throw new Error("No nodes are available.");
     const regex = /^https?:\/\//;
 
     if (regex.test(query)) {
-      let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+      let response = await node.rest.get(
+        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+      );
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
@@ -321,7 +332,9 @@ export class Poru extends EventEmitter {
   async decodeTrack(track: string, node: Node) {
     if (!node) node = this.leastUsedNodes[0];
 
-    return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+    return node.rest.get(
+      `/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`
+    );
   }
 
   async decodeTracks(tracks: string[], node: Node) {
