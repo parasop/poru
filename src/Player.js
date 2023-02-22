@@ -115,11 +115,16 @@ class Player extends EventEmitter {
     return this;
   }
 
-  setVolume(volume) {
-    if (isNaN(volume))
+  setVolume(volume) { 
+    //Player.setVolume(Number) Number should be in between 1 and 100
+    //currentVolume = Player.filters.volume*100 
+    if (Number.isNaN(volume))
       throw new RangeError("[Poru Error] Volume level must be a number.");
  
-      volume = Math.min(5, Math.max(0, volume));
+      if(volume < 1 && volume > 100)
+      throw new RangeError("[Poru Error] Volume Number should be in between 1 and 100");
+
+      volume = (volume/100).toFixed(2);
       this.filters.volume = volume;
       this.filters.updateFilters();
 
