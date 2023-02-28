@@ -195,7 +195,7 @@ export class Poru extends EventEmitter {
       case "oceanic": {
         this.send = (packet: any) => {
           const guild = client.guilds.get(packet.d.guild_id);
-          if (guild) guild.shard.sendWS(packet?.op, packet?.d);
+          if (guild) guild.shard.send(packet?.op, packet?.d);
         };
 
         client.on("packet", async (packet: any) => {
