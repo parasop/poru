@@ -33,7 +33,6 @@ class Track {
                 new RegExp(`^${escapeRegExp(this.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {
                 this.info.identifier = officialAudio.info.identifier;
-                this.info.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
                 this.track = officialAudio.track;
                 return this;
             }
@@ -43,13 +42,11 @@ class Track {
                 track.info.length <= (this.info.length ? this.info.length : 0) + 2000);
             if (sameDuration) {
                 this.info.identifier = sameDuration.info.identifier;
-                this.info.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
                 this.track = sameDuration.track;
                 return this;
             }
         }
         this.info.identifier = result.tracks[0].info.identifier;
-        this.info.image = `https://i.ytimg.com/vi/${this.info.identifier}/maxresdefault.jpg`;
         this.track = result.tracks[0].track;
         return this;
     }
