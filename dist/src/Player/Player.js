@@ -186,7 +186,6 @@ class Player extends events_1.EventEmitter {
     destroy() {
         this.disconnect();
         this.node.rest.destroyPlayer(this.guildId);
-        this.poru.emit("playerDisconnect", this);
         this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
         this.poru.players.delete(this.guildId);
     }
