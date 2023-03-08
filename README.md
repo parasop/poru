@@ -144,7 +144,7 @@ client.on("interactionCreate", async (interaction) => {
     const track = res.tracks[0];
     track.info.requester = interaction.user;
     player.queue.add(track);
-    interacton.reply(`Queued Track \n \`${track.title}\``);
+    interaction.reply(`Queued Track \n \`${track.title}\``);
   }
 
   if (!player.isPlaying && player.isConnected) player.play();
