@@ -5,6 +5,7 @@ import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track } from "./guild/Track";
+export type Constructor<T> = new (...args: any[]) => T;
 export interface NodeGroup {
     name: string;
     host: string;
@@ -21,6 +22,7 @@ export interface ResolveOptions {
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 export interface PoruOptions {
     plugins?: Plugin[];
+    customPlayer?: Constructor<Player>;
     autoResume: boolean;
     library: supportedLibraries;
     defaultPlatform: string;
@@ -77,27 +79,37 @@ export interface PoruEvents {
      * Emitted whenever player start playing new track
      * @eventProperty
      */
-    playerStart: (player: Player, track: Track) => void;
+    trackStart: (player: Player, track: Track) => void;
     /**
      * Emitted whenever track ends
      * @eventProperty
      */
-    playerEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
+    trackEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
     /**
-     * Emitted when player compelete queue and going to disconnect
+     * Emitted when player's queue  is compeleted and going to disconnect
      * @eventProperty
      */
-    playerDisconnect: (player: Player) => void;
+    queueEnd: (player: Player) => void;
     /**
      * Emitted when a track gets stuck while playing
      * @eventProperty
      */
-    playerError: (player: Player, track: Track, data: any) => void;
+    trackError: (player: Player, track: Track, data: any) => void;
+    /**
+    * Emitted when a player got updates
+    * @eventProperty
+    */
+    playerUpdate: (player: Player) => void;
+    /**
+   * Emitted when a player destroy
+   * @eventProperty
+   */
+    playerDestroy: (player: Player) => void;
     /**
      * Emitted when the websocket connection to Discord voice servers is closed
      * @eventProperty
      */
-    playerClose: (player: Player, track: Track, data: any) => void;
+    socketClose: (player: Player, track: Track, data: any) => void;
 }
 export declare interface Poru {
     on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;

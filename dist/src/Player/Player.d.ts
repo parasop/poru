@@ -32,7 +32,7 @@ export declare class Player extends EventEmitter {
     deaf: boolean;
     volume: number;
     constructor(poru: Poru, node: Node, options: any);
-    play(): Promise<void>;
+    play(): any;
     connect(options?: ConnectionOptions): void;
     stop(): this;
     pause(toggle?: boolean): this;
@@ -48,10 +48,11 @@ export declare class Player extends EventEmitter {
     get<K>(key: string): K;
     disconnect(): this;
     destroy(): void;
-    restart(): Promise<void>;
+    restart(): any;
     moveNode(name: string): void;
     AutoMoveNode(): Promise<void>;
-    eventHandler(data: any): boolean | Promise<void>;
+    autoplay(requester: any): Promise<this>;
+    eventHandler(data: any): any;
     resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
     send(data: any): void;
 }

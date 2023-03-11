@@ -1,6 +1,6 @@
 {
   "name": "poru",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "description": "A stable and powerfull lavalink client around node.js",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -13,9 +13,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && npm run build:esm && npm run build:docs",
+    "build": "tsc && npm run build:esm",
     "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
-    "build:docs": "typedoc --theme default --readme README.md --out docs/ --entryPointStrategy expand src/.",
     "prepublishOnly": "tsc && npm run build:esm"
   },
   "repository": {

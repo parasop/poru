@@ -160,7 +160,13 @@ class Poru extends events_1.EventEmitter {
         return this.createPlayer(node, options);
     }
     createPlayer(node, options) {
-        const player = new Player_1.Player(this, node, options);
+        let player;
+        if (this.options.customPlayer) {
+            player = new this.options.customPlayer(this, node, options);
+        }
+        else {
+            player = new Player_1.Player(this, node, options);
+        }
         this.players.set(options.guildId, player);
         player.connect(options);
         return player;
