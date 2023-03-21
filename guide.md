@@ -1,6 +1,6 @@
 # Guide for poru v4
 
-## how to create Player?
+## How to create player?
 
 ```JS
 const player = client.poru.createConnection({
@@ -10,16 +10,16 @@ const player = client.poru.createConnection({
     deaf: true,
   });
 ```
-## how to play songs from spotify?
-```
-const {Spotify} = require("poru-spotify");
-const {Poru} = require("poru");
+## How to play songs from spotify?
+```JS
+const { Spotify } = require("poru-spotify");
+const { Poru } = require("poru");
 
 const spotify = new Spotify({
-clientID: "",
-clientSecret :""
+  clientID: "",
+  clientSecret: ""
 })
 
-//plugin should be an array
-const poru = new Poru(client,nodes,{plugins:[spotify] })
+//plugins should be an array
+const poru = new Poru(client, nodes, { plugins: [spotify] })
 ```
