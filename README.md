@@ -80,7 +80,7 @@ const nodes = [
   },
 ];
 const PoruOptions = {
-  library:"discord.js"
+  library:"discord.js",
   defaultPlatform: "scsearch",
 };
 const client = new Client({
