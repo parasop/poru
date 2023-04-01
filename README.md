@@ -95,7 +95,7 @@ client.poru = new Poru(client, nodes, PoruOptions);
 
 client.poru.on("trackStart", (player, track) => {
   const channel = client.channels.cache.get(player.textChannel);
-  return channel.send(`Now playing \`${track.title}\``);
+  return channel.send(`Now playing \`${track.info.title}\``);
 });
 
 client.on("ready", () => {
@@ -126,7 +126,7 @@ client.on("interactionCreate", async (interaction) => {
     guildId: interaction.guild.id,
     voiceChannel: interaction.member.voice.channelId,
     textChannel: interaction.channel.id,
-    selfDeaf: true,
+    deaf: true,
   });
 
   if (res.loadType === "PLAYLIST_LOADED") {
@@ -142,7 +142,7 @@ client.on("interactionCreate", async (interaction) => {
     const track = res.tracks[0];
     track.info.requester = interaction.user;
     player.queue.add(track);
-    interaction.reply(`Queued Track \n \`${track.title}\``)
+    interaction.reply(`Queued Track \n \`${track.info.title}\``)
   }
 
   if (!player.isPlaying && player.isConnected) player.play();
