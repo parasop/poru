@@ -15,7 +15,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npm run build:esm",
     "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
-    "prepublishOnly": "tsc && npm run build:esm"
+    "prepublishOnly": "npm run build:esm"
   },
   "repository": {
     "type": "git",
