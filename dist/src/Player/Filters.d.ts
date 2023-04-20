@@ -41,6 +41,18 @@ export interface channelMixOptions {
     rightToLeft?: number;
     rightToRight?: number;
 }
+interface FiltersOptions {
+    volume: number;
+    equalizer: Band[];
+    karaoke: karaokeOptions;
+    tremolo: tremoloOptions;
+    vibrato: vibratoOptions;
+    rotation: rotationOptions;
+    distortion: distortionOptions;
+    channelMix: channelMixOptions;
+    lowPass: lowPassOptions;
+    timescale: timescaleOptions;
+}
 interface lowPassOptions {
     smoothing: number;
 }
@@ -56,7 +68,7 @@ export declare class Filters {
     channelMix: channelMixOptions;
     lowPass: lowPassOptions;
     timescale: timescaleOptions;
-    constructor(player: any);
+    constructor(player: any, options?: FiltersOptions);
     setEqualizer(bands: Band[]): Filters;
     /**
         * Change the karaoke Options applied to the currently playing track
@@ -71,6 +83,7 @@ export declare class Filters {
     setDistortion(distortion: distortionOptions): Filters;
     setChannelMix(mix: channelMixOptions): Filters;
     setLowPass(pass: lowPassOptions): Filters;
+    setFilters(options: any): this;
     clearFilters(): Filters;
     updateFilters(): Filters;
 }

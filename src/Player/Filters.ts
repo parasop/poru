@@ -48,6 +48,20 @@ export interface channelMixOptions {
   rightToRight?: number;
 }
 
+interface FiltersOptions {
+   volume: number;
+   equalizer: Band[];
+   karaoke: karaokeOptions;
+   tremolo: tremoloOptions;
+   vibrato: vibratoOptions;
+   rotation: rotationOptions;
+   distortion: distortionOptions;
+   channelMix: channelMixOptions;
+   lowPass: lowPassOptions;
+   timescale: timescaleOptions;
+
+}
+
 interface lowPassOptions {
   smoothing: number;
 }
@@ -65,18 +79,18 @@ export class Filters {
 
   public timescale: timescaleOptions;
 
-  constructor(player) {
+  constructor(player,options?:FiltersOptions) {
     this.player = player;
     (this.volume = 1.0),
      (this.equalizer = []);
-    this.karaoke = null;
-    this.timescale = null;
-    this.tremolo = null;
-    this.vibrato = null;
-    this.rotation = null;
-    this.distortion = null;
-    this.channelMix = null;
-    this.lowPass = null;
+    this.karaoke = options.karaoke || null;
+    this.timescale = options.timescale || null;
+    this.tremolo = options.tremolo || null;
+    this.vibrato = options.vibrato || null;
+    this.rotation =options.rotation || null;
+    this.distortion =options.distortion || null;
+    this.channelMix = options.channelMix || null;
+    this.lowPass = options.lowPass || null;
   }
 
   public setEqualizer(bands: Band[]): Filters {
@@ -143,6 +157,12 @@ public setLowPass(pass: lowPassOptions): Filters{
     this.updateFilters();
 
     return this;
+}
+
+public setFilters(options) {
+  this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this,options) : new Filters(this,options);
+  this.updateFilters();
+  return this;
 }
 
 

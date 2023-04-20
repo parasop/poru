@@ -38,9 +38,7 @@ class Player extends events_1.EventEmitter {
         this.queue = new Queue_1.default();
         this.connection = new Connection_1.Connection(this);
         this.guildId = options.guildId;
-        this.filters = this.poru.options.customFilter
-            ? new this.poru.options.customFilter(this)
-            : new Filters_1.Filters(this);
+        this.filters = this.poru.options.customFilter ? new this.poru.options.customFilter(this) : new Filters_1.Filters(this);
         this.voiceChannel = options.voiceChannel;
         this.textChannel = options.textChannel;
         this.currentTrack = null;
