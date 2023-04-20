@@ -17,14 +17,14 @@ class Filters {
         this.player = player;
         (this.volume = 1.0),
             (this.equalizer = []);
-        this.karaoke = options.karaoke || null;
-        this.timescale = options.timescale || null;
-        this.tremolo = options.tremolo || null;
-        this.vibrato = options.vibrato || null;
-        this.rotation = options.rotation || null;
-        this.distortion = options.distortion || null;
-        this.channelMix = options.channelMix || null;
-        this.lowPass = options.lowPass || null;
+        this.karaoke = options?.karaoke || null;
+        this.timescale = options?.timescale || null;
+        this.tremolo = options?.tremolo || null;
+        this.vibrato = options?.vibrato || null;
+        this.rotation = options?.rotation || null;
+        this.distortion = options?.distortion || null;
+        this.channelMix = options?.channelMix || null;
+        this.lowPass = options?.lowPass || null;
     }
     setEqualizer(bands) {
         this.equalizer = bands;

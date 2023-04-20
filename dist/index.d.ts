@@ -7,3 +7,4 @@ export * from './src/Node/Rest';
 export * from './src/Player/Filters';
 export * from './src/guild/Track';
 export * from './src/guild/Response';
+export * from './src/Player/CustomFilters';

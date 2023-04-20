@@ -11,3 +11,4 @@ export const RequestMethod = mod.RequestMethod;
 export const Response = mod.Response;
 export const Rest = mod.Rest;
 export const Track = mod.Track;
+export const customFilter = mod.customFilter;

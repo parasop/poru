@@ -23,4 +23,5 @@ __exportStar(require("./src/Node/Rest"), exports);
 __exportStar(require("./src/Player/Filters"), exports);
 __exportStar(require("./src/guild/Track"), exports);
 __exportStar(require("./src/guild/Response"), exports);
+__exportStar(require("./src/Player/CustomFilters"), exports);
 //# sourceMappingURL=index.js.map
