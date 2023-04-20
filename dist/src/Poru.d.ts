@@ -5,6 +5,7 @@ import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track } from "./guild/Track";
+import { Filters } from "./Player/Filters";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface NodeGroup {
     name: string;
@@ -23,6 +24,7 @@ export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 export interface PoruOptions {
     plugins?: Plugin[];
     customPlayer?: Constructor<Player>;
+    customFilter?: Constructor<Filters>;
     autoResume: boolean;
     library: supportedLibraries;
     defaultPlatform: string;
@@ -96,14 +98,14 @@ export interface PoruEvents {
      */
     trackError: (player: Player, track: Track, data: any) => void;
     /**
-    * Emitted when a player got updates
-    * @eventProperty
-    */
+     * Emitted when a player got updates
+     * @eventProperty
+     */
     playerUpdate: (player: Player) => void;
     /**
-   * Emitted when a player destroy
-   * @eventProperty
-   */
+     * Emitted when a player destroy
+     * @eventProperty
+     */
     playerDestroy: (player: Player) => void;
     /**
      * Emitted when the websocket connection to Discord voice servers is closed

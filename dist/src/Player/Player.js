@@ -38,7 +38,9 @@ class Player extends events_1.EventEmitter {
         this.queue = new Queue_1.default();
         this.connection = new Connection_1.Connection(this);
         this.guildId = options.guildId;
-        this.filters = new Filters_1.Filters(this);
+        this.filters = this.poru.options.customFilter
+            ? new this.poru.options.customFilter(this)
+            : new Filters_1.Filters(this);
         this.voiceChannel = options.voiceChannel;
         this.textChannel = options.textChannel;
         this.currentTrack = null;
@@ -239,8 +241,14 @@ class Player extends events_1.EventEmitter {
     async autoplay(requester) {
         try {
             let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
-            let response = await this.poru.resolve({ query: data, requester, source: this.poru.options.defaultPlatform || "ytmsearch" });
-            if (!response || !response.tracks || ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType))
+            let response = await this.poru.resolve({
+                query: data,
+                requester,
+                source: this.poru.options.defaultPlatform || "ytmsearch",
+            });
+            if (!response ||
+                !response.tracks ||
+                ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType))
                 return this.stop();
             let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
             this.queue.push(track);

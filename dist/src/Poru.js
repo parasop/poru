@@ -116,7 +116,7 @@ class Poru extends events_1.EventEmitter {
     }
     getNodeByRegion(region) {
         return [...this.nodes.values()]
-            .filter((node) => node.isConnected && node.regions.includes(region.toLowerCase()))
+            .filter((node) => node.isConnected && node.regions?.includes(region?.toLowerCase()))
             .sort((a, b) => {
             const aLoad = a.stats.cpu
                 ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100

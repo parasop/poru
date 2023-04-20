@@ -8,5 +8,6 @@ export const Player = mod.Player;
 export const Plugin = mod.Plugin;
 export const Poru = mod.Poru;
 export const RequestMethod = mod.RequestMethod;
+export const Response = mod.Response;
 export const Rest = mod.Rest;
 export const Track = mod.Track;

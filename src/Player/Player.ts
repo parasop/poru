@@ -39,7 +39,9 @@ export class Player extends EventEmitter {
     this.queue = new Queue();
     this.connection = new Connection(this);
     this.guildId = options.guildId;
-    this.filters = new Filters(this);
+    this.filters = this.poru.options.customFilter
+      ? new this.poru.options.customFilter(this)
+      : new Filters(this);
     this.voiceChannel = options.voiceChannel;
     this.textChannel = options.textChannel;
     this.currentTrack = null;
@@ -62,7 +64,7 @@ export class Player extends EventEmitter {
         (this.ping = packet.state.ping);
       this.timestamp = packet.state.time;
       //this event will be useful for creating web player
-      this.poru.emit("playerUpdate",this)
+      this.poru.emit("playerUpdate", this);
     });
     this.on("event", (data) => this.eventHandler(data));
   }
@@ -70,19 +72,20 @@ export class Player extends EventEmitter {
   public async play() {
     if (!this.queue.length) return;
     this.currentTrack = this.queue.shift();
-    if (!this.currentTrack.track) this.currentTrack = await this.currentTrack.resolve(this.poru);
-    if(this.currentTrack.track){
-    this.node.rest.updatePlayer({
-      guildId: this.guildId,
-      data: {
-        encodedTrack: this.currentTrack.track,
-      },
-    });
-    this.isPlaying = true;
-    this.position = 0;
-  } else {
-    return this.play();
-  }
+    if (!this.currentTrack.track)
+      this.currentTrack = await this.currentTrack.resolve(this.poru);
+    if (this.currentTrack.track) {
+      this.node.rest.updatePlayer({
+        guildId: this.guildId,
+        data: {
+          encodedTrack: this.currentTrack.track,
+        },
+      });
+      this.isPlaying = true;
+      this.position = 0;
+    } else {
+      return this.play();
+    }
   }
 
   public connect(options: ConnectionOptions = this) {
@@ -226,7 +229,7 @@ export class Player extends EventEmitter {
     this.disconnect();
     this.node.rest.destroyPlayer(this.guildId);
     this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
-    this.poru.emit("playerDestroy",this);
+    this.poru.emit("playerDestroy", this);
     this.poru.players.delete(this.guildId);
   }
 
@@ -272,31 +275,35 @@ export class Player extends EventEmitter {
 
   async autoplay(requester) {
     try {
-      let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier
-        }&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier
-        }`;
+      let data = `https://www.youtube.com/watch?v=${
+        this.previousTrack.info.identifier || this.currentTrack.info.identifier
+      }&list=RD${
+        this.previousTrack.info.identifier || this.currentTrack.info.identifier
+      }`;
 
-      let response = await this.poru.resolve({query:data,requester,source:   this.poru.options.defaultPlatform || "ytmsearch"});
-      if (!response ||!response.tracks ||["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)) return this.stop();
-      let track =response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
+      let response = await this.poru.resolve({
+        query: data,
+        requester,
+        source: this.poru.options.defaultPlatform || "ytmsearch",
+      });
+      if (
+        !response ||
+        !response.tracks ||
+        ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)
+      )
+        return this.stop();
+      let track =
+        response.tracks[
+          Math.floor(Math.random() * Math.floor(response.tracks.length))
+        ];
       this.queue.push(track);
       this.play();
 
       return this;
-
     } catch (e) {
-       return this.stop();
+      return this.stop();
     }
   }
-
-
-
-
-
-
-
-
-
 
   public eventHandler(data) {
     switch (data.type) {

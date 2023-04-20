@@ -5,6 +5,7 @@ import { Config as config } from "./config";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track } from "./guild/Track";
+import { Filters } from "./Player/Filters";
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -27,7 +28,8 @@ export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 
 export interface PoruOptions {
   plugins?: Plugin[];
-  customPlayer?: Constructor<Player>
+  customPlayer?: Constructor<Player>;
+  customFilter?: Constructor<Filters>;
   autoResume: boolean;
   library: supportedLibraries;
   defaultPlatform: string;
@@ -104,7 +106,7 @@ export interface PoruEvents {
    * Emitted when player's queue  is compeleted and going to disconnect
    * @eventProperty
    */
-   queueEnd: (player: Player) => void;
+  queueEnd: (player: Player) => void;
 
   /**
    * Emitted when a track gets stuck while playing
@@ -112,18 +114,17 @@ export interface PoruEvents {
    */
   trackError: (player: Player, track: Track, data: any) => void;
 
-   /**
+  /**
    * Emitted when a player got updates
    * @eventProperty
    */
-   playerUpdate: (player: Player) => void;
+  playerUpdate: (player: Player) => void;
 
-    /**
+  /**
    * Emitted when a player destroy
    * @eventProperty
    */
-    playerDestroy: (player: Player) => void;
-
+  playerDestroy: (player: Player) => void;
 
   /**
    * Emitted when the websocket connection to Discord voice servers is closed
@@ -262,7 +263,7 @@ export class Poru extends EventEmitter {
     return [...this.nodes.values()]
       .filter(
         (node) =>
-          node.isConnected && node.regions.includes(region.toLowerCase())
+          node.isConnected && node.regions?.includes(region?.toLowerCase())
       )
       .sort((a, b) => {
         const aLoad = a.stats.cpu
@@ -295,6 +296,7 @@ export class Poru extends EventEmitter {
     if (this.leastUsedNodes.length === 0)
       throw new Error("[Poru Error] No nodes are avaliable");
     let node;
+
     if (options.region) {
       const region = this.getNodeByRegion(options.region)[0];
       node = this.nodes.get(region.name || this.leastUsedNodes[0].name);
@@ -308,12 +310,10 @@ export class Poru extends EventEmitter {
 
   private createPlayer(node: Node, options: ConnectionOptions) {
     let player;
-    if(this.options.customPlayer){
-          player = new this.options.customPlayer(this, node, options);
- 
+    if (this.options.customPlayer) {
+      player = new this.options.customPlayer(this, node, options);
     } else {
-       player = new Player(this, node, options);
- 
+      player = new Player(this, node, options);
     }
 
     this.players.set(options.guildId, player);
@@ -332,7 +332,8 @@ export class Poru extends EventEmitter {
   }
 
   async resolve({ query, source, requester }: ResolveOptions, node?: Node) {
-    if (!this.isActivated) throw new Error(`You have to init poru in your ready event`);
+    if (!this.isActivated)
+      throw new Error(`You have to init poru in your ready event`);
 
     if (!node) node = this.leastUsedNodes[0];
     if (!node) throw new Error("No nodes are available.");
