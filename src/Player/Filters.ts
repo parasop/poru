@@ -1,7 +1,7 @@
 import { Player } from "./Player";
 
 interface Band {
-  bands: number;
+  band: number;
   gain: number;
 }
 interface karaokeOptions {
