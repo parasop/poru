@@ -13,6 +13,20 @@ class customFilter extends Filters_1.Filters {
     constructor(player) {
         super(player);
         this.player = player;
+        this.bassboost = 0;
+    }
+    setBassboost(val) {
+        if (!this.player)
+            return;
+        if (val < 0 && val > 6)
+            throw Error('bassboost value must be between 0 to 5');
+        this.bassboost = val;
+        let num = (val - 1) * (1.25 / 9) - 0.25;
+        this.setEqualizer(Array(13).fill(0).map((n, i) => ({
+            band: i,
+            gain: num
+        })));
+        return this;
     }
     setSlowmode(val) {
         if (!this.player)

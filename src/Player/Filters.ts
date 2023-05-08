@@ -167,7 +167,7 @@ public setFilters(options) {
 
 
 public clearFilters(): Filters {
-    this.player.filters = new Filters(this.player);
+    this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this.player) : new Filters(this.player);
     this.updateFilters()
     return this;
 }
