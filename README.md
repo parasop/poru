@@ -71,14 +71,21 @@ URL | Features  | Additional Information
 ```javascript
 const { Client, GatewayIntentBits } = require("discord.js");
 const { Poru } = require("poru");
+const { Spotify } = require("poru-spotify");
+const spotify = new Spotify({
+ clientID: "",
+ clientSecret: ""
+})
+
 const nodes = [
-  {
+  { 
     name: "local-node",
     host: "localhost",
     port: 2333,
     password: "youshallnotpass",
   },
 ];
+
 const PoruOptions = {
   library:"discord.js",
   defaultPlatform: "scsearch",
@@ -91,7 +98,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent,
   ],
 });
-client.poru = new Poru(client, nodes, PoruOptions);
+client.poru = new Poru(client, nodes, PoruOptions, { plugins: [spotify] });
 
 client.poru.on("trackStart", (player, track) => {
   const channel = client.channels.cache.get(player.textChannel);
