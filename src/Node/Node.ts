@@ -6,6 +6,7 @@ import { Rest } from "./Rest";
 export interface NodeStats {
   players: number;
   playingPlayers: number;
+  uptime: number;
   memory: {
     reservable: number;
     used: number;
@@ -22,7 +23,7 @@ export interface NodeStats {
     systemLoad: number;
     lavalinkLoad: number;
   };
-  uptime: number;
+
 }
 
 export class Node {
