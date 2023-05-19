@@ -3,7 +3,7 @@
         "src"
     ],
     "entryPointStrategy": "expand",
-    "out": "public/docs",
+    "out": "docs",
     "excludeExternals": true,
     "tsconfig": "./tsconfig.json",
     "name": "Poru"
