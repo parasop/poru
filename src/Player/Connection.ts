@@ -13,7 +13,10 @@ export class Connection {
   public voice: IVoiceServer | null;
   public self_mute: boolean;
   public self_deaf: boolean;
-
+  /**
+   * The connection class
+   * @param player Player
+   */
   constructor(player: Player) {
     this.player = player;
     this.sessionId = null;
@@ -26,7 +29,10 @@ export class Connection {
     this.self_mute = false;
     this.self_deaf = false;
   }
-
+  /**
+   * Set the voice server update
+   * @param data The data from the voice server update
+   */
   public setServersUpdate(data) {
     if (!data.endpoint) throw new Error("NO Session id found");
 
@@ -46,7 +52,10 @@ export class Connection {
       `[Voice] <- [Discord] : Voice Server Update | Server: ${this.region} Guild: ${this.player.guildId}`
     );
   }
-
+  /**
+   * Set the state update
+   * @param data The data from the state update
+   */
   setStateUpdate(data) {
     const { session_id, channel_id, self_deaf, self_mute } = data;
     if (

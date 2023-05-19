@@ -26,7 +26,9 @@ export interface ResolveOptions {
   source?: string;
   requester?: any;
 }
-
+/**
+ * @typedef {string} supportedLibraries
+ */
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 
 export interface PoruOptions {
@@ -57,6 +59,8 @@ export interface PoruEvents {
   /**
    * Emitted when data useful for debugging is produced
    * @eventProperty
+   * @param args
+   * @returns void
    */
   debug: (...args: any) => void;
 
@@ -125,7 +129,7 @@ export interface PoruEvents {
   trackEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
 
   /**
-   * Emitted when player's queue  is compeleted and going to disconnect
+   * Emitted when player's queue  is completed and going to disconnect
    * @eventProperty
    * @param player
    * @returns void
@@ -169,7 +173,19 @@ export interface PoruEvents {
    */
   socketClose: (player: Player, track: Track, data: any) => void;
 }
-
+/**
+ * @extends EventEmitter
+ * @interface Poru
+ * @param {PoruOptions} options
+ * @param {NodeGroup[]} nodes
+ * @param {string} userId
+ * @param {string} version
+ * @param {boolean} isActivated
+ * @param {Function} send
+ * @param {Map<string, Node>} nodes
+ * @param {Map<string, Player>} players
+ * @returns Poru
+ */
 export declare interface Poru {
   on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
   once<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
@@ -183,11 +199,9 @@ export declare interface Poru {
 export class Poru extends EventEmitter {
   public readonly client: any;
   private readonly _nodes: NodeGroup[];
-
   public options: PoruOptions;
   public nodes: Map<string, Node>;
   public players: Map<string, Player>;
-
   public userId: string | null;
   public version: string;
   public isActivated: boolean;
@@ -243,7 +257,7 @@ export class Poru extends EventEmitter {
           if (guild) guild.shard?.send(packet);
         };
         client.on("raw", async (packet: any) => {
-          await this.packetUpdate(packet);
+          this.packetUpdate(packet);
         });
         break;
       }
@@ -254,7 +268,7 @@ export class Poru extends EventEmitter {
         };
 
         client.on("rawWS", async (packet: any) => {
-          await this.packetUpdate(packet);
+          this.packetUpdate(packet);
         });
         break;
       }
@@ -265,7 +279,7 @@ export class Poru extends EventEmitter {
         };
 
         client.on("packet", async (packet: any) => {
-          await this.packetUpdate(packet);
+          this.packetUpdate(packet);
         });
         break;
       }
@@ -440,7 +454,12 @@ export class Poru extends EventEmitter {
       return new Response(response, requester);
     }
   }
-
+  /**
+   * Decode a track from poru instance
+   * @param track String
+   * @param node Node
+   * @returns 
+   */
   public async decodeTrack(track: string, node: Node) {
     if (!node) node = this.leastUsedNodes[0];
 
@@ -448,16 +467,30 @@ export class Poru extends EventEmitter {
       `/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`
     );
   }
-
+  /**
+   * Decode tracks from poru instance
+   * @param tracks String[]
+   * @param node Node
+   * @returns 
+   */
   public async decodeTracks(tracks: string[], node: Node) {
     return await node.rest.post(`/v3/decodetracks`, tracks);
   }
 
+  /**
+   * Get lavalink info from poru instance
+   * @param name Node name
+   * @returns 
+   */
   public async getLavalinkInfo(name: string) {
     let node = this.nodes.get(name);
     return await node.rest.get(`/v3/info`);
   }
-
+  /**
+   * Get lavalink status from poru instance
+   * @param name Node name
+   * @returns 
+   */
   public async getLavalinkStatus(name: string) {
     let node = this.nodes.get(name);
     return await node.rest.get(`/v3/stats`);
@@ -471,7 +504,11 @@ async getLavalinkVersion(name:string){
 
 }
 */
-
+  /**
+   * Get a player from poru instance
+   * @param guildId Guild ID
+   * @returns 
+   */
   get(guildId: string) {
     return this.players.get(guildId);
   }
