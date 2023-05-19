@@ -46,7 +46,12 @@ export class Node {
   public attempt: number;
   public stats: NodeStats | null;
   public options: NodeGroup;
-
+  /**
+   * The Node class that is used to connect to a lavalink node
+   * @param poru Poru
+   * @param node NodeGroup
+   * @param options PoruOptions
+   */
   constructor(poru: Poru, node: NodeGroup, options: PoruOptions) {
     this.poru = poru;
     this.name = node.name;
@@ -69,8 +74,11 @@ export class Node {
     this.isConnected = false;
     this.stats = null;
   }
-
-  public connect() {
+  /**
+   * Connects to the lavalink node
+   * @returns {void}
+   */
+  public connect(): void {
     if (this.ws) this.ws.close();
     const headers = {
       Authorization: this.password,
@@ -84,16 +92,24 @@ export class Node {
     this.ws.on("message", this.message.bind(this));
     this.ws.on("close", this.close.bind(this));
   }
-
-  public send(payload: any) {
+  /**
+   * Handles the message event
+   * @param payload any
+   * @returns {void}
+   */
+  public send(payload: any): void {
     const data = JSON.stringify(payload);
-    this.ws.send(data, (error) => {
+    this.ws.send(data, (error: any) => {
       if (error) return error;
       return null;
     });
   }
-
-  public reconnect() {
+  /**
+   * Handles the message event
+   * @param payload any
+   * @returns {void}
+   */
+  public reconnect(): void {
     this.reconnectAttempt = setTimeout(() => {
       if (this.attempt > this.reconnectTries) {
         throw new Error(
@@ -113,7 +129,7 @@ export class Node {
 
     this.poru.players.forEach((player) => {
       if (player.node == this) {
-       player.AutoMoveNode();
+        player.AutoMoveNode();
       }
     });
     this.ws.close(1000, "destroy");

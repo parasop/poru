@@ -1,0 +1,10 @@
+{
+    "entryPoints": [
+        "src"
+    ],
+    "entryPointStrategy": "Expand",
+    "out": "public/docs",
+    "excludeExternals": true,
+    "tsconfig": "./tsconfig.json",
+    "name": "Poru"
+}

@@ -1,33 +1,30 @@
 import { Poru } from "../Poru";
 import { LavalinkResponse } from "./Response";
-const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export interface trackData {
-    track :string;
-    info : trackInfo
-
+  track: string;
+  info: trackInfo;
 }
 
 export interface trackInfo {
-    
-        identifier:string;
-        isSeekable : boolean;
-        author:string;
-        length:number;
-        isStream :boolean;
-        title:string;
-        uri:string;
-        sourceName:string;
-        image? :string
-        requester?:any
-    
+  identifier: string;
+  isSeekable: boolean;
+  author: string;
+  length: number;
+  isStream: boolean;
+  title: string;
+  uri: string;
+  sourceName: string;
+  image?: string
+  requester?: any
 }
 
 
 export class Track {
-    public track : string;
-    public info : trackInfo;
+  public track: string;
+  public info: trackInfo;
 
-  constructor(data:trackData,requester?) {
+  constructor(data: trackData, requester?: any) {
     this.track = data.track;
     this.info = {
       identifier: data.info.identifier,
@@ -44,11 +41,11 @@ export class Track {
   }
 
 
- public async resolve(poru:Poru) {
+  public async resolve(poru: Poru) {
     const query = [this.info.author, this.info.title]
       .filter((x) => !!x)
       .join(" - ");
-    const result:any = await poru.resolve({query,source:poru.options.defaultPlatform || "ytsearch",requester:this.info.requester});
+    const result: any = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch", requester: this.info.requester });
     if (!result || !result.tracks.length) return;
 
     if (this.info.author) {
@@ -70,7 +67,7 @@ export class Track {
     }
     if (this.info.length) {
       const sameDuration = result.tracks.find(
-        (track:trackData) =>
+        (track: trackData) =>
           track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
           track.info.length <= (this.info.length ? this.info.length : 0) + 2000
       );
@@ -84,6 +81,4 @@ export class Track {
     this.track = result.tracks[0].track;
     return this;
   }
-
-
 }
