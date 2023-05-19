@@ -18,7 +18,7 @@
 
 ## Table of contents
 
-- [Documentation](https://poru.parasdocs.tech)
+- [Documentation](https://poru.js.org)
 - [Installation](#installation)
 - [About](#about)
 - [Example](https://github.com/parasop/poru-example)
