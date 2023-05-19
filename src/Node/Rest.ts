@@ -1,5 +1,5 @@
 import { Node } from "./Node";
-import { fetch} from "undici";
+import { fetch } from "undici";
 import { Poru } from "../Poru";
 
 export interface playOptions {
@@ -35,9 +35,8 @@ export class Rest {
 
   constructor(poru: Poru, node: Node) {
     this.poru = poru;
-    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${
-      node.options.port
-    }`;
+    this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${node.options.port
+      }`;
     this.sessionId = node.sessionId;
     this.password = node.password;
   }
@@ -51,7 +50,7 @@ export class Rest {
   }
 
   public async updatePlayer(options: playOptions) {
-    return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`,options.data);
+    return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
   }
 
   public async destroyPlayer(guildId: string) {
