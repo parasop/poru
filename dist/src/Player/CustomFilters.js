@@ -2,6 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.customFilter = void 0;
 const Filters_1 = require("./Filters");
+/**
+ * The customFilters class that is used to apply filters to the currently playing track
+ * @extends Filters
+ */
 class customFilter extends Filters_1.Filters {
     band;
     gain;
@@ -10,11 +14,20 @@ class customFilter extends Filters_1.Filters {
     vaporwave;
     _8d;
     bassboost;
+    /**
+     * The customFilters class that is used to apply filters to the currently playing track
+     * @param player Player
+     */
     constructor(player) {
         super(player);
         this.player = player;
         this.bassboost = 0;
     }
+    /**
+     * Set the bassboost value
+     * @param val The value of the bassboost
+     * @returns
+     */
     setBassboost(val) {
         if (!this.player)
             return;
@@ -28,6 +41,11 @@ class customFilter extends Filters_1.Filters {
         })));
         return this;
     }
+    /**
+     * Set slowmode filter
+     * @param val The value of the band
+     * @returns
+     */
     setSlowmode(val) {
         if (!this.player)
             return;
@@ -42,6 +60,11 @@ class customFilter extends Filters_1.Filters {
             }
             : this.clearFilters());
     }
+    /**
+     * Set Nightcore filter
+     * @param val Boolean
+     * @returns
+     */
     setNightcore(val) {
         if (!this.player)
             return;
@@ -52,6 +75,11 @@ class customFilter extends Filters_1.Filters {
         }
         return val;
     }
+    /**
+     * Set Vaporwave filter
+     * @param val Boolean
+     * @returns
+     */
     setVaporwave(val) {
         if (!this.player)
             return;
@@ -61,6 +89,11 @@ class customFilter extends Filters_1.Filters {
         }
         this.setTimescale(val ? { pitch: 0.5 } : null);
     }
+    /**
+     * Set 8D filter
+     * @param val Boolean
+     * @returns
+     */
     set8D(val) {
         if (!this.player)
             return;

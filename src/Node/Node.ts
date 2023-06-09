@@ -80,6 +80,9 @@ export class Node {
    */
   public connect(): void {
     if (this.ws) this.ws.close();
+    if(!this.poru.nodes.get(this.name)){
+      this.poru.nodes.set(this.name,this)
+    }
     const headers = {
       Authorization: this.password,
       "User-Id": this.poru.userId,

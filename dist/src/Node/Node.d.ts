@@ -43,9 +43,29 @@ export declare class Node {
     attempt: number;
     stats: NodeStats | null;
     options: NodeGroup;
+    /**
+     * The Node class that is used to connect to a lavalink node
+     * @param poru Poru
+     * @param node NodeGroup
+     * @param options PoruOptions
+     */
     constructor(poru: Poru, node: NodeGroup, options: PoruOptions);
+    /**
+     * Connects to the lavalink node
+     * @returns {void}
+     */
     connect(): void;
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
     send(payload: any): void;
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
     reconnect(): void;
     disconnect(): void;
     get penalties(): number;

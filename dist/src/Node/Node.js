@@ -28,6 +28,12 @@ class Node {
     attempt;
     stats;
     options;
+    /**
+     * The Node class that is used to connect to a lavalink node
+     * @param poru Poru
+     * @param node NodeGroup
+     * @param options PoruOptions
+     */
     constructor(poru, node, options) {
         this.poru = poru;
         this.name = node.name;
@@ -50,9 +56,16 @@ class Node {
         this.isConnected = false;
         this.stats = null;
     }
+    /**
+     * Connects to the lavalink node
+     * @returns {void}
+     */
     connect() {
         if (this.ws)
             this.ws.close();
+        if (!this.poru.nodes.get(this.name)) {
+            this.poru.nodes.set(this.name, this);
+        }
         const headers = {
             Authorization: this.password,
             "User-Id": this.poru.userId,
@@ -66,6 +79,11 @@ class Node {
         this.ws.on("message", this.message.bind(this));
         this.ws.on("close", this.close.bind(this));
     }
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
     send(payload) {
         const data = JSON.stringify(payload);
         this.ws.send(data, (error) => {
@@ -74,6 +92,11 @@ class Node {
             return null;
         });
     }
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
     reconnect() {
         this.reconnectAttempt = setTimeout(() => {
             if (this.attempt > this.reconnectTries) {

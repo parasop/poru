@@ -1,6 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Connection = void 0;
+/**
+  * The connection class
+  * @class
+  * @classdesc The connection class
+  * @param {Player} player The player class
+  * @hideconstructor
+  *
+ */
 class Connection {
     player;
     sessionId;
@@ -8,6 +16,10 @@ class Connection {
     voice;
     self_mute;
     self_deaf;
+    /**
+     * The connection class
+     * @param player Player
+     */
     constructor(player) {
         this.player = player;
         this.sessionId = null;
@@ -20,6 +32,10 @@ class Connection {
         this.self_mute = false;
         this.self_deaf = false;
     }
+    /**
+     * Set the voice server update
+     * @param data The data from the voice server update
+     */
     setServersUpdate(data) {
         if (!data.endpoint)
             throw new Error("NO Session id found");
@@ -33,6 +49,10 @@ class Connection {
         });
         this.player.poru.emit("debug", this.player.node.name, `[Voice] <- [Discord] : Voice Server Update | Server: ${this.region} Guild: ${this.player.guildId}`);
     }
+    /**
+     * Set the state update
+     * @param data The data from the state update
+     */
     setStateUpdate(data) {
         const { session_id, channel_id, self_deaf, self_mute } = data;
         if (this.player.voiceChannel &&

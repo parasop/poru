@@ -17,6 +17,13 @@ class Poru extends events_1.EventEmitter {
     version;
     isActivated;
     send;
+    /**
+     * This is the main class of Poru
+     * @param client VoiceClient for Poru library to use to connect to lavalink node server (discord.js, eris, oceanic)
+     * @param nodes Node
+     * @param options PoruOptions
+     * @returns Poru
+     */
     constructor(client, nodes, options) {
         super();
         this.client = client;
@@ -29,6 +36,11 @@ class Poru extends events_1.EventEmitter {
         this.isActivated = false;
         this.send = null;
     }
+    /**
+     * This method is used to add a node to poru
+     * @param client VoiceClient for Poru library to use to connect to lavalink node server (discord.js, eris, oceanic)
+     * @returns void
+     */
     init(client) {
         if (this.isActivated)
             return this;
@@ -52,7 +64,7 @@ class Poru extends events_1.EventEmitter {
                         guild.shard?.send(packet);
                 };
                 client.on("raw", async (packet) => {
-                    await this.packetUpdate(packet);
+                    this.packetUpdate(packet);
                 });
                 break;
             }
@@ -63,7 +75,7 @@ class Poru extends events_1.EventEmitter {
                         guild.shard.sendWS(packet?.op, packet?.d);
                 };
                 client.on("rawWS", async (packet) => {
-                    await this.packetUpdate(packet);
+                    this.packetUpdate(packet);
                 });
                 break;
             }
@@ -74,7 +86,7 @@ class Poru extends events_1.EventEmitter {
                         guild.shard.send(packet?.op, packet?.d);
                 };
                 client.on("packet", async (packet) => {
-                    await this.packetUpdate(packet);
+                    this.packetUpdate(packet);
                 });
                 break;
             }
@@ -86,6 +98,11 @@ class Poru extends events_1.EventEmitter {
             }
         }
     }
+    /**
+     * Voice State Update and Voice Server Update
+     * @param packet packet from discord api
+     * @returns void
+     */
     packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
@@ -101,12 +118,22 @@ class Poru extends events_1.EventEmitter {
             player.connection.setStateUpdate(packet.d);
         }
     }
+    /**
+     * Add a node to poru instance
+     * @param options NodeGroup
+     * @returns Node
+     */
     addNode(options) {
         const node = new Node_1.Node(this, options, this.options);
         this.nodes.set(options.name, node);
         node.connect();
         return node;
     }
+    /**
+     * Remove a node from poru instance
+     * @param identifier Node name
+     * @returns void
+     */
     removeNode(identifier) {
         const node = this.nodes.get(identifier);
         if (!node)
@@ -114,6 +141,11 @@ class Poru extends events_1.EventEmitter {
         node.disconnect();
         this.nodes.delete(identifier);
     }
+    /**
+     * Get a node from poru instance
+     * @param region Region of the node
+     * @returns Node
+     */
     getNodeByRegion(region) {
         return [...this.nodes.values()]
             .filter((node) => node.isConnected && node.regions?.includes(region?.toLowerCase()))
@@ -127,9 +159,14 @@ class Poru extends events_1.EventEmitter {
             return aLoad - bLoad;
         });
     }
+    /**
+     * Get a node from poru instance
+     * @param identifier Node name
+     * @returns Node
+     */
     getNode(identifier = "auto") {
         if (!this.nodes.size)
-            throw new Error(`No nodes avaliable currently`);
+            throw new Error(`No nodes available currently`);
         if (identifier === "auto")
             return this.leastUsedNodes;
         const node = this.nodes.get(identifier);
@@ -139,6 +176,11 @@ class Poru extends events_1.EventEmitter {
             node.connect();
         return node;
     }
+    /**
+     * Get a player from poru instance
+     * @param options ConnectionOptions
+     * @returns
+     */
     createConnection(options) {
         if (!this.isActivated)
             throw new Error(`You have to init poru in your ready event`);
@@ -146,7 +188,7 @@ class Poru extends events_1.EventEmitter {
         if (player)
             return player;
         if (this.leastUsedNodes.length === 0)
-            throw new Error("[Poru Error] No nodes are avaliable");
+            throw new Error("[Poru Error] No nodes are available");
         let node;
         if (options.region) {
             const region = this.getNodeByRegion(options.region)[0];
@@ -156,9 +198,15 @@ class Poru extends events_1.EventEmitter {
             node = this.nodes.get(this.leastUsedNodes[0].name);
         }
         if (!node)
-            throw new Error("[Poru Error] No nodes are avalible");
+            throw new Error("[Poru Error] No nodes are available");
         return this.createPlayer(node, options);
     }
+    /**
+     * Create a player from poru instance
+     * @param node Node
+     * @param options ConnectionOptions
+     * @returns
+     */
     createPlayer(node, options) {
         let player;
         if (this.options.customPlayer) {
@@ -171,14 +219,27 @@ class Poru extends events_1.EventEmitter {
         player.connect(options);
         return player;
     }
+    /**
+     * Remove a player from poru instance
+     * @param guildId Guild ID
+     */
     removeConnection(guildId) {
         this.players.get(guildId)?.destroy();
     }
+    /**
+     * Get a least used node from poru instance
+     */
     get leastUsedNodes() {
         return [...this.nodes.values()]
             .filter((node) => node.isConnected)
             .sort((a, b) => a.penalties - b.penalties);
     }
+    /**
+     * Resolve a track from poru instance
+     * @param param0  ResolveOptions
+     * @param node Node
+     * @returns
+     */
     async resolve({ query, source, requester }, node) {
         if (!this.isActivated)
             throw new Error(`You have to init poru in your ready event`);
@@ -197,18 +258,40 @@ class Poru extends events_1.EventEmitter {
             return new Response_1.Response(response, requester);
         }
     }
+    /**
+     * Decode a track from poru instance
+     * @param track String
+     * @param node Node
+     * @returns
+     */
     async decodeTrack(track, node) {
         if (!node)
             node = this.leastUsedNodes[0];
         return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
     }
+    /**
+     * Decode tracks from poru instance
+     * @param tracks String[]
+     * @param node Node
+     * @returns
+     */
     async decodeTracks(tracks, node) {
         return await node.rest.post(`/v3/decodetracks`, tracks);
     }
+    /**
+     * Get lavalink info from poru instance
+     * @param name Node name
+     * @returns
+     */
     async getLavalinkInfo(name) {
         let node = this.nodes.get(name);
         return await node.rest.get(`/v3/info`);
     }
+    /**
+     * Get lavalink status from poru instance
+     * @param name Node name
+     * @returns
+     */
     async getLavalinkStatus(name) {
         let node = this.nodes.get(name);
         return await node.rest.get(`/v3/stats`);
@@ -221,6 +304,11 @@ class Poru extends events_1.EventEmitter {
   
   }
   */
+    /**
+     * Get a player from poru instance
+     * @param guildId Guild ID
+     * @returns
+     */
     get(guildId) {
         return this.players.get(guildId);
     }
