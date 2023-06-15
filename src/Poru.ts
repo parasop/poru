@@ -35,15 +35,15 @@ export interface PoruOptions {
   plugins?: Plugin[];
   customPlayer?: Constructor<Player>;
   customFilter?: Constructor<Filters>;
-  autoResume: boolean;
+  autoResume?: boolean;
   library: supportedLibraries;
-  defaultPlatform: string;
+  defaultPlatform?: string;
   resumeKey?: string;
   resumeTimeout?: number;
   reconnectTimeout?: number | null;
   reconnectTries?: number | null;
   useCustomFilters?: boolean;
-  send: Function | null;
+  send?: Function | null;
 }
 
 export interface ConnectionOptions {
