@@ -54,6 +54,7 @@ class Player extends events_1.EventEmitter {
         this.isConnected = false;
         this.loop = "NONE";
         this.data = {};
+        this.poru.emit("playerCreate", this);
         this.on("playerUpdate", (packet) => {
             (this.isConnected = packet.state.connected),
                 (this.position = packet.state.position),
@@ -109,6 +110,7 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<void>} To disconnect from voice channel
      */
     stop() {
+        delete this.currentTrack;
         this.position = 0;
         this.isPlaying = false;
         this.node.rest.updatePlayer({

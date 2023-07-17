@@ -155,7 +155,19 @@ export interface PoruEvents {
    */
   playerUpdate: (player: Player) => void;
 
+
+
   /**
+   * Emitted when a player got created
+   * @eventProperty
+   * @param player
+   * @returns void
+   */
+  playerCreate: (player: Player) => void;
+
+
+  /**
+   * 
    * Emitted when a player destroy
    * @eventProperty
    * @param player

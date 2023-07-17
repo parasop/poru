@@ -61,6 +61,7 @@ export class Player extends EventEmitter {
     this.loop = "NONE";
     this.data = {};
 
+    this.poru.emit("playerCreate", this);
     this.on("playerUpdate", (packet) => {
       (this.isConnected = packet.state.connected),
         (this.position = packet.state.position),
