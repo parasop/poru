@@ -110,7 +110,6 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<void>} To disconnect from voice channel
      */
     stop() {
-        delete this.currentTrack;
         this.position = 0;
         this.isPlaying = false;
         this.node.rest.updatePlayer({
