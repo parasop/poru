@@ -343,13 +343,11 @@ export class Player extends EventEmitter {
       )
         return this.stop();
 
-      let tracks = response.tracks.filter((track) => track.info.identifier !== this.previousTrack.info.identifier && track.info.identifier !== this.currentTrack.info.identifier);
-
-      if (!tracks.length) return this.stop();
+      response.tracks.shift();
 
       let track =
-        tracks[
-        Math.floor(Math.random() * Math.floor(tracks.length))
+        response.tracks[
+        Math.floor(Math.random() * Math.floor(response.tracks.length))
         ];
       this.queue.push(track);
       this.play();
