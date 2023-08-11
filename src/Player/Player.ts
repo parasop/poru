@@ -284,7 +284,7 @@ export class Player extends EventEmitter {
     this.poru.emit("playerDestroy", this);
     this.poru.players.delete(this.guildId);
   }
-  
+
   public restart() {
     if (!this.currentTrack.track && !this.queue.length) return;
     if (!this.currentTrack.track) return this.play();
@@ -342,9 +342,14 @@ export class Player extends EventEmitter {
         ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType)
       )
         return this.stop();
+
+      let tracks = response.tracks.filter((track) => track.info.identifier !== this.previousTrack.info.identifier && track.info.identifier !== this.currentTrack.info.identifier);
+
+      if (!tracks.length) return this.stop();
+
       let track =
-        response.tracks[
-        Math.floor(Math.random() * Math.floor(response.tracks.length))
+        tracks[
+        Math.floor(Math.random() * Math.floor(tracks.length))
         ];
       this.queue.push(track);
       this.play();
