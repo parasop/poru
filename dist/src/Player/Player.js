@@ -9,6 +9,7 @@ const Queue_1 = __importDefault(require("../guild/Queue"));
 const events_1 = require("events");
 const Filters_1 = require("./Filters");
 const Response_1 = require("../guild/Response");
+const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 class Player extends events_1.EventEmitter {
     data;
     poru;
@@ -74,7 +75,7 @@ class Player extends events_1.EventEmitter {
             return;
         this.currentTrack = this.queue.shift();
         if (!this.currentTrack.track)
-            this.currentTrack = await this.currentTrack.resolve(this.poru);
+            this.currentTrack = await this.resolveTrack(this.currentTrack);
         if (this.currentTrack.track) {
             this.node.rest.updatePlayer({
                 guildId: this.guildId,
@@ -88,6 +89,40 @@ class Player extends events_1.EventEmitter {
         else {
             return this.play();
         }
+    }
+    /**
+      * Resolve a track
+      * @param {Track} track - Only for personal use
+      */
+    async resolveTrack(track) {
+        // console.log(track)
+        const query = [track.info?.author, track.info?.title]
+            .filter((x) => !!x)
+            .join(" - ");
+        const result = await this.resolve({ query, source: this.poru.options.defaultPlatform || "ytsearch", requester: track.info?.requester });
+        if (!result || !result.tracks.length)
+            return;
+        if (track.info?.author) {
+            const author = [track.info.author, `${track.info.author} - Topic`];
+            const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
+                new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(track.info.title));
+            if (officialAudio) {
+                track.info.identifier = officialAudio.info.identifier;
+                track.track = officialAudio.track;
+                return track;
+            }
+        }
+        if (track.info.length) {
+            const sameDuration = result.tracks.find((track) => track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
+                track.info.length <= (track.info.length ? track.info.length : 0) + 2000);
+            if (sameDuration) {
+                track.info.identifier = sameDuration.info.identifier;
+                track.track = sameDuration.track;
+                return track;
+            }
+        }
+        track.info.identifier = result.tracks[0].info.identifier;
+        return track;
     }
     /**
      *
@@ -310,6 +345,7 @@ class Player extends events_1.EventEmitter {
                 !response.tracks ||
                 ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType))
                 return this.stop();
+            response.tracks.shift();
             let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
             this.queue.push(track);
             this.play();

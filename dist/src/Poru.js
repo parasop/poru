@@ -6,7 +6,6 @@ const Player_1 = require("./Player/Player");
 const events_1 = require("events");
 const config_1 = require("./config");
 const Response_1 = require("./guild/Response");
-const Plugin_1 = require("./Plugin");
 class Poru extends events_1.EventEmitter {
     client;
     _nodes;
@@ -49,8 +48,6 @@ class Poru extends events_1.EventEmitter {
         this.isActivated = true;
         if (this.options.plugins) {
             this.options.plugins.forEach((plugin) => {
-                if (!(plugin instanceof Plugin_1.Plugin))
-                    throw new RangeError(`Some of your Plugin does not extend Poru's Plugin.`);
                 plugin.load(this);
             });
         }

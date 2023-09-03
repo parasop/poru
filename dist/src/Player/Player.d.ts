@@ -43,6 +43,11 @@ export declare class Player extends EventEmitter {
      */
     play(): any;
     /**
+      * Resolve a track
+      * @param {Track} track - Only for personal use
+      */
+    private resolveTrack;
+    /**
      *
      * @param options To connect to voice channel
      *
