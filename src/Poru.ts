@@ -252,11 +252,7 @@ export class Poru extends EventEmitter {
 
     if (this.options.plugins) {
       this.options.plugins.forEach((plugin) => {
-        if (!(plugin instanceof Plugin))
-          throw new RangeError(
-            `Some of your Plugin does not extend Poru's Plugin.`
-          );
-
+  
         plugin.load(this);
       });
     }
