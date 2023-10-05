@@ -134,7 +134,7 @@ class Player extends events_1.EventEmitter {
         this.send({
             guild_id: guildId,
             channel_id: voiceChannel,
-            self_deaf: deaf || true,
+            self_deaf: deaf || false,
             self_mute: mute || false,
         });
         this.isConnected = true;
