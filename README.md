@@ -55,7 +55,8 @@ Note : Send pr to add your repo here
 
 URL | Features  | Additional Information
 -------|----------|-----------------
-[Poru Music](https://github.com/parasop/poru-example) | Basic example | works with latest djs version
+[Poru Music](https://github.com/parasop/poru-example) | Basic example | works with latest djs version |
+[The world machine](https://github.com/Reishimanfr/TWM-bot) | See github repo for full list | - |
 
 
 
