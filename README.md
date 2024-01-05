@@ -13,6 +13,12 @@
 </p>
 
 <p align="center">
+this version support only lavalink v4
+</p>
+
+
+
+<p align="center">
   <a href="https://nodei.co/npm/poru/"><img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true"></a>
 </p>
 

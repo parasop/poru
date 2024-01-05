@@ -246,12 +246,12 @@ class Poru extends events_1.EventEmitter {
             throw new Error("No nodes are available.");
         const regex = /^https?:\/\//;
         if (regex.test(query)) {
-            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(query)}`);
+            let response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(query)}`);
             return new Response_1.Response(response, requester);
         }
         else {
             let track = `${source || "ytsearch"}:${query}`;
-            let response = await node.rest.get(`/v3/loadtracks?identifier=${encodeURIComponent(track)}`);
+            let response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(track)}`);
             return new Response_1.Response(response, requester);
         }
     }
@@ -264,7 +264,7 @@ class Poru extends events_1.EventEmitter {
     async decodeTrack(track, node) {
         if (!node)
             node = this.leastUsedNodes[0];
-        return node.rest.get(`/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+        return node.rest.get(`/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
     }
     /**
      * Decode tracks from poru instance
@@ -273,7 +273,7 @@ class Poru extends events_1.EventEmitter {
      * @returns
      */
     async decodeTracks(tracks, node) {
-        return await node.rest.post(`/v3/decodetracks`, tracks);
+        return await node.rest.post(`/v4/decodetracks`, tracks);
     }
     /**
      * Get lavalink info from poru instance
@@ -282,7 +282,7 @@ class Poru extends events_1.EventEmitter {
      */
     async getLavalinkInfo(name) {
         let node = this.nodes.get(name);
-        return await node.rest.get(`/v3/info`);
+        return await node.rest.get(`/v4/info`);
     }
     /**
      * Get lavalink status from poru instance
@@ -291,7 +291,7 @@ class Poru extends events_1.EventEmitter {
      */
     async getLavalinkStatus(name) {
         let node = this.nodes.get(name);
-        return await node.rest.get(`/v3/stats`);
+        return await node.rest.get(`/v4/stats`);
     }
     /* Temp removed
   

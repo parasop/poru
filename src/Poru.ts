@@ -451,13 +451,13 @@ export class Poru extends EventEmitter {
 
     if (regex.test(query)) {
       let response = await node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+        `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
       );
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
       let response = await node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
+        `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
       );
       return new Response(response, requester);
     }
@@ -472,7 +472,7 @@ export class Poru extends EventEmitter {
     if (!node) node = this.leastUsedNodes[0];
 
     return node.rest.get(
-      `/v3/decodetrack?encodedTrack=${encodeURIComponent(track)}`
+      `/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`
     );
   }
   /**
@@ -482,7 +482,7 @@ export class Poru extends EventEmitter {
    * @returns 
    */
   public async decodeTracks(tracks: string[], node: Node) {
-    return await node.rest.post(`/v3/decodetracks`, tracks);
+    return await node.rest.post(`/v4/decodetracks`, tracks);
   }
 
   /**
@@ -492,7 +492,7 @@ export class Poru extends EventEmitter {
    */
   public async getLavalinkInfo(name: string) {
     let node = this.nodes.get(name);
-    return await node.rest.get(`/v3/info`);
+    return await node.rest.get(`/v4/info`);
   }
   /**
    * Get lavalink status from poru instance
@@ -501,7 +501,7 @@ export class Poru extends EventEmitter {
    */
   public async getLavalinkStatus(name: string) {
     let node = this.nodes.get(name);
-    return await node.rest.get(`/v3/stats`);
+    return await node.rest.get(`/v4/stats`);
   }
 
   /* Temp removed

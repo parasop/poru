@@ -196,7 +196,7 @@ export class Node {
       this.sessionId = packet.sessionId;
       this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
       if (this.resumeKey) {
-        this.rest.patch(`/v3/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
+        this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
         this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
         );
       }
@@ -225,11 +225,11 @@ export class Node {
   }
 
   public async getRoutePlannerStatus(): Promise<any> {
-    return await this.rest.get(`/v3/routeplanner/status`)
+    return await this.rest.get(`/v4/routeplanner/status`)
   }
 
   public async unmarkFailedAddress(address: string): Promise<any> {
-    return this.rest.post(`/v3/routeplanner/free/address`, { address })
+    return this.rest.post(`/v4/routeplanner/free/address`, { address })
 
   }
 

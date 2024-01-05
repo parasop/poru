@@ -46,15 +46,15 @@ export class Rest {
   }
 
   getAllPlayers() {
-    return this.get(`/v3/sessions/${this.sessionId}/players`);
+    return this.get(`/v4/sessions/${this.sessionId}/players`);
   }
 
   public async updatePlayer(options: playOptions) {
-    return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
+    return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
   }
 
   public async destroyPlayer(guildId: string) {
-    await this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
+    await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
   }
 
   public async get(path: RouteLike) {

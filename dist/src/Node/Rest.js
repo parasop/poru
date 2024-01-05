@@ -25,13 +25,13 @@ class Rest {
         this.sessionId = sessionId;
     }
     getAllPlayers() {
-        return this.get(`/v3/sessions/${this.sessionId}/players`);
+        return this.get(`/v4/sessions/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
-        return await this.patch(`/v3/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
+        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
-        await this.delete(`/v3/sessions/${this.sessionId}/players/${guildId}`);
+        await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
     }
     async get(path) {
         try {

@@ -482,13 +482,13 @@ export class Player extends EventEmitter {
 
     if (regex.test(query)) {
       let response = await this.node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(query)}`
+        `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
       );
       return new Response(response, requester);
     } else {
       let track = `${source || "ytsearch"}:${query}`;
       let response = await this.node.rest.get(
-        `/v3/loadtracks?identifier=${encodeURIComponent(track)}`
+        `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
       );
       return new Response(response, requester);
     }
