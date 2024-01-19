@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-this version support only lavalink v4
+note: this version support only lavalink v4 or above
 </p>
 
 
@@ -122,9 +122,9 @@ client.on("interactionCreate", async (interaction) => {
 
   const res = await client.poru.resolve({query:track,source:"scsearch",requester:interaction.member});
 
-  if (res.loadType === "LOAD_FAILED") {
+  if (res.loadType === "error") {
     return interaction.reply("Failed to load track.");
-  } else if (res.loadType === "NO_MATCHES") {
+  } else if (res.loadType === "empty") {
     return interaction.reply("No source found!");
   }
 
@@ -136,7 +136,7 @@ client.on("interactionCreate", async (interaction) => {
     deaf: true,
   });
 
-  if (res.loadType === "PLAYLIST_LOADED") {
+  if (res.loadType === "playlist") {
     for (const track of res.tracks) {
       track.info.requester = interaction.user;
       player.queue.add(track);
