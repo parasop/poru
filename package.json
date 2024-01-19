@@ -50,7 +50,7 @@
     "eris"
   ],
   "devDependencies": {
-    "@types/node": "^18.11.9",
+    "@types/node": "^18.19.8",
     "typedoc": "^0.24.7",
     "typedoc-plugin-markdown": "^3.15.3"
   }

@@ -28,7 +28,7 @@ class Rest {
         return this.get(`/v4/sessions/${this.sessionId}/players`);
     }
     async updatePlayer(options) {
-        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}/?noReplace=false`, options.data);
+        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
         await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);

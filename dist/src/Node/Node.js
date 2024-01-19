@@ -39,7 +39,7 @@ class Node {
         this.name = node.name;
         this.options = node;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
-        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/`;
+        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
         this.password = node.password || "youshallnotpass";
         this.secure = node.secure || false;
         this.regions = node.region || null;
@@ -73,7 +73,7 @@ class Node {
         };
         if (this.resumeKey)
             headers["Resume-Key"] = this.resumeKey;
-        this.ws = new ws_1.default(this.socketURL, { headers });
+        this.ws = new ws_1.default(`${this.socketURL}`, { headers });
         this.ws.on("open", this.open.bind(this));
         this.ws.on("error", this.error.bind(this));
         this.ws.on("message", this.message.bind(this));

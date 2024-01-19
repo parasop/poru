@@ -5,8 +5,12 @@ const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 class Track {
     track;
     info;
+    pluginInfo;
+    userData;
     constructor(data, requester) {
-        this.track = data.track;
+        this.track = data.encoded;
+        this.pluginInfo = data.pluginInfo,
+            this.userData = data.userData;
         this.info = {
             identifier: data.info.identifier,
             isSeekable: data.info.isSeekable,
@@ -16,7 +20,8 @@ class Track {
             sourceName: data.info.sourceName,
             title: data.info.title,
             uri: data.info.uri,
-            image: data.info.image || `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
+            artworkUrl: data.info.artworkUrl || null,
+            isrc: data.info.isrc,
             requester
         };
     }

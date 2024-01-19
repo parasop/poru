@@ -189,7 +189,7 @@ export declare class Poru extends EventEmitter {
     nodes: Map<string, Node>;
     players: Map<string, Player>;
     userId: string | null;
-    version: string;
+    version: Number;
     isActivated: boolean;
     send: Function | null;
     /**

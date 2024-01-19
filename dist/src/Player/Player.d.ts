@@ -41,7 +41,7 @@ export declare class Player extends EventEmitter {
      * Play a track
      * @param {Track} track - The track to play
      */
-    play(): any;
+    play(): Promise<void>;
     /**
       * Resolve a track
       * @param {Track} track - Only for personal use
@@ -119,11 +119,11 @@ export declare class Player extends EventEmitter {
      * @returns {void} To destroy the player
      */
     destroy(): void;
-    restart(): any;
+    restart(): Promise<void>;
     moveNode(name: string): void;
     AutoMoveNode(): Promise<void>;
     autoplay(requester: any): Promise<this>;
-    eventHandler(data: any): any;
+    eventHandler(data: any): boolean | Promise<void>;
     resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
     send(data: any): void;
 }

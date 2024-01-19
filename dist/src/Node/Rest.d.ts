@@ -3,7 +3,7 @@ import { Poru } from "../Poru";
 export interface playOptions {
     guildId: string;
     data: {
-        encodedTrack?: string | null;
+        track?: any;
         identifier?: string;
         startTime?: number;
         endTime?: number;

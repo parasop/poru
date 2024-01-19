@@ -215,7 +215,7 @@ export class Poru extends EventEmitter {
   public nodes: Map<string, Node>;
   public players: Map<string, Player>;
   public userId: string | null;
-  public version: string;
+  public version: Number;
   public isActivated: boolean;
   public send: Function | null;
 

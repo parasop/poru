@@ -1,9 +1,12 @@
+import { AnyMxRecord } from "dns";
 import { Poru } from "../Poru";
 import { LavalinkResponse } from "./Response";
 const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export interface trackData {
-  track: string;
+  encoded: string;
   info: trackInfo;
+  pluginInfo: any,
+  userData: any
 }
 
 export interface trackInfo {
@@ -15,7 +18,9 @@ export interface trackInfo {
   title: string;
   uri: string;
   sourceName: string;
-  image?: string
+  image?: string,
+  artworkUrl: string,
+  isrc: string | null;
   requester?: any
 }
 
@@ -23,9 +28,13 @@ export interface trackInfo {
 export class Track {
   public track: string;
   public info: trackInfo;
+  public pluginInfo: any
+  public userData: any
 
   constructor(data: trackData, requester?: any) {
-    this.track = data.track;
+    this.track = data.encoded;
+    this.pluginInfo = data.pluginInfo,
+      this.userData = data.userData
     this.info = {
       identifier: data.info.identifier,
       isSeekable: data.info.isSeekable,
@@ -35,7 +44,8 @@ export class Track {
       sourceName: data.info.sourceName,
       title: data.info.title,
       uri: data.info.uri,
-      image: data.info.image || `https://i.ytimg.com/vi/${data.info.identifier}/maxresdefault.jpg` || null,
+      artworkUrl: data.info.artworkUrl || null,
+      isrc: data.info.isrc,
       requester
     };
   }

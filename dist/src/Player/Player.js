@@ -80,14 +80,14 @@ class Player extends events_1.EventEmitter {
             this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
-                    encodedTrack: this.currentTrack.track,
+                    track: { encoded: this.currentTrack.track, userData: this.currentTrack.userData },
                 },
             });
             this.isPlaying = true;
             this.position = 0;
         }
         else {
-            return this.play();
+            //  return this.play();
         }
     }
     /**
@@ -95,7 +95,6 @@ class Player extends events_1.EventEmitter {
       * @param {Track} track - Only for personal use
       */
     async resolveTrack(track) {
-        // console.log(track)
         const query = [track.info?.author, track.info?.title]
             .filter((x) => !!x)
             .join(" - ");
@@ -149,7 +148,7 @@ class Player extends events_1.EventEmitter {
         this.isPlaying = false;
         this.node.rest.updatePlayer({
             guildId: this.guildId,
-            data: { encodedTrack: null },
+            data: { track: null },
         });
         return this;
     }
@@ -303,7 +302,7 @@ class Player extends events_1.EventEmitter {
             guildId: this.guildId,
             data: {
                 position: this.position,
-                encodedTrack: this.currentTrack.track,
+                track: this.currentTrack,
             },
         });
     }

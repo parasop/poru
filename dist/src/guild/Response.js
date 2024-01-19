@@ -6,10 +6,18 @@ class Response {
     tracks;
     loadType;
     playlistInfo;
-    constructor(data, requester) {
-        this.tracks = data?.tracks?.map((track) => new Track_1.Track(track, requester));
-        this.loadType = data?.loadType;
-        this.playlistInfo = data?.playlistInfo;
+    constructor(response, requester) {
+        this.tracks = this.handleTracks(response.data, requester);
+        this.loadType = response?.loadType;
+        this.playlistInfo = response.data?.playlistInfo;
+    }
+    handleTracks(data, requester) {
+        if (Array.isArray(data)) {
+            return data?.map((track) => new Track_1.Track(track, requester));
+        }
+        else {
+            return [new Track_1.Track(data, requester)];
+        }
     }
 }
 exports.Response = Response;
