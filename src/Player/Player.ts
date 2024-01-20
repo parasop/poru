@@ -176,7 +176,7 @@ export class Player extends EventEmitter {
     this.isPlaying = false;
     this.node.rest.updatePlayer({
       guildId: this.guildId,
-      data: { track: null },
+      data: { track: { encoded: null } },
     });
 
     return this;
