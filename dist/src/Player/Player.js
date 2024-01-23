@@ -148,7 +148,7 @@ class Player extends events_1.EventEmitter {
         this.isPlaying = false;
         this.node.rest.updatePlayer({
             guildId: this.guildId,
-            data: { track: null },
+            data: { track: { encoded: null } },
         });
         return this;
     }
