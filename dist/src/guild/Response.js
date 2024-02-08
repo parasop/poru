@@ -7,7 +7,12 @@ class Response {
     loadType;
     playlistInfo;
     constructor(response, requester) {
-        this.tracks = this.handleTracks(response.data, requester);
+        if (response.loadType === "playlist") {
+            this.tracks = response.data?.tracks?.map((track) => new Track_1.Track(track, requester));
+        }
+        else {
+            this.tracks = this.handleTracks(response.data, requester);
+        }
         this.loadType = response?.loadType;
         this.playlistInfo = response.data?.playlistInfo;
     }

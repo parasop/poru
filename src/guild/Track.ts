@@ -1,6 +1,4 @@
-import { AnyMxRecord } from "dns";
 import { Poru } from "../Poru";
-import { LavalinkResponse } from "./Response";
 const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export interface trackData {
   encoded: string;
