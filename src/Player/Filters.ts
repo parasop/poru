@@ -8,8 +8,8 @@ import { Player } from "./Player";
  * 
  */
 interface Band {
-  band: number;
-  gain: number;
+    band: number;
+    gain: number;
 }
 
 /**
@@ -22,10 +22,10 @@ interface Band {
  * 
  */
 interface karaokeOptions {
-  level: number;
-  monoLevel: number;
-  filterBand: number;
-  filterWidth: number;
+    level: number;
+    monoLevel: number;
+    filterBand: number;
+    filterWidth: number;
 }
 
 /**
@@ -38,9 +38,9 @@ interface karaokeOptions {
  */
 
 interface timescaleOptions {
-  speed?: number;
-  pitch?: number;
-  rate?: number;
+    speed?: number;
+    pitch?: number;
+    rate?: number;
 }
 
 /**
@@ -50,8 +50,8 @@ interface timescaleOptions {
  * @property {number} depth The depth of the tremolo effect to apply
  */
 interface tremoloOptions {
-  frequency: number;
-  depth: number;
+    frequency: number;
+    depth: number;
 }
 
 /**
@@ -62,8 +62,8 @@ interface tremoloOptions {
  * 
  */
 interface vibratoOptions {
-  frequency: number;
-  depth: number;
+    frequency: number;
+    depth: number;
 }
 
 /**
@@ -73,7 +73,7 @@ interface vibratoOptions {
  * 
  */
 interface rotationOptions {
-  rotationHz: number;
+    rotationHz: number;
 }
 
 /**
@@ -90,14 +90,14 @@ interface rotationOptions {
  * 
  */
 interface distortionOptions {
-  sinOffset?: number;
-  sinScale?: number;
-  cosOffset?: number;
-  cosScale?: number;
-  tanOffset?: number;
-  tanScale?: number;
-  offset?: number;
-  scale?: number;
+    sinOffset?: number;
+    sinScale?: number;
+    cosOffset?: number;
+    cosScale?: number;
+    tanOffset?: number;
+    tanScale?: number;
+    offset?: number;
+    scale?: number;
 }
 
 /**
@@ -110,10 +110,10 @@ interface distortionOptions {
  * 
  */
 export interface channelMixOptions {
-  leftToLeft?: number;
-  leftToRight?: number;
-  rightToLeft?: number;
-  rightToRight?: number;
+    leftToLeft?: number;
+    leftToRight?: number;
+    rightToLeft?: number;
+    rightToRight?: number;
 }
 
 /**
@@ -132,16 +132,16 @@ export interface channelMixOptions {
  * 
  */
 interface FiltersOptions {
-  volume: number;
-  equalizer: Band[];
-  karaoke: karaokeOptions;
-  tremolo: tremoloOptions;
-  vibrato: vibratoOptions;
-  rotation: rotationOptions;
-  distortion: distortionOptions;
-  channelMix: channelMixOptions;
-  lowPass: lowPassOptions;
-  timescale: timescaleOptions;
+    volume: number;
+    equalizer: Band[];
+    karaoke: karaokeOptions;
+    tremolo: tremoloOptions;
+    vibrato: vibratoOptions;
+    rotation: rotationOptions;
+    distortion: distortionOptions;
+    channelMix: channelMixOptions;
+    lowPass: lowPassOptions;
+    timescale: timescaleOptions;
 
 }
 
@@ -151,7 +151,7 @@ interface FiltersOptions {
  * @property {number} smoothing The smoothing of the lowPass effect to apply
  */
 interface lowPassOptions {
-  smoothing: number;
+    smoothing: number;
 }
 
 
@@ -159,181 +159,181 @@ interface lowPassOptions {
  * The Filters class that is used to apply filters to the currently playing track
  */
 export class Filters {
-  public player: Player;
-  public volume: number;
-  public equalizer: Band[];
-  public karaoke: karaokeOptions;
-  public tremolo: tremoloOptions;
-  public vibrato: vibratoOptions;
-  public rotation: rotationOptions;
-  public distortion: distortionOptions;
-  public channelMix: channelMixOptions;
-  public lowPass: lowPassOptions;
+    public player: Player;
+    public volume: number;
+    public equalizer: Band[];
+    public karaoke: karaokeOptions;
+    public tremolo: tremoloOptions;
+    public vibrato: vibratoOptions;
+    public rotation: rotationOptions;
+    public distortion: distortionOptions;
+    public channelMix: channelMixOptions;
+    public lowPass: lowPassOptions;
 
-  public timescale: timescaleOptions;
+    public timescale: timescaleOptions;
 
-  constructor(player: Player, options?: FiltersOptions) {
-    this.player = player;
-    (this.volume = 1.0),
-      (this.equalizer = []);
-    this.karaoke = options?.karaoke || null;
-    this.timescale = options?.timescale || null;
-    this.tremolo = options?.tremolo || null;
-    this.vibrato = options?.vibrato || null;
-    this.rotation = options?.rotation || null;
-    this.distortion = options?.distortion || null;
-    this.channelMix = options?.channelMix || null;
-    this.lowPass = options?.lowPass || null;
-  }
-  /**
-   * Set equalizer bands for the currently playing track
-   * 
-   * @param bands An array of bands to set the equalizer to
-   * @returns 
-   */
-  public setEqualizer(bands: Band[]): Filters {
+    constructor(player: Player, options?: FiltersOptions) {
+        this.player = player;
+        (this.volume = 1.0),
+            (this.equalizer = []);
+        this.karaoke = options?.karaoke || null;
+        this.timescale = options?.timescale || null;
+        this.tremolo = options?.tremolo || null;
+        this.vibrato = options?.vibrato || null;
+        this.rotation = options?.rotation || null;
+        this.distortion = options?.distortion || null;
+        this.channelMix = options?.channelMix || null;
+        this.lowPass = options?.lowPass || null;
+    }
+    /**
+     * Set equalizer bands for the currently playing track
+     * 
+     * @param bands An array of bands to set the equalizer to
+     * @returns 
+     */
+    public setEqualizer(bands: Band[]): Filters {
 
-    this.equalizer = bands;
-    this.updateFilters();
-    return this;
-  }
+        this.equalizer = bands;
+        this.updateFilters();
+        return this;
+    }
 
 
-  /**
-      * Change the karaoke Options applied to the currently playing track
-      * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
-      * @returns The current filter instance
-      */
-  public setKaraoke(karaoke?: karaokeOptions): Filters {
-    this.karaoke = karaoke || null;
-    this.updateFilters();
-    return this;
-  }
+    /**
+        * Change the karaoke Options applied to the currently playing track
+        * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
+        * @returns The current filter instance
+        */
+    public setKaraoke(karaoke?: karaokeOptions): Filters {
+        this.karaoke = karaoke || null;
+        this.updateFilters();
+        return this;
+    }
 
-  /**
-   * Change the timescale Options applied to the currently playing track
-   * @param timescale An object that conforms to the TimescaleOptions type that defines the timescale to apply
-   * @returns The current filter instance
-   * 
-   */
-  public setTimescale(timescale?: timescaleOptions): Filters {
-    this.timescale = timescale || null;
-    this.updateFilters();
-    return this;
-  }
+    /**
+     * Change the timescale Options applied to the currently playing track
+     * @param timescale An object that conforms to the TimescaleOptions type that defines the timescale to apply
+     * @returns The current filter instance
+     * 
+     */
+    public setTimescale(timescale?: timescaleOptions): Filters {
+        this.timescale = timescale || null;
+        this.updateFilters();
+        return this;
+    }
 
-  /**
-   * Change the tremolo Options applied to the currently playing track
-   * 
-   * @param tremolo  An object that conforms to the TremoloOptions type that defines the tremolo to apply
-   * @returns 
-   */
-  public setTremolo(tremolo?: tremoloOptions): Filters {
-    this.tremolo = tremolo || null;
-    this.updateFilters();
-    return this;
-  }
+    /**
+     * Change the tremolo Options applied to the currently playing track
+     * 
+     * @param tremolo  An object that conforms to the TremoloOptions type that defines the tremolo to apply
+     * @returns 
+     */
+    public setTremolo(tremolo?: tremoloOptions): Filters {
+        this.tremolo = tremolo || null;
+        this.updateFilters();
+        return this;
+    }
 
-  /**
-   * Change the vibrato Options applied to the currently playing track
-   * 
-   * @param vibrato An object that conforms to the VibratoOptions type that defines the vibrato to apply
-   * @returns 
-   */
-  public setVibrato(vibrato?: vibratoOptions): Filters {
-    this.vibrato = vibrato || null;
-    this.updateFilters();
-    return this;
-  }
-  /**
-   * Change the rotation Options applied to the currently playing track
-   * 
-   * @param rotation An object that conforms to the RotationOptions type that defines the rotation to apply
-   * @returns 
-   */
-  public setRotation(rotation?: rotationOptions): Filters {
-    this.rotation = rotation || null;
-    this.updateFilters();
+    /**
+     * Change the vibrato Options applied to the currently playing track
+     * 
+     * @param vibrato An object that conforms to the VibratoOptions type that defines the vibrato to apply
+     * @returns 
+     */
+    public setVibrato(vibrato?: vibratoOptions): Filters {
+        this.vibrato = vibrato || null;
+        this.updateFilters();
+        return this;
+    }
+    /**
+     * Change the rotation Options applied to the currently playing track
+     * 
+     * @param rotation An object that conforms to the RotationOptions type that defines the rotation to apply
+     * @returns 
+     */
+    public setRotation(rotation?: rotationOptions): Filters {
+        this.rotation = rotation || null;
+        this.updateFilters();
 
-    return this;
-  }
+        return this;
+    }
 
-  /**
-   * Change the distortion Options applied to the currently playing track
-   * 
-   * @param distortion An object that conforms to the DistortionOptions type that defines the distortion to apply
-   * @returns 
-   */
-  public setDistortion(distortion: distortionOptions): Filters {
-    this.distortion = distortion || null;
-    this.updateFilters();
+    /**
+     * Change the distortion Options applied to the currently playing track
+     * 
+     * @param distortion An object that conforms to the DistortionOptions type that defines the distortion to apply
+     * @returns 
+     */
+    public setDistortion(distortion: distortionOptions): Filters {
+        this.distortion = distortion || null;
+        this.updateFilters();
 
-    return this;
-  }
+        return this;
+    }
 
-  /**
-   * Change the channel mix Options applied to the currently playing track
-   * 
-   * @param mix An object that conforms to the ChannelMixOptions type that defines the channel mix to apply
-   * @returns 
-   */
-  public setChannelMix(mix: channelMixOptions): Filters {
-    this.channelMix = mix || null;
-    this.updateFilters();
+    /**
+     * Change the channel mix Options applied to the currently playing track
+     * 
+     * @param mix An object that conforms to the ChannelMixOptions type that defines the channel mix to apply
+     * @returns 
+     */
+    public setChannelMix(mix: channelMixOptions): Filters {
+        this.channelMix = mix || null;
+        this.updateFilters();
 
-    return this;
-  }
+        return this;
+    }
 
-  /**
-   * Change the low pass Options applied to the currently playing track
-   * 
-   * @param pass An object that conforms to the LowPassOptions type that defines the low pass to apply
-   * @returns 
-   */
-  public setLowPass(pass: lowPassOptions): Filters {
-    this.lowPass = pass || null;
-    this.updateFilters();
+    /**
+     * Change the low pass Options applied to the currently playing track
+     * 
+     * @param pass An object that conforms to the LowPassOptions type that defines the low pass to apply
+     * @returns 
+     */
+    public setLowPass(pass: lowPassOptions): Filters {
+        this.lowPass = pass || null;
+        this.updateFilters();
 
-    return this;
-  }
-  /**
-   * Change the filters of the currently playing track
-   * 
-   * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
-   * @returns 
-   */
-  public setFilters(options: any) {
-    this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this, options) : new Filters(this.player, options);
-    this.updateFilters();
-    return this;
-  }
+        return this;
+    }
+    /**
+     * Change the filters of the currently playing track
+     * 
+     * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
+     * @returns 
+     */
+    public setFilters(options: any) {
+        this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this, options) : new Filters(this.player, options);
+        this.updateFilters();
+        return this;
+    }
 
-  /**
-   * 
-   * @returns The current filters applied to the currently playing track
-   */
-  public clearFilters(): Filters {
-    this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this.player) : new Filters(this.player);
-    this.updateFilters()
-    return this;
-  }
+    /**
+     * 
+     * @returns The current filters applied to the currently playing track
+     */
+    public clearFilters(): Filters {
+        this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this.player) : new Filters(this.player);
+        this.updateFilters()
+        return this;
+    }
 
-  /**
-   * 
-   * @returns the updated filters applied to the currently playing track
-   */
-  public updateFilters(): Filters {
+    /**
+     * 
+     * @returns the updated filters applied to the currently playing track
+     */
+    public updateFilters(): Filters {
 
-    const { equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass, volume } = this;
+        const { equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass, volume } = this;
 
-    this.player.node.rest.updatePlayer({
-      guildId: this.player.guildId,
-      data: {
-        filters: {
-          volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
-        }
-      }
-    })
-    return this;
-  }
+        this.player.node.rest.updatePlayer({
+            guildId: this.player.guildId,
+            data: {
+                filters: {
+                    volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
+                }
+            }
+        })
+        return this;
+    }
 }

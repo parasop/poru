@@ -20,20 +20,21 @@ export interface NodeGroup {
 }
 export interface ResolveOptions {
     query: string;
-    source?: string;
+    source?: supportedPlatforms | (string & {});
     requester?: any;
 }
 /**
  * @typedef {string} supportedLibraries
  */
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
+export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch";
 export interface PoruOptions {
     plugins?: Plugin[];
     customPlayer?: Constructor<Player>;
     customFilter?: Constructor<Filters>;
     autoResume?: boolean;
     library: supportedLibraries;
-    defaultPlatform?: string;
+    defaultPlatform?: supportedPlatforms;
     resumeKey?: string;
     resumeTimeout?: number;
     reconnectTimeout?: number | null;

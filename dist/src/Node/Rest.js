@@ -9,7 +9,7 @@ var RequestMethod;
     RequestMethod["Post"] = "POST";
     RequestMethod["Patch"] = "PATCH";
     RequestMethod["Put"] = "PUT";
-})(RequestMethod = exports.RequestMethod || (exports.RequestMethod = {}));
+})(RequestMethod || (exports.RequestMethod = RequestMethod = {}));
 class Rest {
     sessionId;
     password;

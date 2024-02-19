@@ -14,7 +14,7 @@ class Response {
             this.tracks = this.handleTracks(response.data, requester);
         }
         this.loadType = response?.loadType;
-        this.playlistInfo = response.data?.playlistInfo;
+        this.playlistInfo = response.data?.info;
     }
     handleTracks(data, requester) {
         if (Array.isArray(data)) {

@@ -8,7 +8,7 @@ const player = client.poru.createConnection({
     voiceChannel: interaction.member.voice.channelId,
     textChannel: interaction.channel.id,
     deaf: true,
-  });
+});
 ```
 ## How to play songs from spotify?
 ```JS
@@ -16,8 +16,8 @@ const { Spotify } = require("poru-spotify");
 const { Poru } = require("poru");
 
 const spotify = new Spotify({
-  clientID: "",
-  clientSecret: ""
+    clientID: "",
+    clientSecret: ""
 })
 
 //plugins should be an array

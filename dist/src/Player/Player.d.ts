@@ -29,6 +29,8 @@ export declare class Player extends EventEmitter {
     isPlaying: boolean;
     isPaused: boolean;
     isConnected: boolean;
+    isAutoPlay: boolean;
+    isQuietMode: boolean;
     loop: Loop;
     position: number;
     ping: number;
@@ -122,7 +124,7 @@ export declare class Player extends EventEmitter {
     restart(): Promise<void>;
     moveNode(name: string): void;
     AutoMoveNode(): Promise<void>;
-    autoplay(requester: any): Promise<this>;
+    autoplay(player: Player): Promise<this>;
     eventHandler(data: any): boolean | Promise<void>;
     resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
     send(data: any): void;
