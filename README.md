@@ -25,7 +25,12 @@
   </a>
 </p>
 
-## [Documentation](https://poru.js.org)
+## Table of contents
+
+- [Documentation](https://poru.js.org)
+- [Installation](#installation)
+- [About](#about)
+- [Example](https://github.com/parasop/poru-example)
 
 # Installation
 
