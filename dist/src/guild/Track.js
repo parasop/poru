@@ -6,24 +6,22 @@ class Track {
     track;
     info;
     pluginInfo;
-    userData;
     constructor(data, requester) {
         this.track = data?.encoded;
         this.pluginInfo = data?.pluginInfo,
-            this.userData = data?.userData;
-        this.info = {
-            identifier: data?.info?.identifier,
-            isSeekable: data?.info?.isSeekable,
-            author: data?.info?.author,
-            length: data?.info?.length,
-            isStream: data?.info?.isStream,
-            sourceName: data?.info?.sourceName,
-            title: data?.info?.title,
-            uri: data?.info?.uri,
-            artworkUrl: data?.info?.artworkUrl || null,
-            isrc: data?.info?.isrc,
-            requester
-        };
+            this.info = {
+                identifier: data?.info?.identifier,
+                isSeekable: data?.info?.isSeekable,
+                author: data?.info?.author,
+                length: data?.info?.length,
+                isStream: data?.info?.isStream,
+                sourceName: data?.info?.sourceName,
+                title: data?.info?.title,
+                uri: data?.info?.uri,
+                artworkUrl: data?.info?.artworkUrl || null,
+                isrc: data?.info?.isrc,
+                requester
+            };
     }
     async resolve(poru) {
         const query = [this.info.author, this.info.title]

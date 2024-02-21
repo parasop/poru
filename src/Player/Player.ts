@@ -13,6 +13,7 @@ import { ConnectionOptions } from "../Poru";
  * @property {string} NONE - No loop
  */
 type Loop = "NONE" | "TRACK" | "QUEUE";
+
 const escapeRegExp = (str: string) => {
     try {
         str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -93,7 +94,7 @@ export class Player extends EventEmitter {
             this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
-                    track: { encoded: this.currentTrack?.track, userData: this.currentTrack?.userData },
+                    track: { encoded: this.currentTrack?.track },
                 },
             });
             this.isPlaying = true;
@@ -433,11 +434,11 @@ export class Player extends EventEmitter {
                 this.previousTrack = this.currentTrack;
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
-                    this.poru.emit("trackEnd", this, this.currentTrack);
+                    this.poru.emit("trackEnd", this, data);
                     return this.play();
                 } else if (this.currentTrack && this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
-                    this.poru.emit("trackEnd", this, this.currentTrack, data);
+                    this.poru.emit("trackEnd", this, data);
                     return this.play();
                 }
 
@@ -445,7 +446,7 @@ export class Player extends EventEmitter {
                     this.isPlaying = false;
                     return this.poru.emit("queueEnd", this);
                 } else if (this.queue.length > 0) {
-                    this.poru.emit("trackEnd", this, this.currentTrack);
+                    this.poru.emit("trackEnd", this, data);
                     return this.play();
                 }
 

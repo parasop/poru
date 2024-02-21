@@ -3,7 +3,6 @@ export interface trackData {
     encoded?: string;
     info: trackInfo;
     pluginInfo?: any;
-    userData?: any;
 }
 export interface trackInfo {
     identifier: string;
@@ -22,7 +21,6 @@ export declare class Track {
     track: string;
     info: trackInfo;
     pluginInfo: any;
-    userData: any;
     constructor(data: trackData, requester?: any);
     resolve(poru: Poru): Promise<this>;
 }

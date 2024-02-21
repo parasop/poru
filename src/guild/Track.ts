@@ -4,7 +4,6 @@ export interface trackData {
     encoded?: string;
     info: trackInfo;
     pluginInfo?: any,
-    userData?: any
 }
 
 export interface trackInfo {
@@ -25,12 +24,10 @@ export class Track {
     public track: string;
     public info: trackInfo;
     public pluginInfo: any
-    public userData: any
 
     constructor(data: trackData, requester?: any) {
         this.track = data?.encoded;
         this.pluginInfo = data?.pluginInfo,
-            this.userData = data?.userData
         this.info = {
             identifier: data?.info?.identifier,
             isSeekable: data?.info?.isSeekable,

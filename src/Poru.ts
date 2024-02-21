@@ -32,6 +32,43 @@ export interface ResolveOptions {
  */
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch";
+export type TrackEndReason = 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup';
+export type PlayerEventType = 'TrackStartEvent' | 'TrackEndEvent' | 'TrackExceptionEvent' | 'TrackStuckEvent' | 'WebSocketClosedEvent';
+
+export interface PlayerEvent {
+    op: 'event';
+    type: PlayerEventType;
+    guildId: string;
+}
+
+export interface TrackStartEvent extends PlayerEvent {
+    type: 'TrackStartEvent';
+    track: Track;
+}
+
+export interface TrackEndEvent extends PlayerEvent {
+    type: 'TrackEndEvent';
+    track: Track;
+    reason: TrackEndReason;
+}
+
+export interface TrackStuckEvent extends PlayerEvent {
+    type: 'TrackStuckEvent';
+    track: Track;
+    thresholdMs: number;
+}
+
+export interface TrackExceptionEvent extends PlayerEvent {
+    type: 'TrackExceptionEvent';
+    exception: any;
+}
+
+export interface WebSocketClosedEvent extends PlayerEvent {
+    type: 'WebSocketClosedEvent';
+    code: number;
+    byRemote: boolean;
+    reason: string;
+}
 
 export interface PoruOptions {
     plugins?: Plugin[];
@@ -128,7 +165,7 @@ export interface PoruEvents {
      * @param LavalinkData
      * @returns void
      */
-    trackEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
+    trackEnd: (player: Player, data: TrackEndEvent) => void;
 
     /**
      * Emitted when player's queue  is completed and going to disconnect
@@ -147,7 +184,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    trackError: (player: Player, track: Track, data: any) => void;
+    trackError: (player: Player, track: Track, data: TrackStuckEvent) => void;
 
     /**
      * Emitted when a player got updates
@@ -157,8 +194,6 @@ export interface PoruEvents {
      */
     playerUpdate: (player: Player) => void;
 
-
-
     /**
      * Emitted when a player got created
      * @eventProperty
@@ -166,7 +201,6 @@ export interface PoruEvents {
      * @returns void
      */
     playerCreate: (player: Player) => void;
-
 
     /**
      * 
