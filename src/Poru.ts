@@ -161,8 +161,7 @@ export interface PoruEvents {
      * Emitted whenever track ends
      * @eventProperty
      * @param player
-     * @param track
-     * @param LavalinkData
+     * @param data
      * @returns void
      */
     trackEnd: (player: Player, data: TrackEndEvent) => void;
@@ -219,7 +218,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    socketClose: (player: Player, track: Track, data: any) => void;
+    socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
 }
 
 /**
