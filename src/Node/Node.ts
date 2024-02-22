@@ -23,6 +23,44 @@ export interface NodeStats {
         lavalinkLoad: number;
     };
     uptime: number;
+};
+
+/**
+ * This interface represents the LavaLink V4 Error Responses
+ * @reference https://lavalink.dev/api/rest.html#error-responses
+ */
+export interface ErrorResponses {
+    /**
+     * The timestamp of the error in milliseconds since the Unix epoch
+     */
+    timestamp: number;
+
+    /**
+     * The HTTP status code
+     */
+    status: number;
+
+    /**
+     * The HTTP status code message
+     */
+    error: string;
+
+    /**
+     * The stack trace of the error when trace=true as query param has been sent
+     * @optional
+     */
+    trace?: string;
+
+    /**
+     * The error message
+     */
+    message: string;
+
+    /**
+     * The path of the request
+     */
+    path: string;
+
 }
 
 export class Node {
@@ -42,7 +80,7 @@ export class Node {
     public readonly autoResume: boolean;
     public readonly reconnectTimeout: number;
     public reconnectTries: number;
-    public reconnectAttempt: any;
+    public reconnectAttempt: NodeJS.Timeout | null;
     public attempt: number;
     public stats: NodeStats | null;
     public options: NodeGroup;
@@ -161,7 +199,7 @@ export class Node {
         return penalties;
     }
 
-    private open() {
+    private async open() {
         if (this.reconnectAttempt) {
             clearTimeout(this.reconnectAttempt);
             delete this.reconnectAttempt;
@@ -174,7 +212,7 @@ export class Node {
         if (this.autoResume) {
             for (const player of this.poru.players.values()) {
                 if (player.node === this) {
-                    player.restart();
+                    await player.restart();
                 }
             }
         }
@@ -200,7 +238,7 @@ export class Node {
             this.sessionId = packet.sessionId;
             this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
             if (this.resumeKey) {
-                this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
+                await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
                 this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
                 );
             }
@@ -228,13 +266,11 @@ export class Node {
         );
     }
 
-    public async getRoutePlannerStatus(): Promise<any> {
-        return await this.rest.get(`/v4/routeplanner/status`)
+    public async getRoutePlannerStatus() {
+        return await this.rest.get<null>(`/v4/routeplanner/status`)
     }
 
-    public async unmarkFailedAddress(address: string): Promise<any> {
-        return this.rest.post(`/v4/routeplanner/free/address`, { address })
-
+    public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
+        return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
     }
-
 }

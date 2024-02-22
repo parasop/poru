@@ -4,7 +4,7 @@ import { EventEmitter } from "events";
 import { Config as config } from "./config";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
-import { Track } from "./guild/Track";
+import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
 
 /**
@@ -94,6 +94,63 @@ export interface ConnectionOptions {
     mute: boolean;
     region?: string;
 }
+
+export interface LoadTrackResponseTrack {
+    loadType: "track",
+    data: trackData,
+};
+
+export interface LoadTrackResponseSearch {
+    loadType: "search",
+    data: trackData[],
+};
+
+export interface LoadTrackResponseEmpty {
+    loadType: "empty",
+    data: {}
+};
+
+export type Severity = "common" | "suspicious" | "fault";
+
+export interface LoadTrackResponseError {
+    loadType: "error",
+    data: {
+        message?: string,
+        severity: Severity,
+        cause: string
+    };
+};
+
+export interface LoadTrackResponsePlaylist {
+    loadType: "playlist",
+    data: {
+        /**
+         * The info of the playlist
+         */
+        info: {
+            /**
+             * The name of the playlist
+             */
+            name: string,
+
+            /**
+             * The selected track of the playlist (-1 if no track is selected)
+             */
+            selectedTrack: number,
+        },
+        /**
+         * Addition playlist info provided by plugins
+         */
+        pluginInfo: any,
+
+        /**
+         * The tracks of the playlist
+         */
+        tracks: trackData[]
+    }
+};
+
+export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch | LoadTrackResponseEmpty | LoadTrackResponseError | LoadTrackResponsePlaylist;
 
 export interface PoruEvents {
     /**
@@ -496,13 +553,13 @@ export class Poru extends EventEmitter {
         const regex = /^https?:\/\//;
 
         if (regex.test(query)) {
-            let response = await node.rest.get(
+            let response = await node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
             );
             return new Response(response, requester);
         } else {
             let track = `${source || "ytsearch"}:${query}`;
-            let response = await node.rest.get(
+            let response = await node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
             );
             return new Response(response, requester);

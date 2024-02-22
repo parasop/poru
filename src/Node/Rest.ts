@@ -58,7 +58,7 @@ export class Rest {
         await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
     }
 
-    public async get(path: RouteLike) {
+    public async get<T = unknown>(path: RouteLike) {
         try {
             let req = await fetch(this.url + path, {
                 method: RequestMethod.Get,
@@ -67,13 +67,13 @@ export class Rest {
                     Authorization: this.password,
                 },
             });
-            return await req.json();
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
     }
 
-    public async patch(endpoint: RouteLike, body) {
+    public async patch<T = unknown | null>(endpoint: RouteLike, body): Promise<T> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
@@ -84,13 +84,13 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return await req.json();
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
     }
 
-    public async post(endpoint: RouteLike, body) {
+    public async post<T = unknown>(endpoint: RouteLike, body): Promise<T> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
@@ -101,7 +101,7 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return await req.json();
+            return await req.json() as T;
         } catch (e) {
             return null;
         }

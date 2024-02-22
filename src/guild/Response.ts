@@ -1,3 +1,4 @@
+import { LoadTrackResponse } from "../Poru";
 import { Track, trackData } from "./Track"
 
 export type LoadType = "track" | "playlist" | "search" | "empty" | "error"
@@ -21,23 +22,35 @@ export class Response {
     public tracks: Track[]
     public loadType: LoadType
     public playlistInfo: PlaylistInfo
-    constructor(response, requester) {
+    constructor(response: LoadTrackResponse, requester: any) {
+        switch (response.loadType) {
+            case "playlist": {
+                this.tracks = response.data.tracks.map((track) => new Track(track, requester));
+                this.playlistInfo = response.data.info;
+                break;
+            };
 
-        if (response.loadType === "playlist") {
-            this.tracks = response.data?.tracks?.map((track) => new Track(track, requester));
-        } else {
-            this.tracks = this.handleTracks(response.data, requester);
-        }
-        this.loadType = response?.loadType;
-        this.playlistInfo = response.data?.info;
-    }
+            case "track": {
+                this.tracks = this.handleTracks(response.data, requester);
+                break;
+            };
 
-    handleTracks(data, requester) {
+            case "search": {
+                this.tracks = this.handleTracks(response.data, requester);
+                break;
+            };
+            
+            default: break;
+        };
+        this.loadType = response.loadType;
+    };
+
+    private handleTracks(data: trackData | trackData[], requester: any) {
         if (Array.isArray(data)) {
-            return data?.map((track) => new Track(track, requester))
+            return data.map((track) => new Track(track, requester))
 
         } else {
             return [new Track(data, requester)]
-        }
-    }
-}
+        };
+    };
+};
