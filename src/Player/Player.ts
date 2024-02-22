@@ -5,7 +5,7 @@ import { Connection } from "./Connection";
 import Queue from "../guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
-import { Response } from "../guild/Response";
+import { Response, LoadTrackResponse } from "../guild/Response";
 import { ConnectionOptions } from "../Poru";
 /**
  * The loop type
@@ -83,15 +83,15 @@ export class Player extends EventEmitter {
 
     /**
      * Play a track
-     * @param {Track} track - The track to play
+     * @returns {Promise<Player>} The newly updated player whose playing the song
      */
-    public async play() {
+    public async play(): Promise<Player> {
         if (!this.queue.length) return;
         this.currentTrack = this.queue.shift();
         if (!this.currentTrack.track)
             this.currentTrack = await this.resolveTrack(this.currentTrack);
         if (this.currentTrack.track) {
-            this.node.rest.updatePlayer({
+            await this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
                     track: { encoded: this.currentTrack?.track },
@@ -101,18 +101,23 @@ export class Player extends EventEmitter {
             this.position = 0;
         } else {
             //  return this.play();
-        }
+
+            // Here joniii: What is that?
+        };
+
+        return this;
     }
 
     /**
       * Resolve a track
       * @param {Track} track - Only for personal use
+      * @returns {Promise<Track>} Returns a Track
       */
-    private async resolveTrack(track: Track) {
+    private async resolveTrack(track: Track): Promise<Track> {
         const query = [track.info?.author, track.info?.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result: any = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
+        const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
         if (!result || !result.tracks.length) return;
 
         if (track.info?.author) {
@@ -134,7 +139,7 @@ export class Player extends EventEmitter {
         }
         if (track.info.length) {
             const sameDuration = result.tracks.find(
-                (track: trackData) =>
+                (track) =>
                     track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
                     track.info.length <= (track.info.length ? track.info.length : 0) + 2000
             );
@@ -149,11 +154,11 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @param options To connect to voice channel
-     * 
+     * This function will make the bot connect to a voice channel.
+     * @param {ConnectionOptions} options To connect to voice channel
+     * @returns {void} void
      */
-    public connect(options: ConnectionOptions = this) {
+    public connect(options: ConnectionOptions = this): void {
         let { guildId, voiceChannel, deaf, mute } = options;
         this.send({
             guild_id: guildId,
@@ -170,16 +175,16 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @returns {Promise<void>} To disconnect from voice channel
+     * This function will stop and disconnect from the voice channel
+     * @returns {Promise<Player>} To disconnect from voice channel
      */
-    public stop() {
-        this.position = 0;
-        this.isPlaying = false;
-        this.node.rest.updatePlayer({
+    public async stop(): Promise<Player> {
+        await this.node.rest.updatePlayer({
             guildId: this.guildId,
             data: { track: { encoded: null } },
         });
+        this.position = 0;
+        this.isPlaying = false;
 
         return this;
     }
@@ -187,10 +192,10 @@ export class Player extends EventEmitter {
     /**
      * 
      * @param toggle Boolean to pause or resume the player
-     * @returns {Promise<void>} To pause or resume the player
+     * @returns {Promise<Player>} To pause or resume the player
      */
-    public pause(toggle: boolean = true) {
-        this.node.rest.updatePlayer({
+    public async pause(toggle: boolean = true): Promise<Player> {
+        await this.node.rest.updatePlayer({
             guildId: this.guildId,
             data: { paused: toggle },
         });
@@ -215,7 +220,7 @@ export class Player extends EventEmitter {
      * @param volume Number to set the volume
      * @returns {Player} To set the volume
      */
-    public setVolume(volume: number) {
+    public setVolume(volume: number): Player {
         if (volume < 0 || volume > 1000)
             throw new Error("[Poru Exception] Volume must be between 0 to 1000");
         this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
@@ -228,7 +233,7 @@ export class Player extends EventEmitter {
      * @param mode Loop mode
      * @returns {Player} To set the loop mode
      */
-    public setLoop(mode: Loop) {
+    public setLoop(mode: Loop): Player {
         if (!mode)
             throw new Error(
                 `[Poru Player] You must have to provide loop mode as argument of setLoop`
@@ -265,7 +270,7 @@ export class Player extends EventEmitter {
      * @param channel String to set the text channel
      * @returns {Player} To set the text channel
      */
-    public setTextChannel(channel: string) {
+    public setTextChannel(channel: string): Player {
         this.textChannel = channel;
         return this;
     }
@@ -279,7 +284,7 @@ export class Player extends EventEmitter {
     public setVoiceChannel(
         channel: string,
         options?: { mute: boolean; deaf: boolean }
-    ) {
+    ): Player {
         if (this.isConnected && channel == this.voiceChannel)
             throw new ReferenceError(`Player is already connected to ${channel}`);
 
@@ -307,7 +312,7 @@ export class Player extends EventEmitter {
      * @param value Value to set the key
      * @returns {unknown} To set the key and value
      */
-    public set(key: string, value: unknown) {
+    public set(key: string, value: unknown): unknown {
         return (this.data[key] = value);
     }
 
@@ -324,9 +329,9 @@ export class Player extends EventEmitter {
      * 
      * @returns {Promise<void>} To disconnect from voice channel
      */
-    public disconnect() {
+    public async disconnect(): Promise<this> {
         if (!this.voiceChannel) return;
-        this.pause(true);
+        await this.pause(true);
         this.isConnected = false;
         this.send({
             guild_id: this.guildId,
@@ -339,15 +344,16 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * @returns {void} To destroy the player
+     * Destroys the player for this guild.
+     * @returns {Promise<boolean>} Indicating if the player was successfully destroyed
      */
-    public destroy() {
+    public async destroy(): Promise<boolean> {
         this.disconnect();
-        this.node.rest.destroyPlayer(this.guildId);
+        await this.node.rest.destroyPlayer(this.guildId);
         this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
         this.poru.emit("playerDestroy", this);
-        this.poru.players.delete(this.guildId);
-    }
+        return this.poru.players.delete(this.guildId);
+    };
 
     public restart() {
         if (!this.currentTrack.track && !this.queue.length) return;
@@ -363,7 +369,7 @@ export class Player extends EventEmitter {
     }
 
 
-    public moveNode(name: string) {
+    public async moveNode(name: string) {
         let node = this.poru.nodes.get(name);
 
         if (!node || node.name === this.node.name) return;
@@ -371,13 +377,13 @@ export class Player extends EventEmitter {
             throw new Error("Provided Node not is not connected");
 
         try {
-            this.node.rest.destroyPlayer(this.guildId);
+            await this.node.rest.destroyPlayer(this.guildId);
             this.poru.players.delete(this.guildId);
             this.node = node;
             this.poru.players.set(this.guildId, this);
-            this.restart();
+            await this.restart();
         } catch (e) {
-            this.destroy();
+            await this.destroy();
             throw e;
         }
     }
@@ -387,7 +393,10 @@ export class Player extends EventEmitter {
             throw new Error("[Poru Error] No nodes are avaliable");
 
         const node = this.poru.nodes.get(this.poru.leastUsedNodes[0].name);
-        if (!node) return await this.destroy();
+        if (!node) {
+            await this.destroy();
+            return;
+        };
         await this.moveNode(node.name);
     }
 
@@ -493,13 +502,13 @@ export class Player extends EventEmitter {
         const regex = /^https?:\/\//;
 
         if (regex.test(query)) {
-            let response = await this.node.rest.get(
+            let response = await this.node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
             );
             return new Response(response, requester);
         } else {
             let track = `${source || "ytsearch"}:${query}`;
-            let response = await this.node.rest.get(
+            let response = await this.node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
             );
             return new Response(response, requester);

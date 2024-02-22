@@ -2,7 +2,7 @@ import { Node } from "./Node/Node";
 import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
-import { Response } from "./guild/Response";
+import { Response, LoadTrackResponse } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
@@ -90,67 +90,10 @@ export interface ConnectionOptions {
     guildId: string;
     voiceChannel: string;
     textChannel: string;
-    deaf: boolean;
-    mute: boolean;
+    deaf?: boolean;
+    mute?: boolean;
     region?: string;
 }
-
-export interface LoadTrackResponseTrack {
-    loadType: "track",
-    data: trackData,
-};
-
-export interface LoadTrackResponseSearch {
-    loadType: "search",
-    data: trackData[],
-};
-
-export interface LoadTrackResponseEmpty {
-    loadType: "empty",
-    data: {}
-};
-
-export type Severity = "common" | "suspicious" | "fault";
-
-export interface LoadTrackResponseError {
-    loadType: "error",
-    data: {
-        message?: string,
-        severity: Severity,
-        cause: string
-    };
-};
-
-export interface LoadTrackResponsePlaylist {
-    loadType: "playlist",
-    data: {
-        /**
-         * The info of the playlist
-         */
-        info: {
-            /**
-             * The name of the playlist
-             */
-            name: string,
-
-            /**
-             * The selected track of the playlist (-1 if no track is selected)
-             */
-            selectedTrack: number,
-        },
-        /**
-         * Addition playlist info provided by plugins
-         */
-        pluginInfo: any,
-
-        /**
-         * The tracks of the playlist
-         */
-        tracks: trackData[]
-    }
-};
-
-export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch | LoadTrackResponseEmpty | LoadTrackResponseError | LoadTrackResponsePlaylist;
 
 export interface PoruEvents {
     /**
@@ -397,8 +340,8 @@ export class Poru extends EventEmitter {
 
     /**
      * Voice State Update and Voice Server Update
-     * @param packet packet from discord api
-     * @returns void
+     * @param {any} packet packet from discord api
+     * @returns {void} void
      */
     public packetUpdate(packet: any) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
@@ -417,8 +360,8 @@ export class Poru extends EventEmitter {
 
     /**
      * Add a node to poru instance
-     * @param options NodeGroup
-     * @returns Node
+     * @param {NodeGroup} options NodeGroup
+     * @returns {Node} Node
      */
     public addNode(options: NodeGroup): Node {
         const node = new Node(this, options, this.options);
@@ -429,22 +372,22 @@ export class Poru extends EventEmitter {
 
     /**
      * Remove a node from poru instance
-     * @param identifier Node name
-     * @returns void
+     * @param {string} identifier The Name of the node
+     * @returns {boolean} A boolean indicating if the node was removed
      */
-    public removeNode(identifier: string) {
+    public removeNode(identifier: string): boolean {
         const node = this.nodes.get(identifier);
         if (!node) return;
         node.disconnect();
-        this.nodes.delete(identifier);
+        return this.nodes.delete(identifier);
     }
 
     /**
      * Get a node from poru instance
-     * @param region Region of the node
-     * @returns Node
+     * @param {string} region Region of the node
+     * @returns {Node[]} A array of nodes
      */
-    public getNodeByRegion(region: string) {
+    public getNodeByRegion(region: string): Node[] {
         return [...this.nodes.values()]
             .filter(
                 (node) =>
@@ -463,10 +406,10 @@ export class Poru extends EventEmitter {
 
     /**
      * Get a node from poru instance
-     * @param identifier Node name
-     * @returns Node
+     * @param {string?} identifier Node name
+     * @returns {Node | Node[]} A Node or an array of nodes
      */
-    getNode(identifier: string = "auto") {
+    public getNode(identifier: string = "auto"): Node | Node[] {
         if (!this.nodes.size) throw new Error(`No nodes available currently`);
 
         if (identifier === "auto") return this.leastUsedNodes;
@@ -478,9 +421,9 @@ export class Poru extends EventEmitter {
     }
 
     /**
-     * Get a player from poru instance
-     * @param options ConnectionOptions
-     * @returns 
+     * Creates a new player
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
     public createConnection(options: ConnectionOptions): Player {
         if (!this.isActivated)
@@ -505,11 +448,11 @@ export class Poru extends EventEmitter {
 
     /**
      * Create a player from poru instance
-     * @param node Node
-     * @param options ConnectionOptions
-     * @returns 
+     * @param {Node} node Node
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
-    private createPlayer(node: Node, options: ConnectionOptions) {
+    private createPlayer(node: Node, options: ConnectionOptions): Player {
         let player: Player;
         if (this.options.customPlayer) {
             player = new this.options.customPlayer(this, node, options);
@@ -523,16 +466,20 @@ export class Poru extends EventEmitter {
 
     /**
      * Remove a player from poru instance
-     * @param guildId Guild ID
+     * @param {string} guildId Guild ID
+     * 
+     * @returns {Promise<boolean>} A bool indicating if the player was removed
      */
-    public removeConnection(guildId: string) {
-        this.players.get(guildId)?.destroy();
-    }
+    public async removeConnection(guildId: string): Promise<boolean> {
+        return await this.players.get(guildId)?.destroy();
+    };
 
     /**
      * Get a least used node from poru instance
+     * 
+     * @returns {Node[]} A array of nodes
      */
-    get leastUsedNodes() {
+    get leastUsedNodes(): Node[] {
         return [...this.nodes.values()]
             .filter((node) => node.isConnected)
             .sort((a, b) => a.penalties - b.penalties);
@@ -540,11 +487,11 @@ export class Poru extends EventEmitter {
 
     /**
      * Resolve a track from poru instance
-     * @param param0  ResolveOptions
-     * @param node Node
-     * @returns 
+     * @param {ResolveOptions} param0  ResolveOptions
+     * @param {Node | undefined} node Node or undefined
+     * @returns {Promise<Response>} The Response of the resolved tracks
      */
-    public async resolve({ query, source, requester }: ResolveOptions, node?: Node) {
+    public async resolve({ query, source, requester }: ResolveOptions, node?: Node): Promise<Response> {
         if (!this.isActivated)
             throw new Error(`You have to init poru in your ready event`);
 
@@ -575,7 +522,7 @@ export class Poru extends EventEmitter {
     public async decodeTrack(track: string, node: Node) {
         if (!node) node = this.leastUsedNodes[0];
 
-        return node.rest.get(
+        return node.rest.get<trackData>(
             `/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`
         );
     }
