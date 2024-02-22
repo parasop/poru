@@ -20,20 +20,52 @@ export interface NodeGroup {
 }
 export interface ResolveOptions {
     query: string;
-    source?: string;
+    source?: supportedPlatforms | (string & {});
     requester?: any;
 }
 /**
  * @typedef {string} supportedLibraries
  */
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
+export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch";
+export type TrackEndReason = 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup';
+export type PlayerEventType = 'TrackStartEvent' | 'TrackEndEvent' | 'TrackExceptionEvent' | 'TrackStuckEvent' | 'WebSocketClosedEvent';
+export interface PlayerEvent {
+    op: 'event';
+    type: PlayerEventType;
+    guildId: string;
+}
+export interface TrackStartEvent extends PlayerEvent {
+    type: 'TrackStartEvent';
+    track: Track;
+}
+export interface TrackEndEvent extends PlayerEvent {
+    type: 'TrackEndEvent';
+    track: Track;
+    reason: TrackEndReason;
+}
+export interface TrackStuckEvent extends PlayerEvent {
+    type: 'TrackStuckEvent';
+    track: Track;
+    thresholdMs: number;
+}
+export interface TrackExceptionEvent extends PlayerEvent {
+    type: 'TrackExceptionEvent';
+    exception: any;
+}
+export interface WebSocketClosedEvent extends PlayerEvent {
+    type: 'WebSocketClosedEvent';
+    code: number;
+    byRemote: boolean;
+    reason: string;
+}
 export interface PoruOptions {
     plugins?: Plugin[];
     customPlayer?: Constructor<Player>;
     customFilter?: Constructor<Filters>;
     autoResume?: boolean;
     library: supportedLibraries;
-    defaultPlatform?: string;
+    defaultPlatform?: supportedPlatforms;
     resumeKey?: string;
     resumeTimeout?: number;
     reconnectTimeout?: number | null;
@@ -110,10 +142,10 @@ export interface PoruEvents {
      * @eventProperty
      * @param player
      * @param track
-     * @param LavalinkData
+     * @param data
      * @returns void
      */
-    trackEnd: (player: Player, track: Track, LavalinkData?: unknown) => void;
+    trackEnd: (player: Player, track: Track, data: TrackEndEvent) => void;
     /**
      * Emitted when player's queue  is completed and going to disconnect
      * @eventProperty
@@ -130,7 +162,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    trackError: (player: Player, track: Track, data: any) => void;
+    trackError: (player: Player, track: Track, data: TrackStuckEvent) => void;
     /**
      * Emitted when a player got updates
      * @eventProperty
@@ -161,7 +193,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    socketClose: (player: Player, track: Track, data: any) => void;
+    socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
 }
 /**
  * @extends EventEmitter

@@ -5,5 +5,5 @@ var Config;
 (function (Config) {
     Config[Config["version"] = 4] = "version";
     Config["clientName"] = "Poru";
-})(Config = exports.Config || (exports.Config = {}));
+})(Config || (exports.Config = Config = {}));
 //# sourceMappingURL=config.js.map

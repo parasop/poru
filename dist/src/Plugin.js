@@ -4,7 +4,6 @@ exports.Plugin = void 0;
 class Plugin {
     name;
     /**
-     *
      * @param name The name of the plugin
      */
     constructor(name) {

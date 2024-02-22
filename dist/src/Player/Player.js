@@ -9,7 +9,12 @@ const Queue_1 = __importDefault(require("../guild/Queue"));
 const events_1 = require("events");
 const Filters_1 = require("./Filters");
 const Response_1 = require("../guild/Response");
-const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeRegExp = (str) => {
+    try {
+        str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+    catch { }
+};
 class Player extends events_1.EventEmitter {
     data;
     poru;
@@ -25,6 +30,8 @@ class Player extends events_1.EventEmitter {
     isPlaying;
     isPaused;
     isConnected;
+    isAutoPlay;
+    isQuietMode;
     loop;
     position;
     ping;
@@ -80,7 +87,7 @@ class Player extends events_1.EventEmitter {
             this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
-                    track: { encoded: this.currentTrack.track, userData: this.currentTrack.userData },
+                    track: { encoded: this.currentTrack?.track },
                 },
             });
             this.isPlaying = true;
@@ -98,7 +105,7 @@ class Player extends events_1.EventEmitter {
         const query = [track.info?.author, track.info?.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result = await this.resolve({ query, source: this.poru.options.defaultPlatform || "ytsearch", requester: track.info?.requester });
+        const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
         if (!result || !result.tracks.length)
             return;
         if (track.info?.author) {
@@ -106,7 +113,7 @@ class Player extends events_1.EventEmitter {
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
                 new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {
-                track.info.identifier = officialAudio.info.identifier;
+                //track.info.identifier = officialAudio.info.identifier;
                 track.track = officialAudio.track;
                 return track;
             }
@@ -115,7 +122,7 @@ class Player extends events_1.EventEmitter {
             const sameDuration = result.tracks.find((track) => track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
                 track.info.length <= (track.info.length ? track.info.length : 0) + 2000);
             if (sameDuration) {
-                track.info.identifier = sameDuration.info.identifier;
+                //track.info.identifier = sameDuration.info.identifier;
                 track.track = sameDuration.track;
                 return track;
             }
@@ -332,17 +339,17 @@ class Player extends events_1.EventEmitter {
             return await this.destroy();
         await this.moveNode(node.name);
     }
-    async autoplay(requester) {
+    async autoplay(player) {
         try {
-            let data = `https://www.youtube.com/watch?v=${this.previousTrack.info.identifier || this.currentTrack.info.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
+            let data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
             let response = await this.poru.resolve({
                 query: data,
-                requester,
-                source: this.poru.options.defaultPlatform || "ytmsearch",
+                requester: player.previousTrack?.info?.requester ?? player.currentTrack?.info?.requester,
+                source: player.previousTrack?.info?.sourceName ?? player.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
             });
             if (!response ||
                 !response.tracks ||
-                ["LOAD_FAILED", "NO_MATCHES"].includes(response.loadType))
+                ["error", "empty"].includes(response.loadType))
                 return this.stop();
             response.tracks.shift();
             let track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
@@ -365,7 +372,7 @@ class Player extends events_1.EventEmitter {
                 this.previousTrack = this.currentTrack;
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
-                    this.poru.emit("trackEnd", this, this.currentTrack);
+                    this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return this.play();
                 }
                 else if (this.currentTrack && this.loop === "QUEUE") {
@@ -378,7 +385,7 @@ class Player extends events_1.EventEmitter {
                     return this.poru.emit("queueEnd", this);
                 }
                 else if (this.queue.length > 0) {
-                    this.poru.emit("trackEnd", this, this.currentTrack);
+                    this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return this.play();
                 }
                 this.isPlaying = false;

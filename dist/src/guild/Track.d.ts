@@ -1,9 +1,8 @@
 import { Poru } from "../Poru";
 export interface trackData {
-    encoded: string;
+    encoded?: string;
     info: trackInfo;
-    pluginInfo: any;
-    userData: any;
+    pluginInfo?: any;
 }
 export interface trackInfo {
     identifier: string;
@@ -14,7 +13,6 @@ export interface trackInfo {
     title: string;
     uri: string;
     sourceName: string;
-    image?: string;
     artworkUrl: string;
     isrc: string | null;
     requester?: any;
@@ -23,7 +21,6 @@ export declare class Track {
     track: string;
     info: trackInfo;
     pluginInfo: any;
-    userData: any;
     constructor(data: trackData, requester?: any);
     resolve(poru: Poru): Promise<this>;
 }

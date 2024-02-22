@@ -6,24 +6,22 @@ class Track {
     track;
     info;
     pluginInfo;
-    userData;
     constructor(data, requester) {
-        this.track = data.encoded;
-        this.pluginInfo = data.pluginInfo,
-            this.userData = data.userData;
-        this.info = {
-            identifier: data.info.identifier,
-            isSeekable: data.info.isSeekable,
-            author: data.info.author,
-            length: data.info.length,
-            isStream: data.info.isStream,
-            sourceName: data.info.sourceName,
-            title: data.info.title,
-            uri: data.info.uri,
-            artworkUrl: data.info.artworkUrl || null,
-            isrc: data.info.isrc,
-            requester
-        };
+        this.track = data?.encoded;
+        this.pluginInfo = data?.pluginInfo,
+            this.info = {
+                identifier: data?.info?.identifier,
+                isSeekable: data?.info?.isSeekable,
+                author: data?.info?.author,
+                length: data?.info?.length,
+                isStream: data?.info?.isStream,
+                sourceName: data?.info?.sourceName,
+                title: data?.info?.title,
+                uri: data?.info?.uri,
+                artworkUrl: data?.info?.artworkUrl || null,
+                isrc: data?.info?.isrc,
+                requester
+            };
     }
     async resolve(poru) {
         const query = [this.info.author, this.info.title]
@@ -37,7 +35,7 @@ class Track {
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
                 new RegExp(`^${escapeRegExp(this.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {
-                this.info.identifier = officialAudio.info.identifier;
+                //this.info.identifier = officialAudio.info.identifier;
                 this.track = officialAudio.track;
                 return this;
             }
@@ -46,7 +44,7 @@ class Track {
             const sameDuration = result.tracks.find((track) => track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
                 track.info.length <= (this.info.length ? this.info.length : 0) + 2000);
             if (sameDuration) {
-                this.info.identifier = sameDuration.info.identifier;
+                //this.info.identifier = sameDuration.info.identifier;
                 this.track = sameDuration.track;
                 return this;
             }
