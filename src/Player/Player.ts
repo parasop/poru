@@ -434,11 +434,11 @@ export class Player extends EventEmitter {
                 this.previousTrack = this.currentTrack;
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
-                    this.poru.emit("trackEnd", this, data);
+                    this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return this.play();
                 } else if (this.currentTrack && this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
-                    this.poru.emit("trackEnd", this, data);
+                    this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return this.play();
                 }
 
@@ -446,7 +446,7 @@ export class Player extends EventEmitter {
                     this.isPlaying = false;
                     return this.poru.emit("queueEnd", this);
                 } else if (this.queue.length > 0) {
-                    this.poru.emit("trackEnd", this, data);
+                    this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return this.play();
                 }
 

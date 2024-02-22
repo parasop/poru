@@ -141,10 +141,11 @@ export interface PoruEvents {
      * Emitted whenever track ends
      * @eventProperty
      * @param player
+     * @param track
      * @param data
      * @returns void
      */
-    trackEnd: (player: Player, data: TrackEndEvent) => void;
+    trackEnd: (player: Player, track: Track, data: TrackEndEvent) => void;
     /**
      * Emitted when player's queue  is completed and going to disconnect
      * @eventProperty
