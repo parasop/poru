@@ -136,7 +136,7 @@ export class Rest {
                 },
             });
 
-            return req.json() as T;
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
