@@ -1,8 +1,9 @@
-import { Node } from "./Node";
+import { ErrorResponses, Node } from "./Node";
 import { fetch } from "undici";
 import { Poru } from "../Poru";
-import { setEnvironmentData } from "worker_threads";
-import { Track } from "../guild/Track";
+import { Track, trackData } from "../guild/Track";
+import { FiltersOptions } from '../Player/Filters';
+import { IVoiceServer } from "../Player/Connection";
 
 export interface playOptions {
     guildId: string;
@@ -17,7 +18,25 @@ export interface playOptions {
         filters?: Object;
         voice?: any;
     };
-}
+};
+
+
+export interface PlayerObjectFromAPI {
+    guildId: string;
+    track: trackData;
+    volume: number;
+    paused: boolean;
+    state: PlayerState;
+    voice: IVoiceServer;
+    filters: FiltersOptions;
+};
+
+export interface PlayerState {
+    time: number;
+    position: number;
+    connected: boolean;
+    ping: number;
+};
 
 export type RouteLike = `/${string}`;
 
@@ -46,16 +65,16 @@ export class Rest {
         this.sessionId = sessionId;
     }
 
-    getAllPlayers() {
+    public async getAllPlayers(): Promise<PlayerObjectFromAPI | ErrorResponses> {
         return this.get(`/v4/sessions/${this.sessionId}/players`);
     }
 
-    public async updatePlayer(options: playOptions) {
+    public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses> {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
 
-    public async destroyPlayer(guildId: string) {
-        await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
+    public async destroyPlayer(guildId: string): Promise<null | ErrorResponses> {
+        return await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
     }
 
     public async get<T = unknown>(path: RouteLike) {
@@ -73,7 +92,7 @@ export class Rest {
         }
     }
 
-    public async patch<T = unknown | null>(endpoint: RouteLike, body): Promise<T> {
+    public async patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
@@ -90,7 +109,7 @@ export class Rest {
         }
     }
 
-    public async post<T = unknown>(endpoint: RouteLike, body): Promise<T> {
+    public async post<T = unknown>(endpoint: RouteLike, body: any): Promise<T> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
@@ -107,7 +126,7 @@ export class Rest {
         }
     }
 
-    public async delete(endpoint: RouteLike) {
+    public async delete<T = unknown>(endpoint: RouteLike): Promise<T> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
@@ -117,7 +136,7 @@ export class Rest {
                 },
             });
 
-            return await req.json();
+            return await req.json() as T;
         } catch (e) {
             return null;
         }

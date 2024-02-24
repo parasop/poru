@@ -169,7 +169,11 @@ export class Node {
         }, this.reconnectTimeout);
     }
 
-    public disconnect() {
+    /**
+     * This function will make the node disconnect
+     * @returns {void} void
+     */
+    public disconnect(): void {
         if (!this.isConnected) return;
 
         this.poru.players.forEach((player) => {
@@ -185,6 +189,10 @@ export class Node {
         this.poru.emit("nodeDisconnect", this);
     }
 
+    /**
+     * This function will get the penalties from the current node
+     * @returns {number} The amount of penalties
+     */
     get penalties(): number {
         let penalties = 0;
         if (!this.isConnected) return penalties;
@@ -199,7 +207,11 @@ export class Node {
         return penalties;
     }
 
-    private async open() {
+    /**
+     * This function will open up again the node
+     * @returns {Promise<void>} The Promise<void>
+     */
+    private async open(): Promise<void> {
         if (this.reconnectAttempt) {
             clearTimeout(this.reconnectAttempt);
             delete this.reconnectAttempt;
@@ -218,11 +230,21 @@ export class Node {
         }
     }
 
-    private setStats(packet: NodeStats) {
+    /**
+     * This function will set the stats accordingly from the NodeStats
+     * @param {NodeStats} packet The NodeStats
+     * @returns {void} void 
+     */
+    private setStats(packet: NodeStats): void {
         this.stats = packet;
     }
 
-    private async message(payload: any) {
+    /**
+     * This will send a message to the node
+     * @param {any} payload any 
+     * @returns {Promise<void>} void
+     */
+    private async message(payload: any): Promise<void> {
         const packet = JSON.parse(payload);
         if (!packet?.op) return;
 
@@ -248,6 +270,11 @@ export class Node {
         if (packet.guildId && player) player.emit(packet.op, packet);
     }
 
+    /**
+     * This will close the connection to the node
+     * @param {any} event any
+     * @returns {void} void
+     */
     private close(event: any): void {
         this.disconnect();
         this.poru.emit("nodeDisconnect", this, event);
@@ -257,6 +284,11 @@ export class Node {
         if (event !== 1000) this.reconnect();
     }
 
+    /**
+     * This function will emit the error so that the user's listeners can get them and listen to them
+     * @param {any} event any
+     * @returns {void} void
+     */
     private error(event: any): void {
         if (!event) return;
         this.poru.emit("nodeError", this, event);
@@ -266,10 +298,19 @@ export class Node {
         );
     }
 
-    public async getRoutePlannerStatus() {
+    /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
+    public async getRoutePlannerStatus(): Promise<null> {
         return await this.rest.get<null>(`/v4/routeplanner/status`)
     }
 
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
     public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
         return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
     }
