@@ -86,7 +86,7 @@ export class Rest {
                     Authorization: this.password,
                 },
             });
-            return req.json() as T;
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
@@ -103,7 +103,7 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return req.json() as T;
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
@@ -120,7 +120,7 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return req.json() as T;
+            return await req.json() as T;
         } catch (e) {
             return null;
         }
