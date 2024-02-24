@@ -66,7 +66,7 @@ export class Rest {
     }
 
     public async getAllPlayers(): Promise<PlayerObjectFromAPI | ErrorResponses> {
-        return this.get(`/v4/sessions/${this.sessionId}/players`);
+        return await this.get(`/v4/sessions/${this.sessionId}/players`);
     }
 
     public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses> {
@@ -86,7 +86,7 @@ export class Rest {
                     Authorization: this.password,
                 },
             });
-            return await req.json() as T;
+            return req.json() as T;
         } catch (e) {
             return null;
         }
@@ -103,7 +103,7 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return await req.json() as T;
+            return req.json() as T;
         } catch (e) {
             return null;
         }
@@ -120,7 +120,7 @@ export class Rest {
                 body: JSON.stringify(body),
             });
 
-            return await req.json() as T;
+            return req.json() as T;
         } catch (e) {
             return null;
         }
@@ -136,7 +136,7 @@ export class Rest {
                 },
             });
 
-            return await req.json() as T;
+            return req.json() as T;
         } catch (e) {
             return null;
         }
