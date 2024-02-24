@@ -1,6 +1,6 @@
-import { Poru, ResolveOptions } from "../Poru";
+import { Poru, ResolveOptions, EventData } from "../Poru";
 import { Node } from "../Node/Node";
-import { Track, trackData } from "../guild/Track";
+import { Track } from "../guild/Track";
 import { Connection } from "./Connection";
 import Queue from "../guild/Queue";
 import { EventEmitter } from "events";
@@ -45,7 +45,7 @@ export class Player extends EventEmitter {
     public deaf: boolean;
     public volume: number;
 
-    constructor(poru: Poru, node: Node, options) {
+    constructor(poru: Poru, node: Node, options: ConnectionOptions) {
         super();
         this.poru = poru;
         this.node = node;
@@ -191,7 +191,7 @@ export class Player extends EventEmitter {
 
     /**
      * 
-     * @param toggle Boolean to pause or resume the player
+     * @param {boolean} toggle Boolean to pause or resume the player || Default = true
      * @returns {Promise<Player>} To pause or resume the player
      */
     public async pause(toggle: boolean = true): Promise<Player> {
@@ -206,32 +206,33 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @param position Number to seek to the position
+     * This function will seek to the specified position
+     * @param {number} position Number to seek to the position
+     * @returns {Promise<void>} void
      */
-    public seekTo(position: number): void {
+    public async seekTo(position: number): Promise<void> {
         if (this.position + position >= this.currentTrack.info.length)
             position = this.currentTrack.info.length;
-        this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
+        await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
 
     /**
-     * 
+     * This function will set the volume to a specified number between 0 and 1000
      * @param volume Number to set the volume
-     * @returns {Player} To set the volume
+     * @returns {Promise<Player>} The newly updated Player
      */
-    public setVolume(volume: number): Player {
+    public async setVolume(volume: number): Promise<Player> {
         if (volume < 0 || volume > 1000)
             throw new Error("[Poru Exception] Volume must be between 0 to 1000");
-        this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+        await this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
         this.volume = volume;
         return this;
     }
 
     /**
-     * 
-     * @param mode Loop mode
-     * @returns {Player} To set the loop mode
+     * This function will activate the loop mode. These are the options `NONE, TRACK, QUEUE`
+     * @param {Loop} mode Loop mode
+     * @returns {Player} Returns the newly updated Player
      */
     public setLoop(mode: Loop): Player {
         if (!mode)
@@ -266,9 +267,9 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @param channel String to set the text channel
-     * @returns {Player} To set the text channel
+     * This function will set the text channel in the player
+     * @param {string} channel String to set the text channel
+     * @returns {Player} Returns the newly updated Player
      */
     public setTextChannel(channel: string): Player {
         this.textChannel = channel;
@@ -276,14 +277,14 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @param channel String to set the voice channel
-     * @param options Options `mute` and `deaf`
-     * @returns {Player} To set the voice channel
+     * This function will set the voice channel
+     * @param {string} channel String to set the voice channel
+     * @param {Required<Omit<ConnectionOptions, "guildId" | "region" | "textChannel" | "voiceChannel">>} options Options `mute` and `deaf`
+     * @returns {Player} Returns the newly updated Player
      */
     public setVoiceChannel(
         channel: string,
-        options?: { mute: boolean; deaf: boolean }
+        options?: Required<Omit<ConnectionOptions, "guildId" | "region" | "textChannel" | "voiceChannel">>
     ): Player {
         if (this.isConnected && channel == this.voiceChannel)
             throw new ReferenceError(`Player is already connected to ${channel}`);
@@ -291,8 +292,8 @@ export class Player extends EventEmitter {
         this.voiceChannel = channel;
 
         if (options) {
-            this.mute = options.mute ?? this.mute;
-            this.deaf = options.deaf ?? this.deaf;
+            this.mute = options.mute ?? this.mute ?? false;
+            this.deaf = options.deaf ?? this.deaf ?? false;
         }
 
         this.connect({
@@ -307,29 +308,29 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * 
-     * @param key Key to set the value
-     * @param value Value to set the key
-     * @returns {unknown} To set the key and value
+     * This will set a value to a key
+     * @param {string} key Key to set the value
+     * @param {unknown} value Value to set the key
+     * @returns {K} To set the key and value
      */
-    public set(key: string, value: unknown): unknown {
-        return (this.data[key] = value);
+    public set<K>(key: string, value: K): K {
+        return (this.data[key] = value) as K;
     }
 
     /**
-     * 
-     * @param key Key to get the value
-     * @returns 
+     * This will retrieve the value via the key
+     * @param {string} key Key to get the value
+     * @returns {K} Returns the data that was obtained via the key
      */
     public get<K>(key: string): K {
         return this.data[key] as K;
     }
 
     /**
-     * 
-     * @returns {Promise<void>} To disconnect from voice channel
+     * This function will disconnect us from the channel
+     * @returns {Promise<Player>} Returns the newly updated Player
      */
-    public async disconnect(): Promise<this> {
+    public async disconnect(): Promise<Player> {
         if (!this.voiceChannel) return;
         await this.pause(true);
         this.isConnected = false;
@@ -348,47 +349,62 @@ export class Player extends EventEmitter {
      * @returns {Promise<boolean>} Indicating if the player was successfully destroyed
      */
     public async destroy(): Promise<boolean> {
-        this.disconnect();
+        await this.disconnect();
         await this.node.rest.destroyPlayer(this.guildId);
         this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
         this.poru.emit("playerDestroy", this);
         return this.poru.players.delete(this.guildId);
     };
 
-    public restart() {
+    /**
+     * This function will restart the player and play the current track
+     * @returns {Promise<Player>} Returns a Player object
+     */
+    public async restart(): Promise<Player> {
         if (!this.currentTrack.track && !this.queue.length) return;
-        if (!this.currentTrack.track) return this.play();
+        if (!this.currentTrack.track) return await this.play();
 
-        this.node.rest.updatePlayer({
+        await this.node.rest.updatePlayer({
             guildId: this.guildId,
             data: {
                 position: this.position,
                 track: this.currentTrack,
             },
         });
-    }
+
+        return this;
+    };
 
 
+    /**
+     * This function will move the node from the current player
+     * @param {string} name The name of the node to move to
+     * @returns 
+     */
     public async moveNode(name: string) {
-        let node = this.poru.nodes.get(name);
+        const node = this.poru.nodes.get(name);
 
         if (!node || node.name === this.node.name) return;
         if (!node.isConnected)
-            throw new Error("Provided Node not is not connected");
+            throw new Error("Provided Node is not connected");
 
         try {
             await this.node.rest.destroyPlayer(this.guildId);
             this.poru.players.delete(this.guildId);
             this.node = node;
             this.poru.players.set(this.guildId, this);
-            await this.restart();
+            return await this.restart();
         } catch (e) {
             await this.destroy();
             throw e;
         }
-    }
+    };
 
-    public async AutoMoveNode(): Promise<void> {
+    /**
+     * This function will autmatically move the node to the leastUsed Node for the current player
+     * @returns Promise of Player or nothing if there was no node to move to or a error came up
+     */
+    public async autoMoveNode(): Promise<Player | void> {
         if (this.poru.leastUsedNodes.length === 0)
             throw new Error("[Poru Error] No nodes are avaliable");
 
@@ -397,42 +413,53 @@ export class Player extends EventEmitter {
             await this.destroy();
             return;
         };
-        await this.moveNode(node.name);
-    }
 
-    async autoplay(player: Player) {
+        return await this.moveNode(node.name);
+    };
+
+    /**
+     * This function will automatically add a track to the queue and play it
+     * @returns The newly updated Player which is playing the song
+     */
+    public async autoplay(): Promise<Player> {
         try {
-            let data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier
+            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier
                 }&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
 
-            let response = await this.poru.resolve({
+            const response = await this.poru.resolve({
                 query: data,
-                requester: player.previousTrack?.info?.requester ?? player.currentTrack?.info?.requester,
-                source: player.previousTrack?.info?.sourceName ?? player.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
+                requester: this.previousTrack?.info?.requester ?? this.currentTrack?.info?.requester,
+                source: this.previousTrack?.info?.sourceName ?? this.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
             });
+
             if (
                 !response ||
                 !response.tracks ||
                 ["error", "empty"].includes(response.loadType)
             )
-                return this.stop();
+                return await this.stop();
 
             response.tracks.shift();
 
-            let track =
-                response.tracks[
+            const track = response.tracks[
                 Math.floor(Math.random() * Math.floor(response.tracks.length))
-                ];
+            ];
+
             this.queue.push(track);
-            this.play();
+            await this.play();
 
             return this;
         } catch (e) {
-            return this.stop();
-        }
-    }
+            return await this.stop();
+        };
+    };
 
-    public eventHandler(data) {
+    /**
+     * This function will handle all the events
+     * @param {EventData} data The data of the event
+     * @returns {Promise<Player | boolean | void>} The Player object, a boolean or void
+     */
+    public async eventHandler(data: EventData): Promise<Player | boolean | void> {
         switch (data.type) {
             case "TrackStartEvent": {
                 this.isPlaying = true;
@@ -444,11 +471,11 @@ export class Player extends EventEmitter {
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
                     this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return this.play();
+                    return await this.play();
                 } else if (this.currentTrack && this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
                     this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return this.play();
+                    return await this.play();
                 }
 
                 if (this.queue.length === 0) {
@@ -456,7 +483,7 @@ export class Player extends EventEmitter {
                     return this.poru.emit("queueEnd", this);
                 } else if (this.queue.length > 0) {
                     this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return this.play();
+                    return await this.play();
                 }
 
                 this.isPlaying = false;
@@ -466,12 +493,12 @@ export class Player extends EventEmitter {
 
             case "TrackStuckEvent": {
                 this.poru.emit("trackError", this, this.currentTrack, data);
-                this.stop();
+                await this.stop();
                 break;
             }
             case "TrackExceptionEvent": {
                 this.poru.emit("trackError", this, this.currentTrack, data);
-                this.stop();
+                await this.stop();
                 break;
             }
             case "WebSocketClosedEvent": {
@@ -484,7 +511,7 @@ export class Player extends EventEmitter {
                     });
                 }
                 this.poru.emit("socketClose", this, this.currentTrack, data);
-                this.pause(true);
+                await this.pause(true);
                 this.poru.emit(
                     "debug",
                     `Player -> ${this.guildId}`,
@@ -496,26 +523,36 @@ export class Player extends EventEmitter {
                 throw new Error(`An unknown event: ${data}`);
             }
         }
-    }
+    };
 
-    async resolve({ query, source, requester }: ResolveOptions) {
+    /**
+     * This function will get the track by it's name or identifier or url and will return the track data
+     * @param {ResolveOptions} param0 The parameters to resolve the track
+     * @returns {Promise<Response>} The response of the track data which was searched for
+     */
+    public async resolve({ query, source, requester }: ResolveOptions): Promise<Response> {
         const regex = /^https?:\/\//;
 
         if (regex.test(query)) {
-            let response = await this.node.rest.get<LoadTrackResponse>(
+            const response = await this.node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
             );
             return new Response(response, requester);
         } else {
-            let track = `${source || "ytsearch"}:${query}`;
-            let response = await this.node.rest.get<LoadTrackResponse>(
+            const track = `${source || "ytsearch"}:${query}`;
+            const response = await this.node.rest.get<LoadTrackResponse>(
                 `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
             );
             return new Response(response, requester);
         }
-    }
+    };
 
-    public send(data) {
+    /**
+     * 
+     * @param data The data to send to the voice server from discord
+     * @returns {void} void
+     */
+    public send(data: any): void {
         this.poru.send({ op: 4, d: data });
-    }
+    };
 }

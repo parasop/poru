@@ -50,7 +50,9 @@ export default class Queue extends Array<Track> {
     }
 
     /**
-     * Shuffles the Queue
+     * Shuffles the currnent queue
+     * @returns {void} Returns nothing
+     * 
      */
     public shuffle(): void {
         for (let i = this.length - 1; i > 0; i -= 1) {

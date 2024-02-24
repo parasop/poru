@@ -69,7 +69,13 @@ export interface WebSocketClosedEvent extends PlayerEvent {
     code: number;
     byRemote: boolean;
     reason: string;
-}
+};
+
+/**
+ * The event data
+ * @typedef {TrackEndEvent | TrackStuckEvent | WebSocketClosedEvent | TrackStartEvent | TrackExceptionEvent} EventData
+ */
+export type EventData = TrackEndEvent | TrackStuckEvent | WebSocketClosedEvent | TrackStartEvent | TrackExceptionEvent;
 
 export interface PoruOptions {
     plugins?: Plugin[];
@@ -185,7 +191,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    trackError: (player: Player, track: Track, data: TrackStuckEvent) => void;
+    trackError: (player: Player, track: Track, data: TrackStuckEvent | TrackExceptionEvent) => void;
 
     /**
      * Emitted when a player got updates

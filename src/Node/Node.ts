@@ -171,15 +171,15 @@ export class Node {
 
     /**
      * This function will make the node disconnect
-     * @returns {void} void
+     * @returns {Promise<void>} void
      */
-    public disconnect(): void {
+    public async disconnect(): Promise<void> {
         if (!this.isConnected) return;
 
-        this.poru.players.forEach((player) => {
+        this.poru.players.forEach(async (player) => {
             if (player.node == this) {
-                player.AutoMoveNode();
-            }
+                await player.autoMoveNode();
+            };
         });
         this.ws.close(1000, "destroy");
         this.ws?.removeAllListeners();
