@@ -4,7 +4,7 @@ import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
-import { Track } from "./guild/Track";
+import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
 /**
  * @extends EventEmitter The main class of Poru
@@ -59,6 +59,11 @@ export interface WebSocketClosedEvent extends PlayerEvent {
     byRemote: boolean;
     reason: string;
 }
+/**
+ * The event data
+ * @typedef {TrackEndEvent | TrackStuckEvent | WebSocketClosedEvent | TrackStartEvent | TrackExceptionEvent} EventData
+ */
+export type EventData = TrackEndEvent | TrackStuckEvent | WebSocketClosedEvent | TrackStartEvent | TrackExceptionEvent;
 export interface PoruOptions {
     plugins?: Plugin[];
     customPlayer?: Constructor<Player>;
@@ -77,8 +82,8 @@ export interface ConnectionOptions {
     guildId: string;
     voiceChannel: string;
     textChannel: string;
-    deaf: boolean;
-    mute: boolean;
+    deaf?: boolean;
+    mute?: boolean;
     region?: string;
 }
 export interface PoruEvents {
@@ -162,7 +167,7 @@ export interface PoruEvents {
      * @param data
      * @returns void
      */
-    trackError: (player: Player, track: Track, data: TrackStuckEvent) => void;
+    trackError: (player: Player, track: Track, data: TrackStuckEvent | TrackExceptionEvent) => void;
     /**
      * Emitted when a player got updates
      * @eventProperty
@@ -240,61 +245,65 @@ export declare class Poru extends EventEmitter {
     init(client: any): this;
     /**
      * Voice State Update and Voice Server Update
-     * @param packet packet from discord api
-     * @returns void
+     * @param {any} packet packet from discord api
+     * @returns {void} void
      */
     packetUpdate(packet: any): void;
     /**
      * Add a node to poru instance
-     * @param options NodeGroup
-     * @returns Node
+     * @param {NodeGroup} options NodeGroup
+     * @returns {Node} Node
      */
     addNode(options: NodeGroup): Node;
     /**
      * Remove a node from poru instance
-     * @param identifier Node name
-     * @returns void
+     * @param {string} identifier The Name of the node
+     * @returns {boolean} A boolean indicating if the node was removed
      */
-    removeNode(identifier: string): void;
+    removeNode(identifier: string): boolean;
     /**
      * Get a node from poru instance
-     * @param region Region of the node
-     * @returns Node
+     * @param {string} region Region of the node
+     * @returns {Node[]} A array of nodes
      */
     getNodeByRegion(region: string): Node[];
     /**
      * Get a node from poru instance
-     * @param identifier Node name
-     * @returns Node
+     * @param {string?} identifier Node name
+     * @returns {Node | Node[]} A Node or an array of nodes
      */
     getNode(identifier?: string): Node | Node[];
     /**
-     * Get a player from poru instance
-     * @param options ConnectionOptions
-     * @returns
+     * Creates a new player
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
     createConnection(options: ConnectionOptions): Player;
     /**
      * Create a player from poru instance
-     * @param node Node
-     * @param options ConnectionOptions
-     * @returns
+     * @param {Node} node Node
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
     private createPlayer;
     /**
      * Remove a player from poru instance
-     * @param guildId Guild ID
+     * @param {string} guildId Guild ID
+     *
+     * @returns {Promise<boolean>} A bool indicating if the player was removed
      */
-    removeConnection(guildId: string): void;
+    removeConnection(guildId: string): Promise<boolean>;
     /**
      * Get a least used node from poru instance
+     *
+     * @returns {Node[]} A array of nodes
      */
     get leastUsedNodes(): Node[];
     /**
      * Resolve a track from poru instance
-     * @param param0  ResolveOptions
-     * @param node Node
-     * @returns
+     * @param {ResolveOptions} param0  ResolveOptions
+     * @param {Node | undefined} node Node or undefined
+     * @returns {Promise<Response>} The Response of the resolved tracks
      */
     resolve({ query, source, requester }: ResolveOptions, node?: Node): Promise<Response>;
     /**
@@ -303,7 +312,7 @@ export declare class Poru extends EventEmitter {
      * @param node Node
      * @returns
      */
-    decodeTrack(track: string, node: Node): Promise<unknown>;
+    decodeTrack(track: string, node: Node): Promise<trackData>;
     /**
      * Decode tracks from poru instance
      * @param tracks String[]

@@ -6,23 +6,24 @@ class Track {
     track;
     info;
     pluginInfo;
+    userData;
     constructor(data, requester) {
-        this.track = data?.encoded;
-        this.pluginInfo = data?.pluginInfo,
+        this.track = data.encoded;
+        this.pluginInfo = data.pluginInfo,
+            this.userData = data.userData,
             this.info = {
-                identifier: data?.info?.identifier,
-                isSeekable: data?.info?.isSeekable,
-                author: data?.info?.author,
-                length: data?.info?.length,
-                isStream: data?.info?.isStream,
-                sourceName: data?.info?.sourceName,
-                title: data?.info?.title,
-                uri: data?.info?.uri,
-                artworkUrl: data?.info?.artworkUrl || null,
-                isrc: data?.info?.isrc,
+                isrc: data.info.isrc || null,
+                uri: data.info.uri || null,
+                artworkUrl: data.info.artworkUrl || null,
+                ...data.info,
                 requester
             };
     }
+    /**
+     * This function will resolve the track and return the track as resolved
+     * @param {Poru} poru The poru instance
+     * @returns {Promise<Track>} The resolved track
+     */
     async resolve(poru) {
         const query = [this.info.author, this.info.title]
             .filter((x) => !!x)

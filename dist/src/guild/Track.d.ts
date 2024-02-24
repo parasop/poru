@@ -1,8 +1,9 @@
 import { Poru } from "../Poru";
 export interface trackData {
-    encoded?: string;
+    encoded: string;
     info: trackInfo;
-    pluginInfo?: any;
+    pluginInfo: any;
+    userData: any;
 }
 export interface trackInfo {
     identifier: string;
@@ -10,17 +11,27 @@ export interface trackInfo {
     author: string;
     length: number;
     isStream: boolean;
+    position: number;
     title: string;
-    uri: string;
-    sourceName: string;
-    artworkUrl: string;
+    uri?: string;
+    artworkUrl?: string;
     isrc: string | null;
-    requester?: any;
+    sourceName: string;
+}
+interface trackInfoExtended extends trackInfo {
+    requester: any;
 }
 export declare class Track {
     track: string;
-    info: trackInfo;
+    info: trackInfoExtended;
     pluginInfo: any;
+    userData: any;
     constructor(data: trackData, requester?: any);
-    resolve(poru: Poru): Promise<this>;
+    /**
+     * This function will resolve the track and return the track as resolved
+     * @param {Poru} poru The poru instance
+     * @returns {Promise<Track>} The resolved track
+     */
+    resolve(poru: Poru): Promise<Track>;
 }
+export {};

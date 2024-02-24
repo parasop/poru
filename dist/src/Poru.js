@@ -6,6 +6,7 @@ const Player_1 = require("./Player/Player");
 const events_1 = require("events");
 const config_1 = require("./config");
 const Response_1 = require("./guild/Response");
+;
 class Poru extends events_1.EventEmitter {
     client;
     _nodes;
@@ -97,8 +98,8 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Voice State Update and Voice Server Update
-     * @param packet packet from discord api
-     * @returns void
+     * @param {any} packet packet from discord api
+     * @returns {void} void
      */
     packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
@@ -117,8 +118,8 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Add a node to poru instance
-     * @param options NodeGroup
-     * @returns Node
+     * @param {NodeGroup} options NodeGroup
+     * @returns {Node} Node
      */
     addNode(options) {
         const node = new Node_1.Node(this, options, this.options);
@@ -128,20 +129,20 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Remove a node from poru instance
-     * @param identifier Node name
-     * @returns void
+     * @param {string} identifier The Name of the node
+     * @returns {boolean} A boolean indicating if the node was removed
      */
     removeNode(identifier) {
         const node = this.nodes.get(identifier);
         if (!node)
             return;
         node.disconnect();
-        this.nodes.delete(identifier);
+        return this.nodes.delete(identifier);
     }
     /**
      * Get a node from poru instance
-     * @param region Region of the node
-     * @returns Node
+     * @param {string} region Region of the node
+     * @returns {Node[]} A array of nodes
      */
     getNodeByRegion(region) {
         return [...this.nodes.values()]
@@ -158,8 +159,8 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Get a node from poru instance
-     * @param identifier Node name
-     * @returns Node
+     * @param {string?} identifier Node name
+     * @returns {Node | Node[]} A Node or an array of nodes
      */
     getNode(identifier = "auto") {
         if (!this.nodes.size)
@@ -174,9 +175,9 @@ class Poru extends events_1.EventEmitter {
         return node;
     }
     /**
-     * Get a player from poru instance
-     * @param options ConnectionOptions
-     * @returns
+     * Creates a new player
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
     createConnection(options) {
         if (!this.isActivated)
@@ -200,9 +201,9 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Create a player from poru instance
-     * @param node Node
-     * @param options ConnectionOptions
-     * @returns
+     * @param {Node} node Node
+     * @param {ConnectionOptions} options ConnectionOptions
+     * @returns {Player} Returns the newly created player instance
      */
     createPlayer(node, options) {
         let player;
@@ -218,13 +219,18 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Remove a player from poru instance
-     * @param guildId Guild ID
+     * @param {string} guildId Guild ID
+     *
+     * @returns {Promise<boolean>} A bool indicating if the player was removed
      */
-    removeConnection(guildId) {
-        this.players.get(guildId)?.destroy();
+    async removeConnection(guildId) {
+        return await this.players.get(guildId)?.destroy();
     }
+    ;
     /**
      * Get a least used node from poru instance
+     *
+     * @returns {Node[]} A array of nodes
      */
     get leastUsedNodes() {
         return [...this.nodes.values()]
@@ -233,9 +239,9 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Resolve a track from poru instance
-     * @param param0  ResolveOptions
-     * @param node Node
-     * @returns
+     * @param {ResolveOptions} param0  ResolveOptions
+     * @param {Node | undefined} node Node or undefined
+     * @returns {Promise<Response>} The Response of the resolved tracks
      */
     async resolve({ query, source, requester }, node) {
         if (!this.isActivated)

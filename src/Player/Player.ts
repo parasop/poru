@@ -175,8 +175,10 @@ export class Player extends EventEmitter {
     }
 
     /**
-     * This function will stop and disconnect from the voice channel
-     * @returns {Promise<Player>} To disconnect from voice channel
+     * This function will stop the current song
+     * @returns {Promise<Player>} Returns the player after stopping the song
+     * 
+     * You can use this function to also skip the current song
      */
     public async stop(): Promise<Player> {
         await this.node.rest.updatePlayer({

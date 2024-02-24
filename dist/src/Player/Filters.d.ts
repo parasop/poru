@@ -121,7 +121,7 @@ export interface channelMixOptions {
  * @property {timescaleOptions} timescale The timescale of the filters effect to apply
  *
  */
-interface FiltersOptions {
+export interface FiltersOptions {
     volume: number;
     equalizer: Band[];
     karaoke: karaokeOptions;
