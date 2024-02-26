@@ -1,9 +1,10 @@
 import { Poru } from "../Poru";
 const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 export interface trackData {
-    encoded?: string;
+    encoded: string;
     info: trackInfo;
-    pluginInfo?: any,
+    pluginInfo: any,
+    userData: any,
 }
 
 export interface trackInfo {
@@ -12,42 +13,45 @@ export interface trackInfo {
     author: string;
     length: number;
     isStream: boolean;
+    position: number;
     title: string;
-    uri: string;
-    sourceName: string;
-    artworkUrl: string,
+    uri?: string;
+    artworkUrl?: string;
     isrc: string | null;
-    requester?: any
+    sourceName: string;
 }
+
+interface trackInfoExtended extends trackInfo { requester: any; }
 
 export class Track {
     public track: string;
-    public info: trackInfo;
-    public pluginInfo: any
+    public info: trackInfoExtended;
+    public pluginInfo: any;
+    public userData: any;
 
     constructor(data: trackData, requester?: any) {
-        this.track = data?.encoded;
-        this.pluginInfo = data?.pluginInfo,
+        this.track = data.encoded;
+        this.pluginInfo = data.pluginInfo,
+        this.userData = data.userData,
         this.info = {
-            identifier: data?.info?.identifier,
-            isSeekable: data?.info?.isSeekable,
-            author: data?.info?.author,
-            length: data?.info?.length,
-            isStream: data?.info?.isStream,
-            sourceName: data?.info?.sourceName,
-            title: data?.info?.title,
-            uri: data?.info?.uri,
-            artworkUrl: data?.info?.artworkUrl || null,
-            isrc: data?.info?.isrc,
+            isrc: data.info.isrc || null,
+            uri: data.info.uri || null,
+            artworkUrl: data.info.artworkUrl || null,
+            ...data.info,
             requester
         };
     }
 
-    public async resolve(poru: Poru) {
+    /**
+     * This function will resolve the track and return the track as resolved
+     * @param {Poru} poru The poru instance
+     * @returns {Promise<Track>} The resolved track
+     */
+    public async resolve(poru: Poru): Promise<Track> {
         const query = [this.info.author, this.info.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result: any = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch", requester: this.info.requester });
+        const result = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch", requester: this.info.requester });
         if (!result || !result.tracks.length) return;
 
         if (this.info.author) {
@@ -70,7 +74,7 @@ export class Track {
 
         if (this.info.length) {
             const sameDuration = result.tracks.find(
-                (track: trackData) =>
+                (track) =>
                     track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
                     track.info.length <= (this.info.length ? this.info.length : 0) + 2000
             );

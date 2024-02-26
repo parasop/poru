@@ -7,6 +7,7 @@ exports.Node = void 0;
 const ws_1 = __importDefault(require("ws"));
 const config_1 = require("../config");
 const Rest_1 = require("./Rest");
+;
 class Node {
     isConnected;
     poru;
@@ -110,13 +111,18 @@ class Node {
             this.attempt++;
         }, this.reconnectTimeout);
     }
-    disconnect() {
+    /**
+     * This function will make the node disconnect
+     * @returns {Promise<void>} void
+     */
+    async disconnect() {
         if (!this.isConnected)
             return;
-        this.poru.players.forEach((player) => {
+        this.poru.players.forEach(async (player) => {
             if (player.node == this) {
-                player.AutoMoveNode();
+                await player.autoMoveNode();
             }
+            ;
         });
         this.ws.close(1000, "destroy");
         this.ws?.removeAllListeners();
@@ -125,6 +131,10 @@ class Node {
         this.poru.nodes.delete(this.name);
         this.poru.emit("nodeDisconnect", this);
     }
+    /**
+     * This function will get the penalties from the current node
+     * @returns {number} The amount of penalties
+     */
     get penalties() {
         let penalties = 0;
         if (!this.isConnected)
@@ -137,7 +147,11 @@ class Node {
         }
         return penalties;
     }
-    open() {
+    /**
+     * This function will open up again the node
+     * @returns {Promise<void>} The Promise<void>
+     */
+    async open() {
         if (this.reconnectAttempt) {
             clearTimeout(this.reconnectAttempt);
             delete this.reconnectAttempt;
@@ -148,14 +162,24 @@ class Node {
         if (this.autoResume) {
             for (const player of this.poru.players.values()) {
                 if (player.node === this) {
-                    player.restart();
+                    await player.restart();
                 }
             }
         }
     }
+    /**
+     * This function will set the stats accordingly from the NodeStats
+     * @param {NodeStats} packet The NodeStats
+     * @returns {void} void
+     */
     setStats(packet) {
         this.stats = packet;
     }
+    /**
+     * This will send a message to the node
+     * @param {any} payload any
+     * @returns {Promise<void>} void
+     */
     async message(payload) {
         const packet = JSON.parse(payload);
         if (!packet?.op)
@@ -171,7 +195,7 @@ class Node {
             this.sessionId = packet.sessionId;
             this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
             if (this.resumeKey) {
-                this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
                 this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
             }
         }
@@ -179,6 +203,11 @@ class Node {
         if (packet.guildId && player)
             player.emit(packet.op, packet);
     }
+    /**
+     * This will close the connection to the node
+     * @param {any} event any
+     * @returns {void} void
+     */
     close(event) {
         this.disconnect();
         this.poru.emit("nodeDisconnect", this, event);
@@ -186,15 +215,29 @@ class Node {
         if (event !== 1000)
             this.reconnect();
     }
+    /**
+     * This function will emit the error so that the user's listeners can get them and listen to them
+     * @param {any} event any
+     * @returns {void} void
+     */
     error(event) {
         if (!event)
             return;
         this.poru.emit("nodeError", this, event);
         this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
     }
+    /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
     async getRoutePlannerStatus() {
         return await this.rest.get(`/v4/routeplanner/status`);
     }
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
     async unmarkFailedAddress(address) {
         return this.rest.post(`/v4/routeplanner/free/address`, { address });
     }

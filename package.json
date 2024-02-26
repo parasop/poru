@@ -16,7 +16,7 @@
     "build": "tsc && npm run build:esm",
     "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
     "build:docs": "npx typedoc --plugin typedoc-plugin-markdown --out docs index.ts",
-    "build:docs.json": "npx typedoc --json docs/docs.json src/.",
+    "build:docs.json": "npx typedoc --json docs/docs.json src/. --entryPointStrategy expand",
     "prepublishOnly": "npm run build:esm"
   },
   "repository": {
@@ -50,7 +50,8 @@
     "eris"
   ],
   "devDependencies": {
-    "@types/node": "^20.11.19",
+    "@types/node": "^20.11.20",
+    "@types/ws": "^8.5.10",
     "typedoc": "^0.25.8",
     "typedoc-plugin-markdown": "^3.17.1"
   }
