@@ -4,15 +4,15 @@
 
 <p align="center">
   <a href="https://discord.gg/Zmmc47Nrh8">
-    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord">
+    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord"/>
   </a>
   <a href="https://www.npmjs.com/package/poru">
-    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm">
+    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm"/>
   </a>
-  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars">
-  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues">
-  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package">
-  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM">
+  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues"/>
+  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package"/>
+  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM"/>
 </p>
 
 <p align="center">
@@ -20,9 +20,10 @@
 </p>
 
 <p align="center">
+
   <a href="https://nodei.co/npm/poru/">
-    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package">
-  </a>
+    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/></a>
+
 </p>
 
 ## Table of contents
