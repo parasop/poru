@@ -15,8 +15,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc && npm run build:esm",
     "build:esm": "gen-esm-wrapper dist/index.js dist/index.mjs",
-    "build:docs": "npx typedoc --plugin typedoc-plugin-markdown --out docs index.ts",
-    "build:docs.json": "npx typedoc --json docs/docs.json src/. --entryPointStrategy expand",
     "prepublishOnly": "npm run build:esm"
   },
   "repository": {
