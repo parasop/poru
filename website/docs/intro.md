@@ -1,6 +1,12 @@
 ---
 sidebar_position: 1
 ---
+# Info
+> **Just a Example Guide/Md docs edit `website/docs/` directory for updating it**
+
+<br/>
+
+---
 
 # Tutorial Intro
 
