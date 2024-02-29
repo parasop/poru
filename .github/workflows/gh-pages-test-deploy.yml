@@ -31,7 +31,5 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-      - name: Write docusaurus heading ids
-        run: npm run write-heading-ids
       - name: Test build website
         run: npm run build
