@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/732987654165233744/987656504373026816/20220618_000923_0000.png" />
+  <img src="assets/poru.png" alt="Poru Logo" height="340" width="340"/>
 </p>
 
 <p align="center">
@@ -20,10 +20,9 @@
 </p>
 
 <p align="center">
-
   <a href="https://nodei.co/npm/poru/">
-    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/></a>
-
+    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/>
+    </a>
 </p>
 
 ## Table of contents
@@ -31,7 +30,11 @@
 - [Documentation](https://poru.js.org)
 - [Installation](#installation)
 - [About](#about)
-- [Example](https://github.com/parasop/poru-example)
+- [Implementation Repo](#implementation-repo)
+- [Basic Usage](#example-usage-basic-bot)
+- [Plugins List](#plugins-list)
+- [Help & Support](#need-help)
+- [Example Bot](https://github.com/parasop/poru-example)
 
 # Installation
 
