@@ -521,26 +521,28 @@ export class Poru extends EventEmitter {
 
     /**
      * Decode a track from poru instance
-     * @param track String
-     * @param node Node
-     * @returns 
+     * @param {string} track The encoded track
+     * @param {Node} node The node to decode it on
+     * @returns {Promise<trackData>} The decoded track
      */
-    public async decodeTrack(track: string, node: Node) {
+    public async decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData> {
         if (!node) node = this.leastUsedNodes[0];
 
-        return node.rest.get<trackData>(
-            `/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`
+        return await node.rest.get<trackData>(
+            `/v4/decodetrack?encodedTrack=${encodeURIComponent(encodedTrackString)}`
         );
     }
 
     /**
      * Decode tracks from poru instance
-     * @param tracks String[]
-     * @param node Node
-     * @returns 
+     * @param {string[]} encodedTrackString The encoded strings.
+     * @param {Node | undefined} node The node
+     * @returns {Promise<trackData[]>} The decoded tracks in a array
      */
-    public async decodeTracks(tracks: string[], node: Node) {
-        return await node.rest.post(`/v4/decodetracks`, tracks);
+    public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {      
+        if (!node) node = this.leastUsedNodes[0];
+
+        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString);
     }
 
     /**
@@ -549,7 +551,10 @@ export class Poru extends EventEmitter {
      * @returns 
      */
     public async getLavalinkInfo(name: string) {
-        let node = this.nodes.get(name);
+        const node = this.nodes.get(name);
+
+        if (!node) throw new Error("Node not found!");
+
         return await node.rest.get(`/v4/info`);
     }
 
@@ -559,7 +564,10 @@ export class Poru extends EventEmitter {
      * @returns 
      */
     public async getLavalinkStatus(name: string) {
-        let node = this.nodes.get(name);
+        const node = this.nodes.get(name);
+
+        if (!node) throw new Error("Node not found!");
+
         return await node.rest.get(`/v4/stats`);
     }
 
