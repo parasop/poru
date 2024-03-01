@@ -36,7 +36,7 @@
 - [Help & Support](#need-help)
 - [Example Bot](https://github.com/parasop/poru-example)
 
-# Installation
+## Installation
 
 ```bash
 # Using npm
@@ -46,7 +46,7 @@ npm install poru
 yarn add poru
 ```
 
-# About
+## About
 
 To use, you need a configured [Lavalink](https://github.com/lavalink-devs/Lavalink) instance.
 
