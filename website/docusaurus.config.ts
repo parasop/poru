@@ -6,7 +6,6 @@ import path from 'path';
 const config: Config = {
   title: 'Poru',
   tagline: 'A stable and powerful Lavalink client with some best features',
-  staticDirectories: ["assets", "static"],
   favicon: 'img/poru.png',
 
   // Set the production url of your site here
