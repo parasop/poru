@@ -13,7 +13,7 @@ const config: Config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   // Check if it's running inside github actions environment or locally
-  baseUrl: (!process.env.GITHUB_ACTIONS || !process.env.CI) ? '/' : '/poru',
+  baseUrl: process.env.previewBaseURL ? process.env.previewBaseURL : ((!process.env.GITHUB_ACTIONS || !process.env.CI) ? '/' : '/poru'),
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.

@@ -42,6 +42,9 @@ jobs:
         if: github.event.action != 'closed'
       - name: Test build website
         run: npm run build
+        env: 
+          # http://localhost:3000/poru/pr-preview/pr-3/
+          previewBaseURL: /${{ github.event.repository.name }}/pr-preview/pr-${{ github.event.pull_request.number }}
         if: github.event.action != 'closed'
       - uses: rossjrw/pr-preview-action@v1
         with:
