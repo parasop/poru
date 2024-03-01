@@ -44,6 +44,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          keep_files: true
           # Build output to publish to the `gh-pages` branch:
           publish_dir: ./website/build
           # The following lines assign commit authorship to the official
