@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/poru.png" alt="Poru Logo" height="340" width="340"/>
+  <img src="https://raw.githubusercontent.com/UnschooledGamer/poru/v5/assets/poru.png" alt="Poru Logo" height="340" width="340"/>
 </p>
 
 <p align="center">
