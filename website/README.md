@@ -25,6 +25,7 @@ $ yarn build
 This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
 ### Deployment
+> Note: **that with the `Deploy to GitHub Pages` github actions workflow active/enabled it will build automatically if there are any changes to this directory or to main Poru README then publish it to `gh-pages` branch for deployment.**
 
 Using SSH:
 

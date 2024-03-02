@@ -7,7 +7,7 @@ const config: Config = {
   title: 'Poru',
   tagline: 'A stable and powerful Lavalink client with some best features',
   favicon: 'img/poru.png',
-
+  trailingSlash: false,
   // Set the production url of your site here
   url: 'https://your-docusaurus-site.example.com',
   // Set the /<baseUrl>/ pathname under which your site is served
@@ -17,7 +17,7 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'UnschooledGamer', // Usually your GitHub org/user name.
+  organizationName: 'parasop', // Usually your GitHub org/user name.
   projectName: 'poru', // Usually your repo name.
 
   onBrokenLinks: 'throw',
@@ -76,7 +76,7 @@ const config: Config = {
     navbar: {
       title: 'Poru',
       logo: {
-        alt: 'My Site Logo',
+        alt: 'Poru Logo',
         src: 'img/poru.png',
       },
       items: [

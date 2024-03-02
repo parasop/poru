@@ -3,6 +3,12 @@ name: Deploy to GitHub Pages
 on:
   # To manually run the workflow incase it doesn't trigger.
   workflow_dispatch:
+    inputs:
+      forceRun:
+        description: 'if set to true Forcefully runs the workflow regardless of whether its running in a fork or not'
+        required: false
+        default: false
+        type: boolean
   push:
     branches:
       # change this branch name incase v5 branch is deleted/moved.
@@ -20,6 +26,7 @@ jobs:
   deploy:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
+    if: github.repository_owner == 'parasop' || inputs.forceRun == true
     steps:
       - uses: actions/checkout@v4
         with:
