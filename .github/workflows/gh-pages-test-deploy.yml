@@ -1,5 +1,6 @@
 name: Test deployment
 
+concurrency: gh-pages-preview-${{ github.ref }}
 on:
   pull_request:
     branches:
