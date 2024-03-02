@@ -13,5 +13,9 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "declaration": true,
-  }
+  },
+  "exclude": [
+    "website",
+    "./dist/**/*" 
+  ]
 }
