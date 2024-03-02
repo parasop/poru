@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/UnschooledGamer/poru/v5/assets/poru.png" alt="Poru Logo" height="340" width="340"/>
+  <img src="https://raw.githubusercontent.com/parasop/poru/v5/assets/poru.png" alt="Poru Logo" height="340" width="340"/>
 </p>
 
 <p align="center">
@@ -24,8 +24,6 @@
     <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/>
     </a>
 </p>
-
-> TEST CHANGE FOR CI TESTING
 
 ## Table of contents
 
