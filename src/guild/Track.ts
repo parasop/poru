@@ -15,8 +15,8 @@ export interface trackInfo {
     isStream: boolean;
     position: number;
     title: string;
-    uri?: string;
-    artworkUrl?: string;
+    uri: string | null;
+    artworkUrl: string | null;
     isrc: string | null;
     sourceName: string;
 }
