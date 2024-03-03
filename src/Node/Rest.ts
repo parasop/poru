@@ -87,8 +87,6 @@ export class Rest {
                 },
             });
 
-            console.log(req.headers.get("content-type"), req.headers);
-
             return req.headers.get("content-type") === "application/json" ? await req.json() as T : await req.text() as T;
         } catch (e) {
             return null;

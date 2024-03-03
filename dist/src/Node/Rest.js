@@ -45,7 +45,6 @@ class Rest {
                     Authorization: this.password,
                 },
             });
-            console.log(req.headers.get("content-type"), req.headers);
             return req.headers.get("content-type") === "application/json" ? await req.json() : await req.text();
         }
         catch (e) {
