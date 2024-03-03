@@ -28,7 +28,7 @@ class Rest {
         this.sessionId = sessionId;
     }
     async getAllPlayers() {
-        return this.get(`/v4/sessions/${this.sessionId}/players`);
+        return await this.get(`/v4/sessions/${this.sessionId}/players`); // This will never be a string!
     }
     async updatePlayer(options) {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
@@ -38,14 +38,15 @@ class Rest {
     }
     async get(path) {
         try {
-            let req = await (0, undici_1.fetch)(this.url + path, {
+            const req = await (0, undici_1.fetch)(this.url + path, {
                 method: RequestMethod.Get,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: this.password,
                 },
             });
-            return await req.json();
+            console.log(req.headers.get("content-type"), req.headers);
+            return req.headers.get("content-type") === "application/json" ? await req.json() : await req.text();
         }
         catch (e) {
             return null;

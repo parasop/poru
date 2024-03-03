@@ -7,6 +7,8 @@ const events_1 = require("events");
 const config_1 = require("./config");
 const Response_1 = require("./guild/Response");
 ;
+;
+;
 class Poru extends events_1.EventEmitter {
     client;
     _nodes;
@@ -263,54 +265,65 @@ class Poru extends events_1.EventEmitter {
     }
     /**
      * Decode a track from poru instance
-     * @param track String
-     * @param node Node
-     * @returns
+     * @param {string} track The encoded track
+     * @param {Node} node The node to decode it on
+     * @returns {Promise<trackData>} The decoded track
      */
-    async decodeTrack(track, node) {
+    async decodeTrack(encodedTrackString, node) {
         if (!node)
             node = this.leastUsedNodes[0];
-        return node.rest.get(`/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`);
+        return await node.rest.get(`/v4/decodetrack?encodedTrack=${encodeURIComponent(encodedTrackString)}`);
     }
     /**
      * Decode tracks from poru instance
-     * @param tracks String[]
-     * @param node Node
-     * @returns
+     * @param {string[]} encodedTrackString The encoded strings.
+     * @param {Node | undefined} node The node
+     * @returns {Promise<trackData[]>} The decoded tracks in a array
      */
-    async decodeTracks(tracks, node) {
-        return await node.rest.post(`/v4/decodetracks`, tracks);
+    async decodeTracks(encodedTrackString, node) {
+        if (!node)
+            node = this.leastUsedNodes[0];
+        return await node.rest.post(`/v4/decodetracks`, encodedTrackString);
     }
     /**
      * Get lavalink info from poru instance
-     * @param name Node name
-     * @returns
+     * @param {string} name The name of the node
+     * @returns {NodeInfoResponse} Useful information about the node.
      */
     async getLavalinkInfo(name) {
-        let node = this.nodes.get(name);
+        const node = this.nodes.get(name);
+        if (!node)
+            throw new Error("Node not found!");
         return await node.rest.get(`/v4/info`);
     }
     /**
      * Get lavalink status from poru instance
-     * @param name Node name
-     * @returns
+     * @param {string} name The name of the node
+     * @returns {NodeStatsResponse} The stats from the node
      */
     async getLavalinkStatus(name) {
-        let node = this.nodes.get(name);
+        const node = this.nodes.get(name);
+        if (!node)
+            throw new Error("Node not found!");
         return await node.rest.get(`/v4/stats`);
     }
-    /* Temp removed
-  
-  async getLavalinkVersion(name:string){
-    let node = this.nodes.get(name)
-    return await node.rest.get(`/version`)
-  
-  }
-  */
+    ;
+    /**
+    * Get the current lavalink version of the node
+    * @param {string} name The name of the node
+    * @returns {string} The version of the node
+    */
+    async getLavalinkVersion(name) {
+        const node = this.nodes.get(name);
+        if (!node)
+            throw new Error("Node not found!");
+        return await node.rest.get(`/v4/version`);
+    }
+    ;
     /**
      * Get a player from poru instance
-     * @param guildId Guild ID
-     * @returns
+     * @param {string} guildId Guild ID
+     * @returns {Player} The player for this guild
      */
     get(guildId) {
         return this.players.get(guildId);

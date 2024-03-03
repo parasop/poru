@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { Node } from "./Node/Node";
+import { Node, NodeStats } from "./Node/Node";
 import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
@@ -21,7 +21,7 @@ export interface NodeGroup {
 export interface ResolveOptions {
     query: string;
     source?: supportedPlatforms | (string & {});
-    requester?: any;
+    requester?: Record<string, unknown>;
 }
 /**
  * @typedef {string} supportedLibraries
@@ -86,6 +86,31 @@ export interface ConnectionOptions {
     mute?: boolean;
     region?: string;
 }
+export interface NodeInfoResponse {
+    version: {
+        semver: string;
+        major: number;
+        minor: number;
+        patch: number;
+        preRelease?: string;
+        build?: string;
+    };
+    buildTime: number;
+    git: {
+        branch: string;
+        commit: string;
+        commitTime: string;
+    };
+    jvm: string;
+    lavaplayer: string;
+    sourceManagers: string[];
+    filters: string[];
+    plugins: {
+        name: string;
+        version: string;
+    }[];
+}
+export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 export interface PoruEvents {
     /**
      * Emitted when data useful for debugging is produced
@@ -308,34 +333,40 @@ export declare class Poru extends EventEmitter {
     resolve({ query, source, requester }: ResolveOptions, node?: Node): Promise<Response>;
     /**
      * Decode a track from poru instance
-     * @param track String
-     * @param node Node
-     * @returns
+     * @param {string} track The encoded track
+     * @param {Node} node The node to decode it on
+     * @returns {Promise<trackData>} The decoded track
      */
-    decodeTrack(track: string, node: Node): Promise<trackData>;
+    decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData>;
     /**
      * Decode tracks from poru instance
-     * @param tracks String[]
-     * @param node Node
-     * @returns
+     * @param {string[]} encodedTrackString The encoded strings.
+     * @param {Node | undefined} node The node
+     * @returns {Promise<trackData[]>} The decoded tracks in a array
      */
-    decodeTracks(tracks: string[], node: Node): Promise<unknown>;
+    decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]>;
     /**
      * Get lavalink info from poru instance
-     * @param name Node name
-     * @returns
+     * @param {string} name The name of the node
+     * @returns {NodeInfoResponse} Useful information about the node.
      */
-    getLavalinkInfo(name: string): Promise<unknown>;
+    getLavalinkInfo(name: string): Promise<NodeInfoResponse>;
     /**
      * Get lavalink status from poru instance
-     * @param name Node name
-     * @returns
+     * @param {string} name The name of the node
+     * @returns {NodeStatsResponse} The stats from the node
      */
-    getLavalinkStatus(name: string): Promise<unknown>;
+    getLavalinkStatus(name: string): Promise<NodeStatsResponse>;
+    /**
+    * Get the current lavalink version of the node
+    * @param {string} name The name of the node
+    * @returns {string} The version of the node
+    */
+    getLavalinkVersion(name: string): Promise<string>;
     /**
      * Get a player from poru instance
-     * @param guildId Guild ID
-     * @returns
+     * @param {string} guildId Guild ID
+     * @returns {Player} The player for this guild
      */
     get(guildId: string): Player;
 }

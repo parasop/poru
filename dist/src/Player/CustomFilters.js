@@ -50,16 +50,9 @@ class customFilter extends Filters_1.Filters {
         if (!this.player)
             return;
         this.slowmode = val;
-        this.setFilters(val
-            ? {
-                timescale: {
-                    speed: 0.5,
-                    pitch: 1.0,
-                    rate: 0.8,
-                },
-            }
-            : this.clearFilters());
+        this.setFilters(val ? { timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } : this.clearFilters());
     }
+    ;
     /**
      * Set Nightcore filter
      * @param val Boolean
