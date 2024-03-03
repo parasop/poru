@@ -621,6 +621,7 @@ export class Poru extends EventEmitter {
    * Get the current lavalink version of the node
    * @param {string} name The name of the node
    * @returns {string} The version of the node
+   */
   public async getLavalinkVersion(name: string): Promise<string> {
     const node = this.nodes.get(name)
 
