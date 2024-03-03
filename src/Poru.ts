@@ -605,7 +605,7 @@ export class Poru extends EventEmitter {
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get<string>(`/v4/version`)
+        return await node.rest.get<string>(`/version`)
     };
 
     /**

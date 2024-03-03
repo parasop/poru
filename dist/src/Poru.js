@@ -317,7 +317,7 @@ class Poru extends events_1.EventEmitter {
         const node = this.nodes.get(name);
         if (!node)
             throw new Error("Node not found!");
-        return await node.rest.get(`/v4/version`);
+        return await node.rest.get(`/version`);
     }
     ;
     /**
