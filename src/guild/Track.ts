@@ -3,8 +3,8 @@ const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 export interface trackData {
     encoded: string;
     info: trackInfo;
-    pluginInfo: any,
-    userData: any,
+    pluginInfo: Record<string, unknown>,
+    userData: Record<string, unknown>,
 }
 
 export interface trackInfo {
@@ -26,8 +26,8 @@ interface trackInfoExtended extends trackInfo { requester: any; }
 export class Track {
     public track: string;
     public info: trackInfoExtended;
-    public pluginInfo: any;
-    public userData: any;
+    public pluginInfo: Record<string, unknown>;
+    public userData: Record<string, unknown>;
 
     constructor(data: trackData, requester?: any) {
         this.track = data.encoded;
