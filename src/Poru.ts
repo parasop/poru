@@ -101,6 +101,28 @@ export interface ConnectionOptions {
     region?: string;
 }
 
+export interface NodeInfoResponse {
+    version: {
+        string: string;
+        major: number;
+        minor: number;
+        patch: number;
+        preRelease: string;
+        build: string;
+    };
+    buildTime: number;
+    git: {
+        branch: string;
+        commit: string;
+        commitTime: string;
+    };
+    jvm: string;
+    lavaplayer: string;
+    sourceManages: string[];
+    filters: string[];
+    plugins: { name: string; version: string; }[]
+};
+
 export interface PoruEvents {
     /**
      * Emitted when data useful for debugging is produced
@@ -547,15 +569,15 @@ export class Poru extends EventEmitter {
 
     /**
      * Get lavalink info from poru instance
-     * @param name Node name
-     * @returns 
+     * @param {string} name The name of the node
+     * @returns {NodeInfoResponse} Useful information about the node.
      */
-    public async getLavalinkInfo(name: string) {
+    public async getLavalinkInfo(name: string): Promise<NodeInfoResponse> {
         const node = this.nodes.get(name);
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get(`/v4/info`);
+        return await node.rest.get<NodeInfoResponse>(`/v4/info`);
     }
 
     /**
@@ -582,10 +604,10 @@ export class Poru extends EventEmitter {
 
     /**
      * Get a player from poru instance
-     * @param guildId Guild ID
-     * @returns 
+     * @param {string} guildId Guild ID
+     * @returns {Player} The player for this guild
      */
-    get(guildId: string) {
+    public get(guildId: string) {
         return this.players.get(guildId);
     }
 }
