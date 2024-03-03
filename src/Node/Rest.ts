@@ -1,5 +1,5 @@
 import { ErrorResponses, Node } from "./Node";
-import { fetch } from "undici";
+import { BodyInit, fetch } from "undici";
 import { Poru } from "../Poru";
 import { Track, trackData } from "../guild/Track";
 import { FiltersOptions } from '../Player/Filters';
@@ -66,7 +66,7 @@ export class Rest {
     }
 
     public async getAllPlayers(): Promise<PlayerObjectFromAPI | ErrorResponses> {
-        return await this.get(`/v4/sessions/${this.sessionId}/players`);
+        return await this.get(`/v4/sessions/${this.sessionId}/players`); // This will never be a string!
     }
 
     public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses> {
@@ -79,14 +79,17 @@ export class Rest {
 
     public async get<T = unknown>(path: RouteLike) {
         try {
-            let req = await fetch(this.url + path, {
+            const req = await fetch(this.url + path, {
                 method: RequestMethod.Get,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: this.password,
                 },
             });
-            return await req.json() as T;
+
+            console.log(req.headers.get("content-type"), req.headers);
+
+            return req.headers.get("content-type") === "application/json" ? await req.json() as T : await req.text() as T;
         } catch (e) {
             return null;
         }
