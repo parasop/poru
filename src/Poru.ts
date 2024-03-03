@@ -25,7 +25,7 @@ export interface NodeGroup {
 export interface ResolveOptions {
     query: string;
     source?: supportedPlatforms | (string & {});
-    requester?: Record<string, unknown>;
+    requester?: any;
 };
 
 /**
