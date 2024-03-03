@@ -1,5 +1,5 @@
 import { Player } from "./Player";
-import { Filters } from "./Filters";
+import { Filters, FiltersOptions } from "./Filters";
 
 /**
  * The customFilters class that is used to apply filters to the currently playing track
@@ -49,18 +49,8 @@ export class customFilter extends Filters {
         if (!this.player) return;
         this.slowmode = val;
 
-        this.setFilters(
-            val
-                ? {
-                    timescale: {
-                        speed: 0.5,
-                        pitch: 1.0,
-                        rate: 0.8,
-                    },
-                }
-                : this.clearFilters()
-        );
-    }
+        this.setFilters(val ? { timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } as FiltersOptions : this.clearFilters())
+    };
 
     /**
      * Set Nightcore filter

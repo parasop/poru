@@ -302,9 +302,10 @@ export class Filters {
      * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
      * @returns 
      */
-    public setFilters(options: any) {
+    public setFilters(options: Filters | FiltersOptions) {
         this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this, options) : new Filters(this.player, options);
         this.updateFilters();
+
         return this;
     }
 
