@@ -103,12 +103,12 @@ export interface ConnectionOptions {
 
 export interface NodeInfoResponse {
     version: {
-        string: string;
+        semver: string;
         major: number;
         minor: number;
         patch: number;
-        preRelease: string;
-        build: string;
+        preRelease?: string;
+        build?: string;
     };
     buildTime: number;
     git: {
@@ -118,10 +118,34 @@ export interface NodeInfoResponse {
     };
     jvm: string;
     lavaplayer: string;
-    sourceManages: string[];
+    sourceManagers: string[];
     filters: string[];
     plugins: { name: string; version: string; }[]
 };
+
+export interface NodeStats {
+    players: number;
+    playingPlayers: number;
+    uptime: number;
+    memory: {
+        free: number;
+        used: number;
+        allocated: number;
+        reservable: number;
+    };
+    cpu: {
+        cores: number;
+        systemLoad: number;
+        lavalinkLoad: number;
+    };
+    frameStats: {
+        sent: number;
+        nulled: number;
+        deficit: number;
+    };
+};
+
+export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
 export interface PoruEvents {
     /**
@@ -582,25 +606,28 @@ export class Poru extends EventEmitter {
 
     /**
      * Get lavalink status from poru instance
-     * @param name Node name
-     * @returns 
+     * @param {string} name The name of the node
+     * @returns {NodeStatsResponse} The stats from the node
      */
-    public async getLavalinkStatus(name: string) {
+    public async getLavalinkStatus(name: string): Promise<NodeStatsResponse> {
         const node = this.nodes.get(name);
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get(`/v4/stats`);
-    }
+        return await node.rest.get<NodeStatsResponse>(`/v4/stats`);
+    };
+  
+  /**
+   * Get the current lavalink version of the node
+   * @param {string} name The name of the node
+   * @returns {string} The version of the node
+  public async getLavalinkVersion(name: string): Promise<string> {
+    const node = this.nodes.get(name)
 
-    /* Temp removed
-  
-  async getLavalinkVersion(name:string){
-    let node = this.nodes.get(name)
-    return await node.rest.get(`/version`)
-  
-  }
-  */
+    if (!node) throw new Error("Node not found!");
+
+    return `${await node.rest.get<string>(`/v4/version`)}`
+  };
 
     /**
      * Get a player from poru instance
