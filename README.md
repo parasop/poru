@@ -1,18 +1,18 @@
 <p align="center">
-  <img src="https://cdn.discordapp.com/attachments/732987654165233744/987656504373026816/20220618_000923_0000.png" />
+  <img src="https://raw.githubusercontent.com/parasop/poru/v5/assets/poru.png" alt="Poru Logo" height="340" width="340"/>
 </p>
 
 <p align="center">
   <a href="https://discord.gg/Zmmc47Nrh8">
-    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord">
+    <img src="https://img.shields.io/discord/567705326774779944?style=flat-square" alt="Discord"/>
   </a>
   <a href="https://www.npmjs.com/package/poru">
-    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm">
+    <img src="https://img.shields.io/npm/v/poru?style=flat-square" alt="npm"/>
   </a>
-  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars">
-  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues">
-  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package">
-  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM">
+  <img src="https://img.shields.io/github/stars/parasop/poru?style=flat-square" alt="GitHub Stars"/>
+  <img src="https://img.shields.io/github/issues-raw/parasop/poru?style=flat-square" alt="GitHub issues"/>
+  <img src="https://img.shields.io/snyk/vulnerabilities/npm/poru?style=flat-square" alt="Snyk Vulnerabilities for npm package"/>
+  <img src="https://img.shields.io/npm/l/poru?style=flat-square" alt="NPM"/>
 </p>
 
 <p align="center">
@@ -21,8 +21,8 @@
 
 <p align="center">
   <a href="https://nodei.co/npm/poru/">
-    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package">
-  </a>
+    <img src="https://nodei.co/npm/poru.png?downloads=true&downloadRank=true&stars=true" alt="Poru NPM Package"/>
+    </a>
 </p>
 
 ## Table of contents
@@ -30,9 +30,13 @@
 - [Documentation](https://poru.js.org)
 - [Installation](#installation)
 - [About](#about)
-- [Example](https://github.com/parasop/poru-example)
+- [Implementation Repo](#implementation-repo)
+- [Basic Usage](#example-usage-basic-bot)
+- [Plugins List](#plugins-list)
+- [Help & Support](#need-help)
+- [Example Bot](https://github.com/parasop/poru-example)
 
-# Installation
+## Installation
 
 ```bash
 # Using npm
@@ -42,7 +46,7 @@ npm install poru
 yarn add poru
 ```
 
-# About
+## About
 
 To use, you need a configured [Lavalink](https://github.com/lavalink-devs/Lavalink) instance.
 
