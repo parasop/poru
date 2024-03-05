@@ -1,4 +1,4 @@
-import { Node } from "./Node/Node";
+import { Node, NodeStats } from "./Node/Node";
 import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
@@ -26,7 +26,7 @@ export interface ResolveOptions {
     query: string;
     source?: supportedPlatforms | (string & {});
     requester?: any;
-}
+};
 
 /**
  * @typedef {string} supportedLibraries
@@ -100,6 +100,30 @@ export interface ConnectionOptions {
     mute?: boolean;
     region?: string;
 }
+
+export interface NodeInfoResponse {
+    version: {
+        semver: string;
+        major: number;
+        minor: number;
+        patch: number;
+        preRelease?: string;
+        build?: string;
+    };
+    buildTime: number;
+    git: {
+        branch: string;
+        commit: string;
+        commitTime: string;
+    };
+    jvm: string;
+    lavaplayer: string;
+    sourceManagers: string[];
+    filters: string[];
+    plugins: { name: string; version: string; }[]
+};
+
+export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
 export interface PoruEvents {
     /**
@@ -349,7 +373,7 @@ export class Poru extends EventEmitter {
      * @param {any} packet packet from discord api
      * @returns {void} void
      */
-    public packetUpdate(packet: any) {
+    public packetUpdate(packet: any): void {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         const player = this.players.get(packet.d.guild_id);
@@ -521,63 +545,75 @@ export class Poru extends EventEmitter {
 
     /**
      * Decode a track from poru instance
-     * @param track String
-     * @param node Node
-     * @returns 
+     * @param {string} track The encoded track
+     * @param {Node} node The node to decode it on
+     * @returns {Promise<trackData>} The decoded track
      */
-    public async decodeTrack(track: string, node: Node) {
+    public async decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData> {
         if (!node) node = this.leastUsedNodes[0];
 
-        return node.rest.get<trackData>(
-            `/v4/decodetrack?encodedTrack=${encodeURIComponent(track)}`
+        return await node.rest.get<trackData>(
+            `/v4/decodetrack?encodedTrack=${encodeURIComponent(encodedTrackString)}`
         );
     }
 
     /**
      * Decode tracks from poru instance
-     * @param tracks String[]
-     * @param node Node
-     * @returns 
+     * @param {string[]} encodedTrackString The encoded strings.
+     * @param {Node | undefined} node The node
+     * @returns {Promise<trackData[]>} The decoded tracks in a array
      */
-    public async decodeTracks(tracks: string[], node: Node) {
-        return await node.rest.post(`/v4/decodetracks`, tracks);
+    public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {      
+        if (!node) node = this.leastUsedNodes[0];
+
+        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString);
     }
 
     /**
      * Get lavalink info from poru instance
-     * @param name Node name
-     * @returns 
+     * @param {string} name The name of the node
+     * @returns {NodeInfoResponse} Useful information about the node.
      */
-    public async getLavalinkInfo(name: string) {
-        let node = this.nodes.get(name);
-        return await node.rest.get(`/v4/info`);
+    public async getLavalinkInfo(name: string): Promise<NodeInfoResponse> {
+        const node = this.nodes.get(name);
+
+        if (!node) throw new Error("Node not found!");
+
+        return await node.rest.get<NodeInfoResponse>(`/v4/info`);
     }
 
     /**
      * Get lavalink status from poru instance
-     * @param name Node name
-     * @returns 
+     * @param {string} name The name of the node
+     * @returns {NodeStatsResponse} The stats from the node
      */
-    public async getLavalinkStatus(name: string) {
-        let node = this.nodes.get(name);
-        return await node.rest.get(`/v4/stats`);
-    }
+    public async getLavalinkStatus(name: string): Promise<NodeStatsResponse> {
+        const node = this.nodes.get(name);
 
-    /* Temp removed
+        if (!node) throw new Error("Node not found!");
+
+        return await node.rest.get<NodeStatsResponse>(`/v4/stats`);
+    };
   
-  async getLavalinkVersion(name:string){
-    let node = this.nodes.get(name)
-    return await node.rest.get(`/version`)
-  
-  }
-  */
+    /**
+    * Get the current lavalink version of the node
+    * @param {string} name The name of the node
+    * @returns {string} The version of the node
+    */
+    public async getLavalinkVersion(name: string): Promise<string> {
+        const node = this.nodes.get(name)
+
+        if (!node) throw new Error("Node not found!");
+
+        return await node.rest.get<string>(`/version`)
+    };
 
     /**
      * Get a player from poru instance
-     * @param guildId Guild ID
-     * @returns 
+     * @param {string} guildId Guild ID
+     * @returns {Player} The player for this guild
      */
-    get(guildId: string) {
+    public get(guildId: string): Player {
         return this.players.get(guildId);
     }
 }

@@ -6,23 +6,23 @@ import { Rest } from "./Rest";
 export interface NodeStats {
     players: number;
     playingPlayers: number;
+    uptime: number;
     memory: {
-        reservable: number;
-        used: number;
         free: number;
+        used: number;
         allocated: number;
-    };
-    frameStats: {
-        sent: number;
-        deficit: number;
-        nulled: number;
+        reservable: number;
     };
     cpu: {
         cores: number;
         systemLoad: number;
         lavalinkLoad: number;
     };
-    uptime: number;
+    frameStats: {
+        sent: number;
+        nulled: number;
+        deficit: number;
+    };
 };
 
 /**

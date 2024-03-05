@@ -2,8 +2,8 @@ import { Poru } from "../Poru";
 export interface trackData {
     encoded: string;
     info: trackInfo;
-    pluginInfo: any;
-    userData: any;
+    pluginInfo: Record<string, unknown>;
+    userData: Record<string, unknown>;
 }
 export interface trackInfo {
     identifier: string;
@@ -13,8 +13,8 @@ export interface trackInfo {
     isStream: boolean;
     position: number;
     title: string;
-    uri?: string;
-    artworkUrl?: string;
+    uri: string | null;
+    artworkUrl: string | null;
     isrc: string | null;
     sourceName: string;
 }
@@ -24,8 +24,8 @@ interface trackInfoExtended extends trackInfo {
 export declare class Track {
     track: string;
     info: trackInfoExtended;
-    pluginInfo: any;
-    userData: any;
+    pluginInfo: Record<string, unknown>;
+    userData: Record<string, unknown>;
     constructor(data: trackData, requester?: any);
     /**
      * This function will resolve the track and return the track as resolved

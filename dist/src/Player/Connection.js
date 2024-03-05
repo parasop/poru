@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Connection = void 0;
+;
+;
 /**
   * The connection class
   * @class
@@ -49,6 +51,7 @@ class Connection {
         });
         this.player.poru.emit("debug", this.player.node.name, `[Voice] <- [Discord] : Voice Server Update | Server: ${this.region} Guild: ${this.player.guildId}`);
     }
+    ;
     /**
      * Set the state update
      * @param data The data from the state update
@@ -63,7 +66,6 @@ class Connection {
         this.self_deaf = self_deaf;
         this.self_mute = self_mute;
         this.voice.sessionId = session_id || null;
-        //  this.player.poru.emit('debug', this.player.node.name, `[Voice] <- [Discord] : State Update Received | Channel: ${this.player.voiceChannel} Session ID: ${session_id} Guild: ${this.player.guildId}`);
     }
 }
 exports.Connection = Connection;

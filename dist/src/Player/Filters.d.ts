@@ -225,7 +225,7 @@ export declare class Filters {
      * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
      * @returns
      */
-    setFilters(options: any): this;
+    setFilters(options: Filters | FiltersOptions): this;
     /**
      *
      * @returns The current filters applied to the currently playing track
