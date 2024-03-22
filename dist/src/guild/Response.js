@@ -13,25 +13,16 @@ class Response {
     playlistInfo;
     constructor(response, requester) {
         switch (response.loadType) {
-            case "playlist":
-                {
-                    this.tracks = response.data.tracks.map((track) => new Track_1.Track(track, requester));
-                    this.playlistInfo = response.data.info;
-                    break;
-                }
-                ;
-            case "track":
-                {
-                    this.tracks = this.handleTracks(response.data, requester);
-                    break;
-                }
-                ;
+            case "playlist": {
+                this.tracks = response.data.tracks.map((track) => new Track_1.Track(track, requester));
+                this.playlistInfo = response.data.info;
+                break;
+            }
             case "search":
-                {
-                    this.tracks = this.handleTracks(response.data, requester);
-                    break;
-                }
-                ;
+            case "track": {
+                this.tracks = this.handleTracks(response.data, requester);
+                break;
+            }
             default: break;
         }
         ;
@@ -50,5 +41,4 @@ class Response {
     ;
 }
 exports.Response = Response;
-;
 //# sourceMappingURL=Response.js.map

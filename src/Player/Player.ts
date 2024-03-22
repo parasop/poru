@@ -154,7 +154,7 @@ export class Player extends EventEmitter {
           )
       )
       if (officialAudio) {
-        //track.info.identifier = officialAudio.info.identifier;
+        track.info.identifier = officialAudio.info.identifier;
         track.track = officialAudio.track
         return track
       }
@@ -166,7 +166,7 @@ export class Player extends EventEmitter {
           track.info.length <= (track.info.length ? track.info.length : 0) + 2000
       )
       if (sameDuration) {
-        //track.info.identifier = sameDuration.info.identifier;
+        track.info.identifier = sameDuration.info.identifier;
         track.track = sameDuration.track
         return track
       }

@@ -6,9 +6,6 @@ import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
-/**
- * @extends EventEmitter The main class of Poru
- */
 export type Constructor<T> = new (...args: any[]) => T;
 export interface NodeGroup {
     name: string;
@@ -23,36 +20,51 @@ export interface ResolveOptions {
     source?: supportedPlatforms | (string & {});
     requester?: any;
 }
-/**
- * @typedef {string} supportedLibraries
- */
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
 export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch";
 export type TrackEndReason = 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup';
 export type PlayerEventType = 'TrackStartEvent' | 'TrackEndEvent' | 'TrackExceptionEvent' | 'TrackStuckEvent' | 'WebSocketClosedEvent';
+/**
+ * Represents an event related to a player.
+ */
 export interface PlayerEvent {
     op: 'event';
     type: PlayerEventType;
     guildId: string;
 }
+/**
+ * Represents an event indicating the start of a track.
+ */
 export interface TrackStartEvent extends PlayerEvent {
     type: 'TrackStartEvent';
     track: Track;
 }
+/**
+ * Represents an event indicating the end of a track.
+ */
 export interface TrackEndEvent extends PlayerEvent {
     type: 'TrackEndEvent';
     track: Track;
     reason: TrackEndReason;
 }
+/**
+* Represents an event indicating that a track got stuck while playing.
+*/
 export interface TrackStuckEvent extends PlayerEvent {
     type: 'TrackStuckEvent';
     track: Track;
     thresholdMs: number;
 }
+/**
+* Represents an event indicating an exception occurred with a track.
+*/
 export interface TrackExceptionEvent extends PlayerEvent {
     type: 'TrackExceptionEvent';
     exception: any;
 }
+/**
+* Represents an event indicating that a WebSocket connection was closed.
+*/
 export interface WebSocketClosedEvent extends PlayerEvent {
     type: 'WebSocketClosedEvent';
     code: number;
@@ -113,137 +125,96 @@ export interface NodeInfoResponse {
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 export interface PoruEvents {
     /**
-     * Emitted when data useful for debugging is produced
-     * @eventProperty
-     * @param args
-     * @returns void
+     * Emitted for debugging purposes, providing information for debugging.
+     * @param {...any} args - Arguments related to debugging information.
      */
     debug: (...args: any) => void;
     /**
-     *
-     * @param topic from what section the event come
-     * @param args
-     * Emitted when a Response is come
-     * @eventProperty
+     * Emitted when receiving raw data from a specified topic.
+     * @param {string} topic - The topic of the raw data.
+     * @param {...unknown[]} args - Additional arguments related to the raw data.
      */
     raw: (topic: string, ...args: unknown[]) => void;
     /**
-     * Emitted when lavalink node is connected with poru
-     * @eventProperty
-     * @param node
-     * @param event
-     * @returns void
+     * Emitted when a node connects to the system.
+     * @param {Node} node - The node that has connected.
      */
     nodeConnect: (node: Node) => void;
     /**
-     * Emitted when data useful for debugging is produced
-     * @eventProperty
-     * @param node
-     * @param event
-     * @returns void
+     * Emitted when a node disconnects from the system.
+     * @param {Node} node - The node that has disconnected.
+     * @param {unknown} [event] - Additional event data related to the disconnection.
      */
     nodeDisconnect: (node: Node, event?: unknown) => void;
     /**
-     * Emitted when poru try to reconnect with lavalink node while disconnected
-     * @eventProperty
-     * @param node
-     * @returns void
+     * Emitted when a node successfully reconnects to the system.
+     * @param {Node} node - The node that has reconnected.
      */
     nodeReconnect: (node: Node) => void;
     /**
-     * Emitted when lavalink nodes get an error
-     * @eventProperty
-     * @param node
-     * @param event
-     * @returns void
+     * Emitted when an error occurs on a node.
+     * @param {Node} node - The node where the error occurred.
+     * @param {any} event - The error event object containing details about the error.
      */
     nodeError: (node: Node, event: any) => void;
     /**
-     * Emitted whenever player start playing new track
-     * @eventProperty
-     * @param player
-     * @param track
-     * @returns void
-     *
+     * Emitted when a track starts playing on a player.
+     * @param {Player} player - The player where the track started playing.
+     * @param {Track} track - The track that started playing.
      */
     trackStart: (player: Player, track: Track) => void;
     /**
-     * Emitted whenever track ends
-     * @eventProperty
-     * @param player
-     * @param track
-     * @param data
-     * @returns void
+     * Emitted when a track finishes playing on a player.
+     * @param {Player} player - The player where the track finished playing.
+     * @param {Track} track - The track that finished playing.
+     * @param {TrackEndEvent} data - Additional data related to the end of the track.
      */
     trackEnd: (player: Player, track: Track, data: TrackEndEvent) => void;
     /**
-     * Emitted when player's queue  is completed and going to disconnect
-     * @eventProperty
-     * @param player
-     * @returns void
-     *
+     * Emitted when the queue of a player ends.
+     * @param {Player} player - The player whose queue has ended.
      */
     queueEnd: (player: Player) => void;
     /**
-     * Emitted when a track gets stuck while playing
-     * @eventProperty
-     * @param player
-     * @param track
-     * @param data
-     * @returns void
+     * Emitted when an error occurs while playing a track on a player.
+     * @param {Player} player - The player where the error occurred.
+     * @param {Track} track - The track where the error occurred.
+     * @param {TrackStuckEvent | TrackExceptionEvent} data - Additional data related to the error.
      */
     trackError: (player: Player, track: Track, data: TrackStuckEvent | TrackExceptionEvent) => void;
     /**
-     * Emitted when a player got updates
-     * @eventProperty
-     * @param player
-     * @returns void
+     * Emitted when a player's state is updated.
+     * @param {Player} player - The player whose state is updated.
      */
     playerUpdate: (player: Player) => void;
     /**
-     * Emitted when a player got created
-     * @eventProperty
-     * @param player
-     * @returns void
+     * Emitted when a new player is created.
+     * @param {Player} player - The player that is created.
      */
     playerCreate: (player: Player) => void;
     /**
-     *
-     * Emitted when a player destroy
-     * @eventProperty
-     * @param player
-     * @returns void
+     * Emitted when a player is destroyed.
+     * @param {Player} player - The player that is destroyed.
      */
     playerDestroy: (player: Player) => void;
     /**
-     * Emitted when the websocket connection to Discord voice servers is closed
-     * @eventProperty
-     * @param player
-     * @param track
-     * @param data
-     * @returns void
+     * Emitted when a socket connection is closed.
+     * @param {Player} player - The player associated with the socket.
+     * @param {Track} track - The track associated with the socket.
+     * @param {WebSocketClosedEvent} data - Additional data related to the socket closure.
      */
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
 }
-/**
- * @extends EventEmitter
- * @interface Poru
- * @param {PoruOptions} options
- * @param {NodeGroup[]} nodes
- * @param {string} userId
- * @param {string} version
- * @param {boolean} isActivated
- * @param {Function} send
- * @param {Map<string, Node>} nodes
- * @param {Map<string, Player>} players
- * @returns Poru
- */
 export declare interface Poru {
     on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
     once<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
     emit<K extends keyof PoruEvents>(event: K, ...args: Parameters<PoruEvents[K]>): boolean;
     off<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
 }
+/**
+ * Represents Poru, a library for managing audio players with Lavalink.
+ * @extends EventEmitter
+ */
 export declare class Poru extends EventEmitter {
     readonly client: any;
     private readonly _nodes;
@@ -251,122 +222,112 @@ export declare class Poru extends EventEmitter {
     nodes: Map<string, Node>;
     players: Map<string, Player>;
     userId: string | null;
-    version: Number;
+    version: number;
     isActivated: boolean;
     send: Function | null;
     /**
-     * This is the main class of Poru
-     * @param client VoiceClient for Poru library to use to connect to lavalink node server (discord.js, eris, oceanic)
-     * @param nodes Node
-     * @param options PoruOptions
-     * @returns Poru
+     * Creates an instance of Poru.
+     * @param {any} client - VoiceClient used for connecting to Lavalink node server.
+     * @param {NodeGroup[]} nodes - Array of node groups.
+     * @param {PoruOptions} options - Configuration options for Poru.
+     * @returns {Poru} The Poru instance.
      */
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions);
     /**
-     * This method is used to add a node to poru
-     * @param client VoiceClient for Poru library to use to connect to lavalink node server (discord.js, eris, oceanic)
-     * @returns void
+     * Initializes Poru and adds nodes.
      */
-    init(client: any): this;
+    init(): this;
     /**
-     * Voice State Update and Voice Server Update
-     * @param {any} packet packet from discord api
-     * @returns {void} void
+     * Handles Voice State Update and Voice Server Update packets.
+     * @param {any} packet - Packet from Discord API.
+     * @returns {void}
      */
     packetUpdate(packet: any): void;
     /**
-     * Add a node to poru instance
-     * @param {NodeGroup} options NodeGroup
-     * @returns {Node} Node
+     * Adds a node to the Poru instance.
+     * @param {NodeGroup} options - Node group options.
+     * @returns {Node} The added Node instance.
      */
     addNode(options: NodeGroup): Node;
     /**
-     * Remove a node from poru instance
-     * @param {string} identifier The Name of the node
-     * @returns {boolean} A boolean indicating if the node was removed
-     */
+      * Removes a node from the Poru instance.
+      * @param {string} identifier - The name of the node.
+      * @returns {boolean} A boolean indicating if the node was successfully removed.
+      */
     removeNode(identifier: string): boolean;
     /**
-     * Get a node from poru instance
-     * @param {string} region Region of the node
-     * @returns {Node[]} A array of nodes
+     * Retrieves nodes by region.
+     * @param {string} region - Region of the node.
+     * @returns {Node[]} Array of nodes in the specified region.
      */
     getNodeByRegion(region: string): Node[];
     /**
-     * Get a node from poru instance
-     * @param {string?} identifier Node name
-     * @returns {Node | Node[]} A Node or an array of nodes
+     * Retrieves a node by its identifier.
+     * @param {string} [identifier="auto"] - Node name.
+     * @returns {Node | Node[]} The specified Node instance or array of nodes.
      */
     getNode(identifier?: string): Node | Node[];
     /**
-     * Creates a new player
-     * @param {ConnectionOptions} options ConnectionOptions
-     * @returns {Player} Returns the newly created player instance
+     * Creates a new player.
+     * @param {ConnectionOptions} options - Connection options.
+     * @returns {Player} The newly created Player instance.
      */
     createConnection(options: ConnectionOptions): Player;
-    /**
-     * Create a player from poru instance
-     * @param {Node} node Node
-     * @param {ConnectionOptions} options ConnectionOptions
-     * @returns {Player} Returns the newly created player instance
-     */
     private createPlayer;
     /**
-     * Remove a player from poru instance
-     * @param {string} guildId Guild ID
-     *
-     * @returns {Promise<boolean>} A bool indicating if the player was removed
+     * Removes a player from the Poru instance.
+     * @param {string} guildId - Guild ID.
+     * @returns {Promise<boolean>} A promise indicating if the player was successfully removed.
      */
     removeConnection(guildId: string): Promise<boolean>;
     /**
-     * Get a least used node from poru instance
-     *
-     * @returns {Node[]} A array of nodes
+     * Retrieves least used nodes.
+     * @returns {Node[]} Array of least used nodes.
      */
     get leastUsedNodes(): Node[];
     /**
-     * Resolve a track from poru instance
-     * @param {ResolveOptions} param0  ResolveOptions
-     * @param {Node | undefined} node Node or undefined
-     * @returns {Promise<Response>} The Response of the resolved tracks
+     * Resolves a track.
+     * @param {ResolveOptions} options - Options for resolving tracks.
+     * @param {Node} [node] - Node to use for resolution.
+     * @returns {Promise<Response>} The response containing resolved tracks.
      */
     resolve({ query, source, requester }: ResolveOptions, node?: Node): Promise<Response>;
     /**
-     * Decode a track from poru instance
-     * @param {string} track The encoded track
-     * @param {Node} node The node to decode it on
-     * @returns {Promise<trackData>} The decoded track
+     * Decodes a track.
+     * @param {string} encodedTrackString - The encoded track string.
+     * @param {Node} [node] - The node to decode on.
+     * @returns {Promise<trackData>} The decoded track.
      */
     decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData>;
     /**
-     * Decode tracks from poru instance
-     * @param {string[]} encodedTrackString The encoded strings.
-     * @param {Node | undefined} node The node
-     * @returns {Promise<trackData[]>} The decoded tracks in a array
+     * Decodes multiple tracks.
+     * @param {string[]} encodedTrackString - Array of encoded track strings.
+     * @param {Node} [node] - The node to decode on.
+     * @returns {Promise<trackData[]>} Array of decoded tracks.
      */
     decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]>;
     /**
-     * Get lavalink info from poru instance
-     * @param {string} name The name of the node
-     * @returns {NodeInfoResponse} Useful information about the node.
-     */
+      * Retrieves Lavalink info for a node.
+      * @param {string} name - The name of the node.
+      * @returns {Promise<NodeInfoResponse>} Information about the node.
+      */
     getLavalinkInfo(name: string): Promise<NodeInfoResponse>;
     /**
-     * Get lavalink status from poru instance
-     * @param {string} name The name of the node
-     * @returns {NodeStatsResponse} The stats from the node
+     * Retrieves Lavalink status for a node.
+     * @param {string} name - The name of the node.
+     * @returns {Promise<NodeStatsResponse>} The status of the node.
      */
     getLavalinkStatus(name: string): Promise<NodeStatsResponse>;
     /**
-    * Get the current lavalink version of the node
-    * @param {string} name The name of the node
-    * @returns {string} The version of the node
-    */
+     * Retrieves the Lavalink version for a node.
+     * @param {string} name - The name of the node.
+     * @returns {Promise<string>} The version of the node.
+     */
     getLavalinkVersion(name: string): Promise<string>;
     /**
-     * Get a player from poru instance
-     * @param {string} guildId Guild ID
-     * @returns {Player} The player for this guild
+     * Retrieves a player by guild ID.
+     * @param {string} guildId - Guild ID.
+     * @returns {Player} The player instance for the specified guild.
      */
     get(guildId: string): Player;
 }

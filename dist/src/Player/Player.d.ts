@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { Poru, ResolveOptions, EventData } from "../Poru";
+import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
 import { Node } from "../Node/Node";
 import { Track } from "../guild/Track";
 import { Connection } from "./Connection";
@@ -7,159 +7,175 @@ import Queue from "../guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "../guild/Response";
-import { ConnectionOptions } from "../Poru";
-/**
- * The loop type
- * @typedef {string} Loop
- * @property {string} NONE - No loop
- */
 type Loop = "NONE" | "TRACK" | "QUEUE";
+/**
+ * Represents a player capable of playing audio tracks.
+ * @extends EventEmitter
+ */
 export declare class Player extends EventEmitter {
     readonly data: Record<string, unknown>;
+    /** The Poru instance associated with the player. */
     poru: Poru;
+    /** The node associated with the player. */
     node: Node;
+    /** The connection associated with the player. */
     connection: Connection;
+    /** The queue of tracks for the player. */
     queue: Queue;
+    /** Filters applied to the player's audio. */
     filters: Filters;
+    /** The guild ID associated with the player. */
     guildId: string;
+    /** The guild ID associated with the player. */
     voiceChannel: string;
+    /** The text channel ID associated with the player. */
     textChannel: string;
+    /** The currently playing track */
     currentTrack: Track;
+    /** The previously played track */
     previousTrack: Track;
+    /** Indicates whether the player is currently playing a track. */
     isPlaying: boolean;
+    /** Indicates whether the player is connected to a voice channel. */
     isPaused: boolean;
+    /** Indicates whether the player is connected to a voice channel. */
     isConnected: boolean;
+    /** Indicated whether autoplay mode is enabled. */
     isAutoPlay: boolean;
+    /** Indicated whether quiet mode is enabled for the player.  */
     isQuietMode: boolean;
+    /** The loop settings for the player. */
     loop: Loop;
+    /** The current position of the player in the track (in milliseconds) */
     position: number;
+    /** The current delay estimate of the player (in milliseconds) */
     ping: number;
+    /** The timestamp of the player's state */
     timestamp: number;
+    /** Indicates whether the player is set to be muted. */
     mute: boolean;
+    /** Indicated whether the player is set to be deafened */
     deaf: boolean;
+    /** The volume of the player (0-1000) */
     volume: number;
     constructor(poru: Poru, node: Node, options: ConnectionOptions);
     /**
-     * Play a track
-     * @returns {Promise<Player>} The newly updated player whose playing the song
+     * Initiates playback of the next track in the queue.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     play(): Promise<Player>;
     /**
-      * Resolve a track
-      * @param {Track} track - Only for personal use
-      * @returns {Promise<Track>} Returns a Track
-      */
+     * Resolves a track before playback.
+     * @param {Track} track - The track to resolve.
+     * @returns {Promise<Track>} - A Promise that resolves to the resolved track.
+     * @private
+     */
     private resolveTrack;
     /**
-     * This function will make the bot connect to a voice channel.
-     * @param {ConnectionOptions} options To connect to voice channel
-     * @returns {void} void
+     * Connects the player to a voice channel.
+     * @param {ConnectionOptions} [options=this] - The options for the connection.
      */
     connect(options?: ConnectionOptions): void;
     /**
-     * This function will stop the current song
-     * @returns {Promise<Player>} Returns the player after stopping the song
-     *
-     * You can use this function to also skip the current song
+     * Skips the current track.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
-    stop(): Promise<Player>;
+    skip(): Promise<Player>;
     /**
-     *
-     * @param {boolean} toggle Boolean to pause or resume the player || Default = true
-     * @returns {Promise<Player>} To pause or resume the player
+     * Pauses or resumes playback.
+     * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     pause(toggle?: boolean): Promise<Player>;
     /**
-     * This function will seek to the specified position
-     * @param {number} position Number to seek to the position
-     * @returns {Promise<void>} void
+     * Seeks to a specific position in the current track.
+     * @param {number} position - The position to seek to (in milliseconds).
      */
     seekTo(position: number): Promise<void>;
     /**
-     * This function will set the volume to a specified number between 0 and 1000
-     * @param volume Number to set the volume
-     * @returns {Promise<Player>} The newly updated Player
+     * Sets the volume level of the player.
+     * @param {number} volume - The volume level (0 to 1000).
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     setVolume(volume: number): Promise<Player>;
     /**
-     * This function will activate the loop mode. These are the options `NONE, TRACK, QUEUE`
-     * @param {Loop} mode Loop mode
-     * @returns {Player} Returns the newly updated Player
+     * Sets the loop mode of the player.
+     * @param {Loop} mode - The loop mode to set.
+     * @returns {Player} - The Player instance.
      */
-    setLoop(mode: Loop): Player;
+    setLoop(mode: Loop): this;
     /**
-     * This function will set the text channel in the player
-     * @param {string} channel String to set the text channel
-     * @returns {Player} Returns the newly updated Player
+     * Sets the text channel associated with the player.
+     * @param {string} channel - The ID of the text channel.
+     * @returns {Player} - The Player instance.
      */
-    setTextChannel(channel: string): Player;
+    setTextChannel(channel: string): this;
     /**
-     * This function will set the voice channel
-     * @param {string} channel String to set the voice channel
-     * @param {Required<Omit<ConnectionOptions, "guildId" | "region" | "textChannel" | "voiceChannel">>} options Options `mute` and `deaf`
-     * @returns {Player} Returns the newly updated Player
+     * Sets the voice channel associated with the player.
+     * @param {string} channel - The ID of the voice channel.
+     * @param {ConnectionOptions} [options] - The options for the connection.
+     * @returns {Player} - The Player instance.
      */
-    setVoiceChannel(channel: string, options?: Required<Omit<ConnectionOptions, "guildId" | "region" | "textChannel" | "voiceChannel">>): Player;
+    setVoiceChannel(channel: string, options?: Required<Omit<ConnectionOptions, "guildId" | "region" | "textChannel" | "voiceChannel">>): this;
     /**
-     * This will set a value to a key
-     * @param {string} key Key to set the value
-     * @param {unknown} value Value to set the key
-     * @returns {K} To set the key and value
+     * Sets a custom data value associated with the player.
+     * @param {string} key - The key for the data value.
+     * @param {K} value - The value to set.
+     * @returns {K} - The set value.
      */
     set<K>(key: string, value: K): K;
     /**
-     * This will retrieve the value via the key
-     * @param {string} key Key to get the value
-     * @returns {K} Returns the data that was obtained via the key
+     * Retrieves a custom data value associated with the player.
+     * @param {string} key - The key for the data value.
+     * @returns {K} - The retrieved value.
      */
     get<K>(key: string): K;
     /**
-     * This function will disconnect us from the channel
-     * @returns {Promise<Player>} Returns the newly updated Player
+     * Disconnects the player from the voice channel.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     disconnect(): Promise<Player>;
     /**
-     * Destroys the player for this guild.
-     * @returns {Promise<boolean>} Indicating if the player was successfully destroyed
+     * Destroys the player and cleans up associated resources.
+     * @returns {Promise<boolean>} - A Promise that resolves to a boolean indicating the success of destruction.
      */
     destroy(): Promise<boolean>;
     /**
-     * This function will restart the player and play the current track
-     * @returns {Promise<Player>} Returns a Player object
+     * Restarts playback from the current track.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     restart(): Promise<Player>;
     /**
-     * This function will move the node from the current player
-     * @param {string} name The name of the node to move to
-     * @returns
+     * Moves the player to a different node.
+     * @param {string} name - The name of the target node.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     moveNode(name: string): Promise<Player>;
     /**
-     * This function will autmatically move the node to the leastUsed Node for the current player
-     * @returns Promise of Player or nothing if there was no node to move to or a error came up
+     * Automatically moves the player to a less used node.
+     * @returns {Promise<Player | void>} - A Promise that resolves to the Player instance or void.
      */
     autoMoveNode(): Promise<Player | void>;
     /**
-     * This function will automatically add a track to the queue and play it
-     * @returns The newly updated Player which is playing the song
+     * Enables autoplay functionality for the player.
+     * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     autoplay(): Promise<Player>;
     /**
-     * This function will handle all the events
-     * @param {EventData} data The data of the event
-     * @returns {Promise<Player | boolean | void>} The Player object, a boolean or void
+     * Handles incoming events for the player.
+     * @param {EventData} data - The event data.
+     * @returns {Promise<Player | boolean | void>} - A Promise that resolves to the Player instance, a boolean, or void.
      */
     eventHandler(data: EventData): Promise<Player | boolean | void>;
     /**
-     * This function will get the track by it's name or identifier or url and will return the track data
-     * @param {ResolveOptions} param0 The parameters to resolve the track
-     * @returns {Promise<Response>} The response of the track data which was searched for
+     * Resolves a query to obtain audio tracks.
+     * @param {ResolveOptions} options - The options for resolving the query.
+     * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
     resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
     /**
-     *
-     * @param data The data to send to the voice server from discord
-     * @returns {void} void
+     * Sends data to the Poru system.
+     * @param {any} data - The data to send.
      */
     send(data: any): void;
 }
