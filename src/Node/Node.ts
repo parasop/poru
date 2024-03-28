@@ -112,7 +112,7 @@ export class Node {
         this.attempt = 0;
         this.isConnected = false;
         this.stats = null;
-        this.clientName = options.clientName || config.clientName;
+        this.clientName = options.clientName || `${config.clientName}/${config.version}`;
     };
 
     /**
