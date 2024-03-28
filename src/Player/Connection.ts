@@ -3,7 +3,7 @@ import { Player } from "./Player";
 export interface IVoiceServer {
     token: string;
     sessionId: string;
-    endpoint: string;
+    endpoint?: string;
 };
 
 type TYear = `${number}${number}${number}${number}`;

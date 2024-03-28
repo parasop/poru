@@ -6,6 +6,7 @@ import { Response, LoadTrackResponse } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
+import { IVoiceServer, SetStateUpdate } from "./Player/Connection";
 
 export type Constructor<T> = new (...args: any[]) => T;
 
@@ -18,6 +19,25 @@ export interface NodeGroup {
     region?: string[];
 }
 
+export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
+
+interface PacketVoiceStateUpdate {
+    op: number;
+    d: SetStateUpdate;
+    t: "VOICE_STATE_UPDATE";
+};
+
+interface PacketVoiceServerUpdate {
+    op: number;
+    d: IVoiceServer;
+    t: "VOICE_SERVER_UPDATE";
+};
+
+interface AnyOtherPacket {
+    op: number;
+    d: any;
+    t: string;
+};
 
 export interface ResolveOptions {
     query: string;
@@ -102,6 +122,7 @@ export interface PoruOptions {
     reconnectTries?: number | null;
     useCustomFilters?: boolean;
     send?: Function | null;
+    clientName?: string;
 }
 
 export interface ConnectionOptions {
@@ -264,7 +285,6 @@ export class Poru extends EventEmitter {
      * @param {any} client - VoiceClient used for connecting to Lavalink node server.
      * @param {NodeGroup[]} nodes - Array of node groups.
      * @param {PoruOptions} options - Configuration options for Poru.
-     * @returns {Poru} The Poru instance.
      */
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions) {
         super();
@@ -282,15 +302,14 @@ export class Poru extends EventEmitter {
     /**
      * Initializes Poru and adds nodes.
      */
-    public init() {
+    public async init() {
         if (this.isActivated) return this;
         this.userId = this.client.user.id;
-        this._nodes.forEach((node) => this.addNode(node));
+        this._nodes.forEach(async (node) => await this.addNode(node));
         this.isActivated = true;
 
         if (this.options.plugins) {
             this.options.plugins.forEach((plugin) => {
-
                 plugin.load(this);
             });
         }
@@ -298,33 +317,33 @@ export class Poru extends EventEmitter {
 
         switch (this.options.library) {
             case "discord.js": {
-                this.send = (packet: any) => {
+                this.send = (packet: Packet) => {
                     const guild = this.client.guilds.cache.get(packet.d.guild_id);
                     if (guild) guild.shard?.send(packet);
                 };
-                this.client.on("raw", async (packet: any) => {
+                this.client.on("raw", async (packet: Packet) => {
                     this.packetUpdate(packet);
                 });
                 break;
             }
             case "eris": {
-                this.send = (packet: any) => {
+                this.send = (packet: Packet) => {
                     const guild = this.client.guilds.get(packet.d.guild_id);
                     if (guild) guild.shard.sendWS(packet?.op, packet?.d);
                 };
 
-                this.client.on("rawWS", async (packet: any) => {
+                this.client.on("rawWS", async (packet: Packet) => {
                     this.packetUpdate(packet);
                 });
                 break;
             }
             case "oceanic": {
-                this.send = (packet: any) => {
+                this.send = (packet: Packet) => {
                     const guild = this.client.guilds.get(packet.d.guild_id);
                     if (guild) guild.shard.send(packet?.op, packet?.d);
                 };
 
-                this.client.on("packet", async (packet: any) => {
+                this.client.on("packet", async (packet: Packet) => {
                     this.packetUpdate(packet);
                 });
                 break;
@@ -337,16 +356,18 @@ export class Poru extends EventEmitter {
                 break;
             }
         }
-    }
+    };
 
     /**
      * Handles Voice State Update and Voice Server Update packets.
-     * @param {any} packet - Packet from Discord API.
+     * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    public packetUpdate(packet: any): void {
+    public packetUpdate(packet: Packet): void {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
+        if (!("guild_id" in packet.d)) return;
+
         const player = this.players.get(packet.d.guild_id);
         if (!player) return;
 
@@ -364,10 +385,10 @@ export class Poru extends EventEmitter {
      * @param {NodeGroup} options - Node group options.
      * @returns {Node} The added Node instance.
      */
-    public addNode(options: NodeGroup): Node {
+    public async addNode(options: NodeGroup): Promise<Node> {
         const node = new Node(this, options, this.options);
         this.nodes.set(options.name, node);
-        node.connect();
+        await node.connect();
         return node;
     }
 
