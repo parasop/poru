@@ -511,20 +511,9 @@ export class Poru extends EventEmitter {
 
         if (!node) node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
-        const regex = /^https?:\/\//;
-
-        if (regex.test(query)) {
-            let response = await node.rest.get<LoadTrackResponse>(
-                `/v4/loadtracks?identifier=${encodeURIComponent(query)}`
-            );
-            return new Response(response, requester);
-        } else {
-            let track = `${source || "ytsearch"}:${query}`;
-            let response = await node.rest.get<LoadTrackResponse>(
-                `/v4/loadtracks?identifier=${encodeURIComponent(track)}`
-            );
-            return new Response(response, requester);
-        }
+        
+        const response = await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : source || 'ytsearch:') + query)}`)
+        return new Response(response, requester);
     }
 
     /**
