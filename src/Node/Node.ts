@@ -84,6 +84,7 @@ export class Node {
     public attempt: number;
     public stats: NodeStats | null;
     public options: NodeGroup;
+    public clientName: string;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -111,29 +112,34 @@ export class Node {
         this.attempt = 0;
         this.isConnected = false;
         this.stats = null;
-    }
+        this.clientName = options.clientName || config.clientName;
+    };
 
     /**
      * Connects to the lavalink node
      * @returns {void}
      */
-    public connect(): void {
-        if (this.ws) this.ws.close();
-        if (!this.poru.nodes.get(this.name)) {
-            this.poru.nodes.set(this.name, this)
-        }
-        const headers = {
-            Authorization: this.password,
-            "User-Id": this.poru.userId,
-            "Client-Name": config.clientName,
-        };
-        if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
-        this.ws = new WebSocket(`${this.socketURL}`, { headers });
-        this.ws.on("open", this.open.bind(this));
-        this.ws.on("error", this.error.bind(this));
-        this.ws.on("message", this.message.bind(this));
-        this.ws.on("close", this.close.bind(this));
-    }
+    public async connect(): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            if (this.isConnected) return resolve(true);
+            if (this.ws) this.ws.close();
+            if (!this.poru.nodes.get(this.name)) {
+                this.poru.nodes.set(this.name, this)
+            }
+            const headers = {
+                Authorization: this.password,
+                "User-Id": this.poru.userId,
+                "Client-Name": this.clientName,
+            };
+            if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
+            this.ws = new WebSocket(`${this.socketURL}`, { headers });
+            this.ws.on("open", this.open.bind(this));
+            this.ws.on("error", this.error.bind(this));
+            this.ws.on("message", this.message.bind(this));
+            this.ws.on("close", this.close.bind(this));
+            resolve(true);
+        })
+    };
 
     /**
      * Handles the message event
