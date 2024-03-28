@@ -120,7 +120,7 @@ export class Node {
      * @returns {void}
      */
     public async connect(): Promise<boolean> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             if (this.isConnected) return resolve(true);
             if (this.ws) this.ws.close();
             if (!this.poru.nodes.get(this.name)) {
