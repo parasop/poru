@@ -199,9 +199,9 @@ export class Node {
      * This function will get the penalties from the current node
      * @returns {number} The amount of penalties
      */
-    get penalties(): number {
+    public get penalties(): number {
         let penalties = 0;
-        if (!this.isConnected) return penalties;
+        if (!this.isConnected || !this.stats) return penalties;
         penalties += this.stats.players;
         penalties += Math.round(
             Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10
