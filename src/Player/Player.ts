@@ -381,8 +381,8 @@ export class Player extends EventEmitter {
    * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
    */
   public async restart(): Promise<Player> {
-    if (!this.currentTrack.track && !this.queue.length) return
-    if (!this.currentTrack.track) return await this.play()
+    if (!this.currentTrack?.track && !this.queue.length) return
+    if (!this.currentTrack?.track) return await this.play()
 
     await this.node.rest.updatePlayer({
       guildId: this.guildId,

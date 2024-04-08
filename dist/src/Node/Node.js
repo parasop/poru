@@ -29,6 +29,7 @@ class Node {
     attempt;
     stats;
     options;
+    clientName;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -56,30 +57,38 @@ class Node {
         this.attempt = 0;
         this.isConnected = false;
         this.stats = null;
+        this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
     }
+    ;
     /**
      * Connects to the lavalink node
      * @returns {void}
      */
-    connect() {
-        if (this.ws)
-            this.ws.close();
-        if (!this.poru.nodes.get(this.name)) {
-            this.poru.nodes.set(this.name, this);
-        }
-        const headers = {
-            Authorization: this.password,
-            "User-Id": this.poru.userId,
-            "Client-Name": config_1.Config.clientName,
-        };
-        if (this.resumeKey)
-            headers["Resume-Key"] = this.resumeKey;
-        this.ws = new ws_1.default(`${this.socketURL}`, { headers });
-        this.ws.on("open", this.open.bind(this));
-        this.ws.on("error", this.error.bind(this));
-        this.ws.on("message", this.message.bind(this));
-        this.ws.on("close", this.close.bind(this));
+    async connect() {
+        return new Promise((resolve) => {
+            if (this.isConnected)
+                return resolve(true);
+            if (this.ws)
+                this.ws.close();
+            if (!this.poru.nodes.get(this.name)) {
+                this.poru.nodes.set(this.name, this);
+            }
+            const headers = {
+                Authorization: this.password,
+                "User-Id": this.poru.userId,
+                "Client-Name": this.clientName,
+            };
+            if (this.resumeKey)
+                headers["Resume-Key"] = this.resumeKey;
+            this.ws = new ws_1.default(`${this.socketURL}`, { headers });
+            this.ws.on("open", this.open.bind(this));
+            this.ws.on("error", this.error.bind(this));
+            this.ws.on("message", this.message.bind(this));
+            this.ws.on("close", this.close.bind(this));
+            resolve(true);
+        });
     }
+    ;
     /**
      * Handles the message event
      * @param payload any

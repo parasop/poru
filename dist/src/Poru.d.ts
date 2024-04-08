@@ -6,6 +6,7 @@ import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
 import { Track, trackData } from "./guild/Track";
 import { Filters } from "./Player/Filters";
+import { IVoiceServer, SetStateUpdate } from "./Player/Connection";
 export type Constructor<T> = new (...args: any[]) => T;
 export interface NodeGroup {
     name: string;
@@ -14,6 +15,22 @@ export interface NodeGroup {
     password: string;
     secure?: boolean;
     region?: string[];
+}
+export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
+interface PacketVoiceStateUpdate {
+    op: number;
+    d: SetStateUpdate;
+    t: "VOICE_STATE_UPDATE";
+}
+interface PacketVoiceServerUpdate {
+    op: number;
+    d: IVoiceServer;
+    t: "VOICE_SERVER_UPDATE";
+}
+interface AnyOtherPacket {
+    op: number;
+    d: any;
+    t: string;
 }
 export interface ResolveOptions {
     query: string;
@@ -89,6 +106,7 @@ export interface PoruOptions {
     reconnectTries?: number | null;
     useCustomFilters?: boolean;
     send?: Function | null;
+    clientName?: string;
 }
 export interface ConnectionOptions {
     guildId: string;
@@ -230,25 +248,24 @@ export declare class Poru extends EventEmitter {
      * @param {any} client - VoiceClient used for connecting to Lavalink node server.
      * @param {NodeGroup[]} nodes - Array of node groups.
      * @param {PoruOptions} options - Configuration options for Poru.
-     * @returns {Poru} The Poru instance.
      */
     constructor(client: any, nodes: NodeGroup[], options: PoruOptions);
     /**
      * Initializes Poru and adds nodes.
      */
-    init(): this;
+    init(): Promise<this>;
     /**
      * Handles Voice State Update and Voice Server Update packets.
-     * @param {any} packet - Packet from Discord API.
+     * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    packetUpdate(packet: any): void;
+    packetUpdate(packet: Packet): void;
     /**
      * Adds a node to the Poru instance.
      * @param {NodeGroup} options - Node group options.
      * @returns {Node} The added Node instance.
      */
-    addNode(options: NodeGroup): Node;
+    addNode(options: NodeGroup): Promise<Node>;
     /**
       * Removes a node from the Poru instance.
       * @param {string} identifier - The name of the node.
@@ -331,3 +348,4 @@ export declare class Poru extends EventEmitter {
      */
     get(guildId: string): Player;
 }
+export {};

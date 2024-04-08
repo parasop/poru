@@ -337,9 +337,9 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     async restart() {
-        if (!this.currentTrack.track && !this.queue.length)
+        if (!this.currentTrack?.track && !this.queue.length)
             return;
-        if (!this.currentTrack.track)
+        if (!this.currentTrack?.track)
             return await this.play();
         await this.node.rest.updatePlayer({
             guildId: this.guildId,
@@ -491,16 +491,8 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
     async resolve({ query, source, requester }) {
-        const regex = /^https?:\/\//;
-        if (regex.test(query)) {
-            const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(query)}`);
-            return new Response_1.Response(response, requester);
-        }
-        else {
-            const track = `${source || "ytsearch"}:${query}`;
-            const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(track)}`);
-            return new Response_1.Response(response, requester);
-        }
+        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`);
+        return new Response_1.Response(response, requester);
     }
     ;
     /**
