@@ -41,6 +41,7 @@ const config: Config = {
             index: "index.ts",
           }
         }],
+        gitRefName: 'main',
         readmes: true,
         // minimal: ,
         debug: true,
@@ -73,6 +74,10 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     image: 'img/poru.png',
+    colorMode: {
+      defaultMode: 'dark',
+      respectPrefersColorScheme: true
+    },
     navbar: {
       title: 'Poru',
       logo: {
