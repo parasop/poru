@@ -41,7 +41,7 @@ const config: Config = {
             index: "index.ts",
           }
         }],
-        gitRefName: 'main',
+        gitRefName: 'v5',
         readmes: true,
         // minimal: ,
         debug: true,
