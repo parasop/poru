@@ -51,7 +51,7 @@ export enum RequestMethod {
 }
 
 export class Rest {
-    private sessionId: string;
+    private sessionId: string | null;
     private password: string;
     public url: string;
     public poru: Poru;
