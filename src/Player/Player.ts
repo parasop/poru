@@ -124,6 +124,7 @@ export class Player extends EventEmitter {
       })
       this.isPlaying = true
       this.position = 0
+      this.isAutoPlay = false;
     };
 
     return this
@@ -180,7 +181,8 @@ export class Player extends EventEmitter {
    * @param {ConnectionOptions} [options=this] - The options for the connection.
    */
   public connect(options: ConnectionOptions = this): void {
-    let { guildId, voiceChannel, deaf, mute } = options
+    const { guildId, voiceChannel, deaf, mute } = options
+
     this.send({
       guild_id: guildId,
       channel_id: voiceChannel,
@@ -203,7 +205,8 @@ export class Player extends EventEmitter {
     await this.node.rest.updatePlayer({
       guildId: this.guildId,
       data: { track: { encoded: null } },
-    })
+    });
+
     this.position = 0
     this.isPlaying = false
 
@@ -403,10 +406,10 @@ export class Player extends EventEmitter {
    * @param {string} name - The name of the target node.
    * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
    */
-  public async moveNode(name: string) {
+  public async moveNode(name: string): Promise<Player> {
     const node = this.poru.nodes.get(name)
 
-    if (!node || node.name === this.node.name) return
+    if (!node || node.name === this.node.name) return this;
     if (!node.isConnected)
       throw new Error("Provided Node is not connected")
 
@@ -430,7 +433,7 @@ export class Player extends EventEmitter {
     if (this.poru.leastUsedNodes.length === 0)
       throw new Error("[Poru Error] No nodes are avaliable")
 
-    const node = this.poru.nodes.get(this.poru.leastUsedNodes[0].name)
+    const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name)
     if (!node) {
       await this.destroy()
       return
