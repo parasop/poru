@@ -322,7 +322,7 @@ export class Poru extends EventEmitter {
                     if (guild) guild.shard?.send(packet);
                 };
                 this.client.on("raw", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -333,7 +333,7 @@ export class Poru extends EventEmitter {
                 };
 
                 this.client.on("rawWS", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -344,7 +344,7 @@ export class Poru extends EventEmitter {
                 };
 
                 this.client.on("packet", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -363,7 +363,7 @@ export class Poru extends EventEmitter {
      * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    public packetUpdate(packet: Packet): void {
+    public async packetUpdate(packet: Packet): Promise<void> {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         if (!("guild_id" in packet.d)) return;
@@ -372,7 +372,7 @@ export class Poru extends EventEmitter {
         if (!player) return;
 
         if (packet.t === "VOICE_SERVER_UPDATE") {
-            player.connection.setServersUpdate(packet.d);
+            await player.connection.setServersUpdate(packet.d);
         }
         if (packet.t === "VOICE_STATE_UPDATE") {
             if (packet.d.user_id !== this.userId) return;
@@ -542,7 +542,7 @@ export class Poru extends EventEmitter {
     public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {      
         if (!node) node = this.leastUsedNodes[0];
 
-        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString);
+        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString) as trackData[];
     }
 
    /**
