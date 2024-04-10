@@ -75,6 +75,7 @@ export declare class Node {
     attempt: number;
     stats: NodeStats | null;
     options: NodeGroup;
+    clientName: string;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -86,7 +87,7 @@ export declare class Node {
      * Connects to the lavalink node
      * @returns {void}
      */
-    connect(): void;
+    connect(): Promise<boolean>;
     /**
      * Handles the message event
      * @param payload any

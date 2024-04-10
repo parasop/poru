@@ -1,4 +1,4 @@
 export declare enum Config {
-    version = 4,
+    version = 5,
     clientName = "Poru"
 }

@@ -8,6 +8,9 @@ const config_1 = require("./config");
 const Response_1 = require("./guild/Response");
 ;
 ;
+;
+;
+;
 /**
  * Represents Poru, a library for managing audio players with Lavalink.
  * @extends EventEmitter
@@ -27,7 +30,6 @@ class Poru extends events_1.EventEmitter {
      * @param {any} client - VoiceClient used for connecting to Lavalink node server.
      * @param {NodeGroup[]} nodes - Array of node groups.
      * @param {PoruOptions} options - Configuration options for Poru.
-     * @returns {Poru} The Poru instance.
      */
     constructor(client, nodes, options) {
         super();
@@ -44,11 +46,11 @@ class Poru extends events_1.EventEmitter {
     /**
      * Initializes Poru and adds nodes.
      */
-    init() {
+    async init() {
         if (this.isActivated)
             return this;
         this.userId = this.client.user.id;
-        this._nodes.forEach((node) => this.addNode(node));
+        this._nodes.forEach(async (node) => await this.addNode(node));
         this.isActivated = true;
         if (this.options.plugins) {
             this.options.plugins.forEach((plugin) => {
@@ -99,13 +101,16 @@ class Poru extends events_1.EventEmitter {
             }
         }
     }
+    ;
     /**
      * Handles Voice State Update and Voice Server Update packets.
-     * @param {any} packet - Packet from Discord API.
+     * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
     packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
+            return;
+        if (!("guild_id" in packet.d))
             return;
         const player = this.players.get(packet.d.guild_id);
         if (!player)
@@ -124,10 +129,10 @@ class Poru extends events_1.EventEmitter {
      * @param {NodeGroup} options - Node group options.
      * @returns {Node} The added Node instance.
      */
-    addNode(options) {
+    async addNode(options) {
         const node = new Node_1.Node(this, options, this.options);
         this.nodes.set(options.name, node);
-        node.connect();
+        await node.connect();
         return node;
     }
     /**
@@ -245,16 +250,8 @@ class Poru extends events_1.EventEmitter {
             node = this.leastUsedNodes[0];
         if (!node)
             throw new Error("No nodes are available.");
-        const regex = /^https?:\/\//;
-        if (regex.test(query)) {
-            let response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(query)}`);
-            return new Response_1.Response(response, requester);
-        }
-        else {
-            let track = `${source || "ytsearch"}:${query}`;
-            let response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent(track)}`);
-            return new Response_1.Response(response, requester);
-        }
+        const response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`);
+        return new Response_1.Response(response, requester);
     }
     /**
      * Decodes a track.
