@@ -34,9 +34,6 @@ export class Track {
         this.pluginInfo = data.pluginInfo,
         this.userData = data.userData,
         this.info = {
-            isrc: data.info.isrc || null,
-            uri: data.info.uri || null,
-            artworkUrl: data.info.artworkUrl || null,
             ...data.info,
             requester
         };
@@ -45,14 +42,14 @@ export class Track {
     /**
      * This function will resolve the track and return the track as resolved
      * @param {Poru} poru The poru instance
-     * @returns {Promise<Track>} The resolved track
+     * @returns {Promise<Track | null>} The resolved track
      */
-    public async resolve(poru: Poru): Promise<Track> {
+    public async resolve(poru: Poru): Promise<Track | null> {
         const query = [this.info.author, this.info.title]
             .filter((x) => !!x)
             .join(" - ");
         const result = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch", requester: this.info.requester });
-        if (!result || !result.tracks.length) return;
+        if (!result || !result.tracks.length) return null;
 
         if (this.info.author) {
             const author = [this.info.author, `${this.info.author} - Topic`];
@@ -80,7 +77,7 @@ export class Track {
             );
 
             if (sameDuration) {
-                //this.info.identifier = sameDuration.info.identifier;
+                // this.info.identifier = sameDuration.info.identifier;
                 this.track = sameDuration.track;
                 return this;
             }
@@ -89,5 +86,5 @@ export class Track {
         this.info.identifier = result.tracks[0].info.identifier;
         this.track = result.tracks[0].track;
         return this;
-    }
-}
+    };
+};
