@@ -19,9 +19,16 @@ export interface trackInfo {
     artworkUrl: string | null;
     isrc: string | null;
     sourceName: string;
-}
+};
 
-interface trackInfoExtended extends trackInfo { requester: any; }
+interface trackInfoWihtUndefinedObjects extends Omit<trackInfo, "uri" | "artworkUrl" | "isrc"> {
+    uri: string | null | undefined;
+    artworkUrl: string | null | undefined;
+    isrc: string | null | undefined;
+};
+
+type trackInfoExtended = (trackInfo | trackInfoWihtUndefinedObjects) & { requester: any; };
+
 
 export class Track {
     public track: string;
@@ -35,9 +42,12 @@ export class Track {
         this.userData = data.userData,
         this.info = {
             ...data.info,
+            uri: data.info.uri || null,
+            artworkUrl: data.info.artworkUrl || null,
+            isrc: data.info.isrc || null,
             requester
         };
-    }
+    };
 
     /**
      * This function will resolve the track and return the track as resolved
