@@ -322,7 +322,7 @@ export class Poru extends EventEmitter {
                     if (guild) guild.shard?.send(packet);
                 };
                 this.client.on("raw", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -333,7 +333,7 @@ export class Poru extends EventEmitter {
                 };
 
                 this.client.on("rawWS", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -344,7 +344,7 @@ export class Poru extends EventEmitter {
                 };
 
                 this.client.on("packet", async (packet: Packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -352,7 +352,7 @@ export class Poru extends EventEmitter {
                 if (!this.send)
                     throw new Error("Send function is required in Poru Options");
 
-                this.send = this.options.send;
+                this.send = this.options.send ?? null;
                 break;
             }
         }
@@ -363,7 +363,7 @@ export class Poru extends EventEmitter {
      * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    public packetUpdate(packet: Packet): void {
+    public async packetUpdate(packet: Packet): Promise<void> {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         if (!("guild_id" in packet.d)) return;
@@ -372,7 +372,7 @@ export class Poru extends EventEmitter {
         if (!player) return;
 
         if (packet.t === "VOICE_SERVER_UPDATE") {
-            player.connection.setServersUpdate(packet.d);
+            await player.connection.setServersUpdate(packet.d);
         }
         if (packet.t === "VOICE_STATE_UPDATE") {
             if (packet.d.user_id !== this.userId) return;
@@ -397,12 +397,12 @@ export class Poru extends EventEmitter {
      * @param {string} identifier - The name of the node.
      * @returns {boolean} A boolean indicating if the node was successfully removed.
      */
-    public removeNode(identifier: string): boolean {
+    public async removeNode(identifier: string): Promise<boolean> {
         const node = this.nodes.get(identifier);
-        if (!node) return;
-        node.disconnect();
+        if (!node) return true;
+        await node.disconnect();
         return this.nodes.delete(identifier);
-    }
+    };
 
     /**
      * Retrieves nodes by region.
@@ -416,10 +416,10 @@ export class Poru extends EventEmitter {
                     node.isConnected && node.regions?.includes(region?.toLowerCase())
             )
             .sort((a, b) => {
-                const aLoad = a.stats.cpu
+                const aLoad = a.stats?.cpu
                     ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
                     : 0;
-                const bLoad = b.stats.cpu
+                const bLoad = b.stats?.cpu
                     ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
                     : 0;
                 return aLoad - bLoad;
@@ -455,7 +455,7 @@ export class Poru extends EventEmitter {
 
         if (this.leastUsedNodes.length === 0)
             throw new Error("[Poru Error] No nodes are available");
-        let node: Node;
+        let node: Node | undefined;
 
         if (options.region) {
             const region = this.getNodeByRegion(options.region)[0];
@@ -470,23 +470,25 @@ export class Poru extends EventEmitter {
 
     private createPlayer(node: Node, options: ConnectionOptions): Player {
         let player: Player;
+
         if (this.options.customPlayer) {
             player = new this.options.customPlayer(this, node, options);
         } else {
             player = new Player(this, node, options);
         }
+
         this.players.set(options.guildId, player);
         player.connect(options);
         return player;
-    }
+    };
 
     /**
      * Removes a player from the Poru instance.
      * @param {string} guildId - Guild ID.
-     * @returns {Promise<boolean>} A promise indicating if the player was successfully removed.
+     * @returns {Promise<boolean>} A promise indicating a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     public async removeConnection(guildId: string): Promise<boolean> {
-        return await this.players.get(guildId)?.destroy();
+        return await this.players.get(guildId)?.destroy() ?? false;
     };
 
     /**
@@ -512,7 +514,8 @@ export class Poru extends EventEmitter {
         if (!node) node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
         
-        const response = await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`)
+        const response = (await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
+
         return new Response(response, requester);
     }
 
@@ -522,7 +525,7 @@ export class Poru extends EventEmitter {
      * @param {Node} [node] - The node to decode on.
      * @returns {Promise<trackData>} The decoded track.
      */
-    public async decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData> {
+    public async decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData | null> {
         if (!node) node = this.leastUsedNodes[0];
 
         return await node.rest.get<trackData>(
@@ -539,7 +542,7 @@ export class Poru extends EventEmitter {
     public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {      
         if (!node) node = this.leastUsedNodes[0];
 
-        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString);
+        return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString) as trackData[];
     }
 
    /**
@@ -552,7 +555,7 @@ export class Poru extends EventEmitter {
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get<NodeInfoResponse>(`/v4/info`);
+        return await node.rest.get<NodeInfoResponse>(`/v4/info`) as NodeInfoResponse;
     }
 
     /**
@@ -565,7 +568,7 @@ export class Poru extends EventEmitter {
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get<NodeStatsResponse>(`/v4/stats`);
+        return await node.rest.get<NodeStatsResponse>(`/v4/stats`) as NodeStatsResponse;
     };
   
     /**
@@ -578,7 +581,7 @@ export class Poru extends EventEmitter {
 
         if (!node) throw new Error("Node not found!");
 
-        return await node.rest.get<string>(`/version`)
+        return await node.rest.get<string>(`/version`) as string;
     };
 
     /**
@@ -586,7 +589,7 @@ export class Poru extends EventEmitter {
      * @param {string} guildId - Guild ID.
      * @returns {Player} The player instance for the specified guild.
      */
-    public get(guildId: string): Player {
-        return this.players.get(guildId);
-    }
-}
+    public get(guildId: string): Player | null {
+        return this.players.get(guildId) ?? null;
+    };
+};

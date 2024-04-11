@@ -142,8 +142,7 @@ export interface FiltersOptions {
     channelMix: channelMixOptions;
     lowPass: lowPassOptions;
     timescale: timescaleOptions;
-
-}
+};
 
 /**
  * The lowPassOptions interface that is used to define the lowPass options to apply to the currently playing track
@@ -154,7 +153,6 @@ interface lowPassOptions {
     smoothing: number;
 }
 
-
 /**
  * The Filters class that is used to apply filters to the currently playing track
  */
@@ -162,28 +160,27 @@ export class Filters {
     public player: Player;
     public volume: number;
     public equalizer: Band[];
-    public karaoke: karaokeOptions;
-    public tremolo: tremoloOptions;
-    public vibrato: vibratoOptions;
-    public rotation: rotationOptions;
-    public distortion: distortionOptions;
-    public channelMix: channelMixOptions;
-    public lowPass: lowPassOptions;
+    public karaoke: karaokeOptions | undefined;
+    public tremolo: tremoloOptions | undefined;
+    public vibrato: vibratoOptions | undefined;
+    public rotation: rotationOptions | undefined;
+    public distortion: distortionOptions | undefined;
+    public channelMix: channelMixOptions | undefined;
+    public lowPass: lowPassOptions | undefined;
+    public timescale: timescaleOptions | undefined;
 
-    public timescale: timescaleOptions;
-
-    constructor(player: Player, options?: FiltersOptions) {
+    constructor(player: Player, options?: Partial<FiltersOptions>) {
         this.player = player;
         (this.volume = 1.0),
             (this.equalizer = []);
-        this.karaoke = options?.karaoke || null;
-        this.timescale = options?.timescale || null;
-        this.tremolo = options?.tremolo || null;
-        this.vibrato = options?.vibrato || null;
-        this.rotation = options?.rotation || null;
-        this.distortion = options?.distortion || null;
-        this.channelMix = options?.channelMix || null;
-        this.lowPass = options?.lowPass || null;
+        this.karaoke = options?.karaoke || undefined;
+        this.timescale = options?.timescale || undefined;
+        this.tremolo = options?.tremolo || undefined;
+        this.vibrato = options?.vibrato || undefined;
+        this.rotation = options?.rotation || undefined;
+        this.distortion = options?.distortion || undefined;
+        this.channelMix = options?.channelMix || undefined;
+        this.lowPass = options?.lowPass || undefined;
     }
     /**
      * Set equalizer bands for the currently playing track
@@ -191,24 +188,22 @@ export class Filters {
      * @param bands An array of bands to set the equalizer to
      * @returns 
      */
-    public setEqualizer(bands: Band[]): Filters {
-
+    public async setEqualizer(bands: Band[]): Promise<Filters> {
         this.equalizer = bands;
-        this.updateFilters();
+        await this.updateFilters();
         return this;
-    }
-
+    };
 
     /**
         * Change the karaoke Options applied to the currently playing track
         * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
         * @returns The current filter instance
         */
-    public setKaraoke(karaoke?: karaokeOptions): Filters {
-        this.karaoke = karaoke || null;
-        this.updateFilters();
+    public async setKaraoke(karaoke?: karaokeOptions): Promise<Filters> {
+        this.karaoke = karaoke || undefined;
+        await this.updateFilters();
         return this;
-    }
+    };
 
     /**
      * Change the timescale Options applied to the currently playing track
@@ -216,11 +211,11 @@ export class Filters {
      * @returns The current filter instance
      * 
      */
-    public setTimescale(timescale?: timescaleOptions): Filters {
-        this.timescale = timescale || null;
-        this.updateFilters();
+    public async setTimescale(timescale?: timescaleOptions): Promise<Filters> {
+        this.timescale = timescale || undefined;
+        await this.updateFilters();
         return this;
-    }
+    };
 
     /**
      * Change the tremolo Options applied to the currently playing track
@@ -228,11 +223,11 @@ export class Filters {
      * @param tremolo  An object that conforms to the TremoloOptions type that defines the tremolo to apply
      * @returns 
      */
-    public setTremolo(tremolo?: tremoloOptions): Filters {
-        this.tremolo = tremolo || null;
-        this.updateFilters();
+    public async setTremolo(tremolo?: tremoloOptions): Promise<Filters> {
+        this.tremolo = tremolo || undefined;
+        await this.updateFilters();
         return this;
-    }
+    };
 
     /**
      * Change the vibrato Options applied to the currently playing track
@@ -240,23 +235,24 @@ export class Filters {
      * @param vibrato An object that conforms to the VibratoOptions type that defines the vibrato to apply
      * @returns 
      */
-    public setVibrato(vibrato?: vibratoOptions): Filters {
-        this.vibrato = vibrato || null;
-        this.updateFilters();
+    public async setVibrato(vibrato?: vibratoOptions): Promise<Filters> {
+        this.vibrato = vibrato || undefined;
+        await this.updateFilters();
         return this;
-    }
+    };
+
     /**
      * Change the rotation Options applied to the currently playing track
      * 
      * @param rotation An object that conforms to the RotationOptions type that defines the rotation to apply
      * @returns 
      */
-    public setRotation(rotation?: rotationOptions): Filters {
-        this.rotation = rotation || null;
-        this.updateFilters();
+    public async setRotation(rotation?: rotationOptions): Promise<Filters> {
+        this.rotation = rotation || undefined;
+        await this.updateFilters();
 
         return this;
-    }
+    };
 
     /**
      * Change the distortion Options applied to the currently playing track
@@ -264,12 +260,12 @@ export class Filters {
      * @param distortion An object that conforms to the DistortionOptions type that defines the distortion to apply
      * @returns 
      */
-    public setDistortion(distortion: distortionOptions): Filters {
-        this.distortion = distortion || null;
-        this.updateFilters();
+    public async setDistortion(distortion: distortionOptions): Promise<Filters> {
+        this.distortion = distortion || undefined;
+        await this.updateFilters();
 
         return this;
-    }
+    };
 
     /**
      * Change the channel mix Options applied to the currently playing track
@@ -277,12 +273,12 @@ export class Filters {
      * @param mix An object that conforms to the ChannelMixOptions type that defines the channel mix to apply
      * @returns 
      */
-    public setChannelMix(mix: channelMixOptions): Filters {
-        this.channelMix = mix || null;
-        this.updateFilters();
+    public async setChannelMix(mix: channelMixOptions): Promise<Filters> {
+        this.channelMix = mix || undefined;
+        await this.updateFilters();
 
         return this;
-    }
+    };
 
     /**
      * Change the low pass Options applied to the currently playing track
@@ -290,51 +286,52 @@ export class Filters {
      * @param pass An object that conforms to the LowPassOptions type that defines the low pass to apply
      * @returns 
      */
-    public setLowPass(pass: lowPassOptions): Filters {
-        this.lowPass = pass || null;
-        this.updateFilters();
+    public async setLowPass(pass: lowPassOptions): Promise<Filters> {
+        this.lowPass = pass || undefined;
+        await this.updateFilters();
 
         return this;
-    }
+    };
+
     /**
      * Change the filters of the currently playing track
      * 
      * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
      * @returns 
      */
-    public setFilters(options: Filters | FiltersOptions) {
+    public async setFilters(options: Filters | FiltersOptions): Promise<Filters> {
         this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this, options) : new Filters(this.player, options);
-        this.updateFilters();
+        await this.updateFilters();
 
         return this;
-    }
+    };
 
     /**
-     * 
+     * Clears all of the filters to their default values
      * @returns The current filters applied to the currently playing track
      */
-    public clearFilters(): Filters {
+    public async clearFilters(): Promise<Filters> {
         this.player.filters = this.player.poru.options.customFilter ? new this.player.poru.options.customFilter(this.player) : new Filters(this.player);
-        this.updateFilters()
+        await this.updateFilters()
         return this;
-    }
+    };
 
     /**
-     * 
+     * Updates all the filters applied to the currently playing track
      * @returns the updated filters applied to the currently playing track
      */
-    public updateFilters(): Filters {
-
+    public async updateFilters(): Promise<Filters> {
         const { equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass, volume } = this;
 
-        this.player.node.rest.updatePlayer({
+        await this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
             data: {
                 filters: {
                     volume, equalizer, karaoke, timescale, tremolo, vibrato, rotation, distortion, channelMix, lowPass,
                 }
             }
-        })
+        });
+
         return this;
-    }
-}
+    };
+};

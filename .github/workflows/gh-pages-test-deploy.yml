@@ -18,6 +18,12 @@ on:
     # Review gh actions docs if you want to further define triggers, paths, etc
     # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#on
 
+permissions: 
+  contents: write
+  pages: write
+  deployments: write
+  pull-requests: write
+
 jobs:
   test-deploy:
     # setting the working directory as that's where the docs/website exists.

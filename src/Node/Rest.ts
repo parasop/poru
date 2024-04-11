@@ -5,6 +5,8 @@ import { Track, trackData } from "../guild/Track";
 import { FiltersOptions } from '../Player/Filters';
 import { IVoiceServer } from "../Player/Connection";
 
+export type PartialNull<T> = { [P in keyof T]: T[P] | null };
+
 export interface playOptions {
     guildId: string;
     data: {
@@ -14,9 +16,9 @@ export interface playOptions {
         endTime?: number;
         volume?: number;
         position?: number;
-        paused?: Boolean;
-        filters?: Object;
-        voice?: any;
+        paused?: boolean;
+        filters?: Partial<FiltersOptions>;
+        voice?: IVoiceServer | PartialNull<IVoiceServer> | null;
     };
 };
 
@@ -49,7 +51,7 @@ export enum RequestMethod {
 }
 
 export class Rest {
-    private sessionId: string;
+    private sessionId: string | null;
     private password: string;
     public url: string;
     public poru: Poru;
@@ -65,11 +67,20 @@ export class Rest {
         this.sessionId = sessionId;
     }
 
-    public async getAllPlayers(): Promise<PlayerObjectFromAPI | ErrorResponses> {
+    /**
+     * Gets all players in this specific session
+     * @returns Returns a list of players in this specific session.
+     */
+    public async getAllPlayers(): Promise<PlayerObjectFromAPI[] | ErrorResponses | null> {
         return await this.get(`/v4/sessions/${this.sessionId}/players`); // This will never be a string!
     }
 
-    public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses> {
+    /**
+     * Updates a specific player in this session in the specified guild
+     * @param options 
+     * @returns A player object from the API
+     */
+    public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses | null> {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
 
@@ -77,7 +88,7 @@ export class Rest {
         return await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);
     }
 
-    public async get<T = unknown>(path: RouteLike) {
+    public async get<T = unknown>(path: RouteLike): Promise<T | null> {
         try {
             const req = await fetch(this.url + path, {
                 method: RequestMethod.Get,
@@ -93,7 +104,7 @@ export class Rest {
         }
     }
 
-    public async patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T> {
+    public async patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
@@ -110,7 +121,7 @@ export class Rest {
         }
     }
 
-    public async post<T = unknown>(endpoint: RouteLike, body: any): Promise<T> {
+    public async post<T = unknown>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
@@ -127,7 +138,7 @@ export class Rest {
         }
     }
 
-    public async delete<T = unknown>(endpoint: RouteLike): Promise<T> {
+    public async delete<T = unknown>(endpoint: RouteLike): Promise<T | null> {
         try {
             let req = await fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
