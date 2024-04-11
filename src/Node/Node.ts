@@ -1,4 +1,4 @@
-import { Poru, PoruOptions, NodeGroup } from "../Poru";
+import { Poru, PoruOptions, NodeGroup, EventData } from "../Poru";
 import WebSocket from "ws";
 import { Config as config } from "../config";
 import { Rest } from "./Rest";
@@ -22,8 +22,45 @@ export interface NodeStats {
         sent: number;
         nulled: number;
         deficit: number;
+    } | null;
+};
+
+/**
+ * Dispatched when you successfully connect to the Lavalink node
+ */
+interface LavalinkReadyPacket {
+    op: "ready";
+    resumed: boolean;
+    sessionId: string;
+};
+
+/**
+ * Dispatched every x seconds with the latest player state
+ */
+interface LavalinkPlayerUpdatePacket {
+    op: "playerUpdate";
+    guildId: string;
+    state: {
+        time: number;
+        position: number;
+        connected: true;
+        ping: number;
     };
 };
+
+/**
+ * Dispatched when the node sends stats once per minute
+ */
+interface LavalinkNodeStatsPacket extends NodeStats {
+    op: "stats";
+};
+
+/**
+ * Dispatched when player or voice events occur
+ */
+type LavalinkEventPacket = { op: "event" } & EventData;
+
+type LavalinkPackets = LavalinkReadyPacket | LavalinkPlayerUpdatePacket | LavalinkNodeStatsPacket | LavalinkEventPacket
 
 /**
  * This interface represents the LavaLink V4 Error Responses
@@ -246,38 +283,36 @@ export class Node {
      */
     private setStats(packet: NodeStats): void {
         this.stats = packet;
-    }
+    };
 
     /**
      * This will send a message to the node
-     * @param {any} payload any 
-     * @returns {Promise<void>} void
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
      */
-    private async message(payload: any): Promise<void> {
-        const packet = JSON.parse(payload);
+    private async message(payload: string): Promise<void> {
+        const packet = JSON.parse(payload) as LavalinkPackets;
         if (!packet?.op) return;
 
         this.poru.emit("raw", "Node", packet)
         this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
         if (packet.op === "stats") {
-            delete packet.op;
             this.setStats(packet);
-        }
-        if (packet.op === "ready") {
+        } else if (packet.op === "ready") {
             this.rest.setSessionId(packet.sessionId);
             this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`)
+            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+
             if (this.resumeKey) {
                 await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
-                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`
-                );
-            }
-
-        }
-        const player = this.poru.players.get(packet.guildId);
-        if (packet.guildId && player) player.emit(packet.op, packet);
-    }
+                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+            };
+        } else {
+            const player = this.poru.players.get(packet.guildId);
+            if (packet.guildId && player) player.emit(packet.op, packet);
+        };
+    };
 
     /**
      * This will close the connection to the node
