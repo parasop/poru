@@ -283,6 +283,15 @@ export class Node {
     };
 
     /**
+     * This function will set the stats accordingly from the NodeStats
+     * @param {NodeStats} packet The NodeStats
+     * @returns {void} void 
+     */
+    private setStats(packet: NodeStats): void {
+        this.stats = packet;
+    }
+
+    /**
      * This will send a message to the node
      * @param {string} payload The sent payload we recieved in stringified form
      * @returns {Promise<void>} Return void

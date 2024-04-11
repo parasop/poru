@@ -434,7 +434,7 @@ export class Player extends EventEmitter {
       throw new Error("[Poru Error] No nodes are avaliable")
 
     const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name);
-
+    
     if (!node) {
       await this.destroy()
       return;
