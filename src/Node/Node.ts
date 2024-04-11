@@ -58,7 +58,7 @@ interface LavalinkNodeStatsPacket extends NodeStats {
 /**
  * Dispatched when player or voice events occur
  */
-type LavalinkEventPacket = { op: "event" } & EventData;
+type LavalinkEventPacket = { op: "event"; guildId: string; } & EventData;
 
 type LavalinkPackets = LavalinkReadyPacket | LavalinkPlayerUpdatePacket | LavalinkNodeStatsPacket | LavalinkEventPacket
 
@@ -297,20 +297,38 @@ export class Node {
         this.poru.emit("raw", "Node", packet)
         this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
-        if (packet.op === "stats") {
-            this.setStats(packet);
-        } else if (packet.op === "ready") {
-            this.rest.setSessionId(packet.sessionId);
-            this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+        switch (packet.op) {
+            case "ready": {
+                this.rest.setSessionId(packet.sessionId);
+                this.sessionId = packet.sessionId;
+                this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
 
-            if (this.resumeKey) {
-                await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout })
-                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                // If a resume key was set use it
+                if (this.resumeKey) {
+                    await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                    this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                };
+
+                break;
             };
-        } else {
-            const player = this.poru.players.get(packet.guildId);
-            if (packet.guildId && player) player.emit(packet.op, packet);
+
+            // If the packet has stats about the node in it update them on the Node's class
+            case "stats": {
+                this.setStats(packet);
+
+                break;
+            };
+
+            // If the packet is an event or playerUpdate emit the event to the player
+            case "event":
+            case "playerUpdate": {
+                const player = this.poru.players.get(packet.guildId);
+                if (packet.guildId && player) player.emit(packet.op, packet);
+
+                break;
+            };
+
+            default: break;
         };
     };
 
