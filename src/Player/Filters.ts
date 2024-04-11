@@ -275,7 +275,7 @@ export class Filters {
      */
     public async setChannelMix(mix: channelMixOptions): Promise<Filters> {
         this.channelMix = mix || undefined;
-        await await this.updateFilters();
+        await this.updateFilters();
 
         return this;
     };
