@@ -233,7 +233,7 @@ export class Node {
                 await player.autoMoveNode();
             };
         });
-        
+
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
@@ -283,15 +283,6 @@ export class Node {
     };
 
     /**
-     * This function will set the stats accordingly from the NodeStats
-     * @param {NodeStats} packet The NodeStats
-     * @returns {void} void 
-     */
-    private setStats(packet: NodeStats): void {
-        this.stats = packet;
-    };
-
-    /**
      * This will send a message to the node
      * @param {string} payload The sent payload we recieved in stringified form
      * @returns {Promise<void>} Return void
@@ -321,7 +312,7 @@ export class Node {
 
                 // If the packet has stats about the node in it update them on the Node's class
                 case "stats": {
-                    this.setStats(packet);
+                    this.stats = packet
 
                     break;
                 };
