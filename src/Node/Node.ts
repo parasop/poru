@@ -233,12 +233,13 @@ export class Node {
                 await player.autoMoveNode();
             };
         });
+        
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
         this.poru.nodes.delete(this.name);
         this.poru.emit("nodeDisconnect", this);
-    }
+    };
 
     /**
      * This function will get the penalties from the current node
@@ -246,17 +247,19 @@ export class Node {
      */
     public get penalties(): number {
         let penalties = 0;
+
         if (!this.isConnected || !this.stats) return penalties;
+
         penalties += this.stats.players;
-        penalties += Math.round(
-            Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10
-        );
+        penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
+
         if (this.stats.frameStats) {
             penalties += this.stats.frameStats.deficit;
             penalties += this.stats.frameStats.nulled * 2;
-        }
+        };
+
         return penalties;
-    }
+    };
 
     /**
      * This function will open up again the node
@@ -276,7 +279,7 @@ export class Node {
             if (this.autoResume) this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         } catch (error) {
             this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.name}.`, error)
-        }
+        };
     };
 
     /**
@@ -335,8 +338,8 @@ export class Node {
                 default: break;
             };
         } catch (err) {
-            this.poru.emit("debug", "[Web Socket] Error while parsing the payload.", err)
-        }
+            this.poru.emit("debug", "[Web Socket] Error while parsing the payload.", err);
+        };
     };
 
     /**
@@ -352,7 +355,7 @@ export class Node {
     
             if (event !== 1000) await this.reconnect();   
         } catch (error) {
-            this.poru.emit("debug", "[Web Socket] Error while closing the connection with the node.", error)
+            this.poru.emit("debug", "[Web Socket] Error while closing the connection with the node.", error);
         };
     };
 
@@ -383,5 +386,5 @@ export class Node {
      */
     public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
         return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
-    }
-}
+    };
+};
