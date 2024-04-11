@@ -29,7 +29,6 @@ interface trackInfoWithUndefinedObjects extends Omit<trackInfo, "uri" | "artwork
 
 type trackInfoExtended = (trackInfo | trackInfoWithUndefinedObjects) & { requester: any; };
 
-
 export class Track {
     public track: string;
     public info: trackInfoExtended;
