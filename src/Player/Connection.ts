@@ -1,3 +1,4 @@
+import { PartialNull } from "../Node/Rest";
 import { Player } from "./Player";
 
 export interface IVoiceServer {
@@ -50,7 +51,7 @@ export class Connection {
     public player: Player;
     public sessionId: string | null;
     public region: string | null;
-    public voice: IVoiceServer | null;
+    public voice: IVoiceServer | PartialNull<IVoiceServer>;
     public self_mute: boolean;
     public self_deaf: boolean;
 
@@ -75,19 +76,18 @@ export class Connection {
      * Set the voice server update
      * @param data The data from the voice server update
      */
-    public setServersUpdate(data: IVoiceServer) {
-        if (!data.endpoint) throw new Error("NO Session id found");
+    public async setServersUpdate(data: IVoiceServer): Promise<void> {
+        if (!data.endpoint) throw new Error("[Poru Error] No Session id found.");
 
         this.voice.endpoint = data.endpoint;
         this.voice.token = data.token;
+        this.region = data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
 
-        this.region =
-            data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
-
-        this.player.node.rest.updatePlayer({
+        await this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
+
         this.player.poru.emit(
             "debug",
             this.player.node.name,
@@ -112,5 +112,5 @@ export class Connection {
         this.self_deaf = self_deaf;
         this.self_mute = self_mute;
         this.voice.sessionId = session_id || null;
-    }
-}
+    };
+};

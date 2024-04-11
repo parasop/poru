@@ -3,9 +3,14 @@ import { Track, trackData } from "./Track"
 export type LoadType = "track" | "playlist" | "search" | "empty" | "error"
 
 interface PlaylistInfo {
+  type: "playlist",
   name: string
   selectedTrack: number
-}
+};
+
+interface NoPlaylistInfo {
+  type: "noPlaylist",
+};
 
 
 export interface LoadTrackResponseTrack {
@@ -68,22 +73,38 @@ export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch
 export class Response {
   public tracks: Track[]
   public loadType: LoadType
-  public playlistInfo: PlaylistInfo
+  public playlistInfo: PlaylistInfo | NoPlaylistInfo;
+
   constructor(response: LoadTrackResponse, requester: any) {
     switch (response.loadType) {
       case "playlist": {
-        this.tracks = response.data.tracks.map((track) => new Track(track, requester))
-        this.playlistInfo = response.data.info
-        break
+        this.tracks = this.handleTracks(response.data.tracks, requester)
+        this.playlistInfo = {
+          ...response.data.info,
+          type: "playlist"
+        };
+
+        break;
       }
 
       case "search":
       case "track": {
         this.tracks = this.handleTracks(response.data, requester)
-        break
-      }
+        this.playlistInfo = {
+          type: "noPlaylist"
+        };
 
-      default: break
+        break;
+      };
+
+      default: {
+        this.tracks = [];
+        this.playlistInfo = {
+          type: "noPlaylist"
+        };
+
+        break;
+      }
     };
     this.loadType = response.loadType
   };

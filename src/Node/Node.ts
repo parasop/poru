@@ -60,8 +60,7 @@ export interface ErrorResponses {
      * The path of the request
      */
     path: string;
-
-}
+};
 
 export class Node {
     public isConnected: boolean;
@@ -71,8 +70,8 @@ export class Node {
     public readonly socketURL: string;
     public password: string;
     public readonly secure: boolean;
-    public readonly regions: Array<string>;
-    public sessionId: string;
+    public readonly regions: Array<string> | null;
+    public sessionId: string | null;
     public rest: Rest;
     public ws: WebSocket | null;
     public readonly resumeKey: string | null;
@@ -95,10 +94,10 @@ export class Node {
         this.poru = poru;
         this.name = node.name;
         this.options = node;
+        this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
         this.password = node.password || "youshallnotpass";
-        this.secure = node.secure || false;
         this.regions = node.region || null;
         this.sessionId = null;
         this.rest = new Rest(poru, this);
@@ -125,13 +124,17 @@ export class Node {
             if (this.ws) this.ws.close();
             if (!this.poru.nodes.get(this.name)) {
                 this.poru.nodes.set(this.name, this)
-            }
-            const headers = {
+            };
+            if (!this.poru.userId) throw new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library.")
+
+            const headers: { [key: string]: string } = {
                 Authorization: this.password,
                 "User-Id": this.poru.userId,
                 "Client-Name": this.clientName,
             };
+
             if (this.resumeKey) headers["Resume-Key"] = this.resumeKey;
+
             this.ws = new WebSocket(`${this.socketURL}`, { headers });
             this.ws.on("open", this.open.bind(this));
             this.ws.on("error", this.error.bind(this));
@@ -147,6 +150,7 @@ export class Node {
      * @returns {void}
      */
     public send(payload: any): void {
+        if (!this.isConnected || !this.ws) throw new Error("[Poru Error] The node is not connected");
         const data = JSON.stringify(payload);
         this.ws.send(data, (error: any) => {
             if (error) return error;
@@ -187,10 +191,9 @@ export class Node {
                 await player.autoMoveNode();
             };
         });
-        this.ws.close(1000, "destroy");
+        this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        //    this.reconnect = 1;
         this.poru.nodes.delete(this.name);
         this.poru.emit("nodeDisconnect", this);
     }
@@ -199,9 +202,9 @@ export class Node {
      * This function will get the penalties from the current node
      * @returns {number} The amount of penalties
      */
-    get penalties(): number {
+    public get penalties(): number {
         let penalties = 0;
-        if (!this.isConnected) return penalties;
+        if (!this.isConnected || !this.stats) return penalties;
         penalties += this.stats.players;
         penalties += Math.round(
             Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10
@@ -220,8 +223,8 @@ export class Node {
     private async open(): Promise<void> {
         if (this.reconnectAttempt) {
             clearTimeout(this.reconnectAttempt);
-            delete this.reconnectAttempt;
-        }
+            this.reconnectAttempt = null;
+        };
 
         this.poru.emit("nodeConnect", this);
         this.isConnected = true;
