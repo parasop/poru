@@ -21,13 +21,13 @@ export interface trackInfo {
     sourceName: string;
 };
 
-interface trackInfoWihtUndefinedObjects extends Omit<trackInfo, "uri" | "artworkUrl" | "isrc"> {
+interface trackInfoWithUndefinedObjects extends Omit<trackInfo, "uri" | "artworkUrl" | "isrc"> {
     uri: string | null | undefined;
     artworkUrl: string | null | undefined;
     isrc: string | null | undefined;
 };
 
-type trackInfoExtended = (trackInfo | trackInfoWihtUndefinedObjects) & { requester: any; };
+type trackInfoExtended = (trackInfo | trackInfoWithUndefinedObjects) & { requester: any; };
 
 
 export class Track {
