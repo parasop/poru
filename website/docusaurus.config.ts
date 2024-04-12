@@ -14,7 +14,9 @@ const config: Config = {
   // For GitHub pages deployment, it is often '/<projectName>/'
   // Check if it's running inside github actions environment or locally
   baseUrl: process.env.previewBaseURL ? process.env.previewBaseURL : ((!process.env.GITHUB_ACTIONS || !process.env.CI) ? '/' : '/poru'),
-
+  // Attempt to fix https://github.com/milesj/docusaurus-plugin-typedoc-api/issues/140
+  githubHost: "github.com"
+  
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'parasop', // Usually your GitHub org/user name.
