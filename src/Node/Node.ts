@@ -1,7 +1,7 @@
 import { Poru, PoruOptions, NodeGroup, EventData } from "../Poru";
 import WebSocket from "ws";
 import { Config as config } from "../config";
-import { Rest } from "./Rest";
+import { PartialNull, Rest } from "./Rest";
 
 export interface NodeStats {
     players: number;
@@ -321,7 +321,9 @@ export class Node {
 
                 // If the packet has stats about the node in it update them on the Node's class
                 case "stats": {
-                    this.stats = packet
+                    delete (packet as NodeStats & { op: string | undefined}).op;
+
+                    this.stats = packet;
 
                     break;
                 };
