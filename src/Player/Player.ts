@@ -421,8 +421,8 @@ export class Player extends EventEmitter {
       return await this.restart()
     } catch (e) {
       await this.destroy()
-      throw e
-    }
+      throw e;
+    };
   };
 
   /**
@@ -433,10 +433,11 @@ export class Player extends EventEmitter {
     if (this.poru.leastUsedNodes.length === 0)
       throw new Error("[Poru Error] No nodes are avaliable")
 
-    const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name)
+    const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name);
+    
     if (!node) {
       await this.destroy()
-      return
+      return;
     };
 
     return await this.moveNode(node.name)
