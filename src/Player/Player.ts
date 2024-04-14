@@ -434,7 +434,7 @@ export class Player extends EventEmitter {
       throw new Error("[Poru Error] No nodes are avaliable")
 
     const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name);
-    
+
     if (!node) {
       await this.destroy()
       return;
@@ -550,7 +550,7 @@ export class Player extends EventEmitter {
    * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
    */
   public async resolve({ query, source, requester }: ResolveOptions): Promise<Response> {
-    const response = await this.node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
+    const response = await this.node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
     return new Response(response, requester);
   };
 
