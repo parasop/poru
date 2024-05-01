@@ -1,8 +1,9 @@
 import { Poru, PoruOptions, NodeGroup, EventData } from "../Poru";
 import WebSocket from "ws";
 import { Config as config } from "../config";
-import { PartialNull, Rest } from "./Rest";
+import { Rest } from "./Rest";
 import { IncomingMessage } from "http";
+import { LavaLinkLoadTypes } from "../guild/Response";
 
 export interface NodeStats {
     players: number;
@@ -24,6 +25,22 @@ export interface NodeStats {
         nulled: number;
         deficit: number;
     } | null;
+};
+
+export type NodeLinkV2LoadTypes = "shorts" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
+  
+export interface NodelinkGetLyricsInterface {
+    loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes;
+    data: {
+          name: string;
+          synced: boolean;
+          data: {
+            startTime: number;
+            endTime: number;
+            text: string;
+          }[];
+          rtl: boolean;
+    } | Record<string, never>;
 };
 
 /**
@@ -273,7 +290,7 @@ export class Node {
     public async getRoutePlannerStatus(): Promise<null | ErrorResponses> {
         if (this.isNodeLink) return {
             timestamp: Date.now(),
-            status: 400,
+            status: 404,
             error: "Not found.",
             message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
             path: "/v4/routeplanner/status"
@@ -290,7 +307,7 @@ export class Node {
     public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
         if (this.isNodeLink) return {
             timestamp: Date.now(),
-            status: 400,
+            status: 404,
             error: "Not found.",
             message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
             path: "/v4/routeplanner/free/address"
