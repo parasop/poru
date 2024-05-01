@@ -12,6 +12,7 @@ const Rest_1 = require("./Rest");
 ;
 ;
 ;
+;
 class Node {
     isConnected;
     poru;
@@ -34,6 +35,7 @@ class Node {
     stats;
     options;
     clientName;
+    isNodeLink;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -62,6 +64,7 @@ class Node {
         this.isConnected = false;
         this.stats = null;
         this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
+        this.isNodeLink = false;
     }
     ;
     /**
@@ -92,6 +95,7 @@ class Node {
             this.ws.on("error", this.error.bind(this));
             this.ws.on("message", this.message.bind(this));
             this.ws.on("close", this.close.bind(this));
+            this.ws.on("upgrade", (request) => this.upgrade(request));
             resolve(true);
         });
     }
@@ -171,6 +175,48 @@ class Node {
     }
     ;
     /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
+    async getRoutePlannerStatus() {
+        if (this.isNodeLink)
+            return {
+                timestamp: Date.now(),
+                status: 404,
+                error: "Not found.",
+                message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+                path: "/v4/routeplanner/status"
+            };
+        return await this.rest.get(`/v4/routeplanner/status`);
+    }
+    ;
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
+    async unmarkFailedAddress(address) {
+        if (this.isNodeLink)
+            return {
+                timestamp: Date.now(),
+                status: 404,
+                error: "Not found.",
+                message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+                path: "/v4/routeplanner/free/address"
+            };
+        return this.rest.post(`/v4/routeplanner/free/address`, { address });
+    }
+    ;
+    /**
+     * This function will get the upgrade event from the ws connection
+     * @param {IncomingMessage} request The request from the upgraded WS connection
+     */
+    upgrade(request) {
+        // Checking if this node is a NodeLink or not
+        this.isNodeLink = Boolean(request.headers.isnodelink) ?? false;
+    }
+    ;
+    /**
      * This function will open up again the node
      * @returns {Promise<void>} The Promise<void>
      */
@@ -193,14 +239,6 @@ class Node {
         ;
     }
     ;
-    /**
-     * This function will set the stats accordingly from the NodeStats
-     * @param {NodeStats} packet The NodeStats
-     * @returns {void} void
-     */
-    setStats(packet) {
-        this.stats = packet;
-    }
     /**
      * This will send a message to the node
      * @param {string} payload The sent payload we recieved in stringified form
@@ -285,22 +323,6 @@ class Node {
             return;
         this.poru.emit("nodeError", this, event);
         this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
-    }
-    ;
-    /**
-     * This function will get the RoutePlanner status
-     * @returns {Promise<null>}
-     */
-    async getRoutePlannerStatus() {
-        return await this.rest.get(`/v4/routeplanner/status`);
-    }
-    /**
-     * This function will Unmark a failed address
-     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
-     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
-     */
-    async unmarkFailedAddress(address) {
-        return this.rest.post(`/v4/routeplanner/free/address`, { address });
     }
     ;
 }

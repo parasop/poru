@@ -188,6 +188,19 @@ class Player extends events_1.EventEmitter {
         this.isPlaying = false;
         return this;
     }
+    ;
+    async getLyrics(encodedTrack, language = "en") {
+        let node = this.node;
+        if (!this.node.isNodeLink)
+            node = Array.from(this.poru.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
+        if (!node || !node.isNodeLink)
+            throw new Error("[Poru Exception] No NodeLink node found in the Poru instance.");
+        if (!encodedTrack && !this.currentTrack)
+            throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+        encodedTrack = this.currentTrack?.track;
+        return await this.node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`);
+    }
+    ;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
