@@ -18,9 +18,14 @@ export interface trackInfo {
     isrc: string | null;
     sourceName: string;
 }
-interface trackInfoExtended extends trackInfo {
-    requester: any;
+interface trackInfoWithUndefinedObjects extends Omit<trackInfo, "uri" | "artworkUrl" | "isrc"> {
+    uri: string | null | undefined;
+    artworkUrl: string | null | undefined;
+    isrc: string | null | undefined;
 }
+type trackInfoExtended = (trackInfo | trackInfoWithUndefinedObjects) & {
+    requester: any;
+};
 export declare class Track {
     track: string;
     info: trackInfoExtended;
@@ -30,8 +35,8 @@ export declare class Track {
     /**
      * This function will resolve the track and return the track as resolved
      * @param {Poru} poru The poru instance
-     * @returns {Promise<Track>} The resolved track
+     * @returns {Promise<Track | null>} The resolved track
      */
-    resolve(poru: Poru): Promise<Track>;
+    resolve(poru: Poru): Promise<Track | null>;
 }
 export {};

@@ -1,8 +1,12 @@
 import { Track, trackData } from "./Track";
 export type LoadType = "track" | "playlist" | "search" | "empty" | "error";
 interface PlaylistInfo {
+    type: "playlist";
     name: string;
     selectedTrack: number;
+}
+interface NoPlaylistInfo {
+    type: "noPlaylist";
 }
 export interface LoadTrackResponseTrack {
     loadType: "track";
@@ -55,7 +59,7 @@ export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch
 export declare class Response {
     tracks: Track[];
     loadType: LoadType;
-    playlistInfo: PlaylistInfo;
+    playlistInfo: PlaylistInfo | NoPlaylistInfo;
     constructor(response: LoadTrackResponse, requester: any);
     private handleTracks;
 }

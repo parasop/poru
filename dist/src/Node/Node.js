@@ -8,6 +8,10 @@ const ws_1 = __importDefault(require("ws"));
 const config_1 = require("../config");
 const Rest_1 = require("./Rest");
 ;
+;
+;
+;
+;
 class Node {
     isConnected;
     poru;
@@ -40,10 +44,10 @@ class Node {
         this.poru = poru;
         this.name = node.name;
         this.options = node;
+        this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
         this.password = node.password || "youshallnotpass";
-        this.secure = node.secure || false;
         this.regions = node.region || null;
         this.sessionId = null;
         this.rest = new Rest_1.Rest(poru, this);
@@ -73,6 +77,9 @@ class Node {
             if (!this.poru.nodes.get(this.name)) {
                 this.poru.nodes.set(this.name, this);
             }
+            ;
+            if (!this.poru.userId)
+                throw new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library.");
             const headers = {
                 Authorization: this.password,
                 "User-Id": this.poru.userId,
@@ -95,6 +102,8 @@ class Node {
      * @returns {void}
      */
     send(payload) {
+        if (!this.isConnected || !this.ws)
+            throw new Error("[Poru Error] The node is not connected");
         const data = JSON.stringify(payload);
         this.ws.send(data, (error) => {
             if (error)
@@ -107,19 +116,22 @@ class Node {
      * @param payload any
      * @returns {void}
      */
-    reconnect() {
-        this.reconnectAttempt = setTimeout(() => {
+    async reconnect() {
+        this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
                 throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`);
             }
+            // Delete the ws instance
             this.isConnected = false;
             this.ws?.removeAllListeners();
             this.ws = null;
+            // Try to reconnect
             this.poru.emit("nodeReconnect", this);
-            this.connect();
+            await this.connect();
             this.attempt++;
         }, this.reconnectTimeout);
     }
+    ;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
@@ -133,20 +145,20 @@ class Node {
             }
             ;
         });
-        this.ws.close(1000, "destroy");
+        this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        //    this.reconnect = 1;
         this.poru.nodes.delete(this.name);
         this.poru.emit("nodeDisconnect", this);
     }
+    ;
     /**
      * This function will get the penalties from the current node
      * @returns {number} The amount of penalties
      */
     get penalties() {
         let penalties = 0;
-        if (!this.isConnected)
+        if (!this.isConnected || !this.stats)
             return penalties;
         penalties += this.stats.players;
         penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
@@ -154,28 +166,33 @@ class Node {
             penalties += this.stats.frameStats.deficit;
             penalties += this.stats.frameStats.nulled * 2;
         }
+        ;
         return penalties;
     }
+    ;
     /**
      * This function will open up again the node
      * @returns {Promise<void>} The Promise<void>
      */
     async open() {
-        if (this.reconnectAttempt) {
-            clearTimeout(this.reconnectAttempt);
-            delete this.reconnectAttempt;
-        }
-        this.poru.emit("nodeConnect", this);
-        this.isConnected = true;
-        this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
-        if (this.autoResume) {
-            for (const player of this.poru.players.values()) {
-                if (player.node === this) {
-                    await player.restart();
-                }
+        try {
+            if (this.reconnectAttempt) {
+                clearTimeout(this.reconnectAttempt);
+                this.reconnectAttempt = null;
             }
+            ;
+            this.poru.emit("nodeConnect", this);
+            this.isConnected = true;
+            this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
+            if (this.autoResume)
+                this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         }
+        catch (error) {
+            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.name}.`, error);
+        }
+        ;
     }
+    ;
     /**
      * This function will set the stats accordingly from the NodeStats
      * @param {NodeStats} packet The NodeStats
@@ -186,44 +203,78 @@ class Node {
     }
     /**
      * This will send a message to the node
-     * @param {any} payload any
-     * @returns {Promise<void>} void
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
      */
     async message(payload) {
-        const packet = JSON.parse(payload);
-        if (!packet?.op)
-            return;
-        this.poru.emit("raw", "Node", packet);
-        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
-        if (packet.op === "stats") {
-            delete packet.op;
-            this.setStats(packet);
-        }
-        if (packet.op === "ready") {
-            this.rest.setSessionId(packet.sessionId);
-            this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
-            if (this.resumeKey) {
-                await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+        try {
+            const packet = JSON.parse(payload);
+            if (!packet?.op)
+                return;
+            this.poru.emit("raw", "Node", packet);
+            this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+            switch (packet.op) {
+                case "ready":
+                    {
+                        this.rest.setSessionId(packet.sessionId);
+                        this.sessionId = packet.sessionId;
+                        this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+                        // If a resume key was set use it
+                        if (this.resumeKey) {
+                            await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                            this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                        }
+                        ;
+                        break;
+                    }
+                    ;
+                // If the packet has stats about the node in it update them on the Node's class
+                case "stats":
+                    {
+                        delete packet.op;
+                        this.stats = packet;
+                        break;
+                    }
+                    ;
+                // If the packet is an event or playerUpdate emit the event to the player
+                case "event":
+                case "playerUpdate":
+                    {
+                        const player = this.poru.players.get(packet.guildId);
+                        if (packet.guildId && player)
+                            player.emit(packet.op, packet);
+                        break;
+                    }
+                    ;
+                default: break;
             }
+            ;
         }
-        const player = this.poru.players.get(packet.guildId);
-        if (packet.guildId && player)
-            player.emit(packet.op, packet);
+        catch (err) {
+            this.poru.emit("debug", "[Web Socket] Error while parsing the payload.", err);
+        }
+        ;
     }
+    ;
     /**
      * This will close the connection to the node
      * @param {any} event any
      * @returns {void} void
      */
-    close(event) {
-        this.disconnect();
-        this.poru.emit("nodeDisconnect", this, event);
-        this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"}`);
-        if (event !== 1000)
-            this.reconnect();
+    async close(event) {
+        try {
+            await this.disconnect();
+            this.poru.emit("nodeDisconnect", this, event);
+            this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
+            if (event !== 1000)
+                await this.reconnect();
+        }
+        catch (error) {
+            this.poru.emit("debug", "[Web Socket] Error while closing the connection with the node.", error);
+        }
+        ;
     }
+    ;
     /**
      * This function will emit the error so that the user's listeners can get them and listen to them
      * @param {any} event any
@@ -235,6 +286,7 @@ class Node {
         this.poru.emit("nodeError", this, event);
         this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
     }
+    ;
     /**
      * This function will get the RoutePlanner status
      * @returns {Promise<null>}
@@ -250,6 +302,8 @@ class Node {
     async unmarkFailedAddress(address) {
         return this.rest.post(`/v4/routeplanner/free/address`, { address });
     }
+    ;
 }
 exports.Node = Node;
+;
 //# sourceMappingURL=Node.js.map

@@ -1,3 +1,4 @@
+import { PartialNull } from "../Node/Rest";
 import { Player } from "./Player";
 export interface IVoiceServer {
     token: string;
@@ -45,7 +46,7 @@ export declare class Connection {
     player: Player;
     sessionId: string | null;
     region: string | null;
-    voice: IVoiceServer | null;
+    voice: IVoiceServer | PartialNull<IVoiceServer>;
     self_mute: boolean;
     self_deaf: boolean;
     /**
@@ -57,7 +58,7 @@ export declare class Connection {
      * Set the voice server update
      * @param data The data from the voice server update
      */
-    setServersUpdate(data: IVoiceServer): void;
+    setServersUpdate(data: IVoiceServer): Promise<void>;
     /**
      * Set the state update
      * @param data The data from the state update

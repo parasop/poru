@@ -31,9 +31,9 @@ export declare class Player extends EventEmitter {
     /** The text channel ID associated with the player. */
     textChannel: string;
     /** The currently playing track */
-    currentTrack: Track;
+    currentTrack: Track | null;
     /** The previously played track */
-    previousTrack: Track;
+    previousTrack: Track | null;
     /** Indicates whether the player is currently playing a track. */
     isPlaying: boolean;
     /** Indicates whether the player is connected to a voice channel. */
@@ -51,7 +51,7 @@ export declare class Player extends EventEmitter {
     /** The current delay estimate of the player (in milliseconds) */
     ping: number;
     /** The timestamp of the player's state */
-    timestamp: number;
+    timestamp: number | null;
     /** Indicates whether the player is set to be muted. */
     mute: boolean;
     /** Indicated whether the player is set to be deafened */
@@ -134,10 +134,10 @@ export declare class Player extends EventEmitter {
      * Disconnects the player from the voice channel.
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
-    disconnect(): Promise<Player>;
+    protected disconnect(): Promise<Player>;
     /**
      * Destroys the player and cleans up associated resources.
-     * @returns {Promise<boolean>} - A Promise that resolves to a boolean indicating the success of destruction.
+     * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     destroy(): Promise<boolean>;
     /**

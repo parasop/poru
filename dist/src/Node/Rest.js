@@ -27,9 +27,18 @@ class Rest {
     setSessionId(sessionId) {
         this.sessionId = sessionId;
     }
+    /**
+     * Gets all players in this specific session
+     * @returns Returns a list of players in this specific session.
+     */
     async getAllPlayers() {
         return await this.get(`/v4/sessions/${this.sessionId}/players`); // This will never be a string!
     }
+    /**
+     * Updates a specific player in this session in the specified guild
+     * @param options
+     * @returns A player object from the API
+     */
     async updatePlayer(options) {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
