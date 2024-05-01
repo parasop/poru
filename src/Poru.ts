@@ -1,4 +1,4 @@
-import { Node, NodeStats } from "./Node/Node";
+import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
 import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
@@ -571,6 +571,17 @@ export class Poru extends EventEmitter {
         return await node.rest.get<NodeStatsResponse>(`/v4/stats`) as NodeStatsResponse;
     };
   
+    public async getLyrics(encodedTrack: string | null, language: string = "en"): Promise<NodelinkGetLyricsInterface | null> {
+        const node = (Array.from(this.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
+
+        if (!node) return null;
+        // Just to be extra sure
+        if (!node.isNodeLink) throw new Error("[Poru Exception] The node must be a Nodelink node.");
+        if (!encodedTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+
+        return await node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`);
+    };
+
     /**
      * Retrieves the Lavalink version for a node.
      * @param {string} name - The name of the node.
