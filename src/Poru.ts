@@ -349,7 +349,7 @@ export class Poru extends EventEmitter {
                 break;
             }
             case "other": {
-                if (!this.send)
+                if (!this.send || !this.options.send)
                     throw new Error("Send function is required in Poru Options");
 
                 this.send = this.options.send ?? null;
