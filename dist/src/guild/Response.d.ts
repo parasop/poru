@@ -1,11 +1,12 @@
 import { Track, trackData } from "./Track";
-export type LoadType = "track" | "playlist" | "search" | "empty" | "error";
-interface PlaylistInfo {
+export type LavaLinkLoadTypes = "track" | "playlist" | "search" | "empty" | "error";
+export type Severity = "common" | "suspicious" | "fault";
+export interface PlaylistInfo {
     type: "playlist";
     name: string;
     selectedTrack: number;
 }
-interface NoPlaylistInfo {
+export interface NoPlaylistInfo {
     type: "noPlaylist";
 }
 export interface LoadTrackResponseTrack {
@@ -20,7 +21,6 @@ export interface LoadTrackResponseEmpty {
     loadType: "empty";
     data: {};
 }
-export type Severity = "common" | "suspicious" | "fault";
 export interface LoadTrackResponseError {
     loadType: "error";
     data: {
@@ -58,9 +58,9 @@ export interface LoadTrackResponsePlaylist {
 export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch | LoadTrackResponseEmpty | LoadTrackResponseError | LoadTrackResponsePlaylist;
 export declare class Response {
     tracks: Track[];
-    loadType: LoadType;
+    loadType: LavaLinkLoadTypes;
     playlistInfo: PlaylistInfo | NoPlaylistInfo;
     constructor(response: LoadTrackResponse, requester: any);
     private handleTracks;
+    private convertNodelinkResponseToLavalink;
 }
-export {};

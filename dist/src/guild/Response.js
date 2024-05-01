@@ -14,11 +14,13 @@ class Response {
     loadType;
     playlistInfo;
     constructor(response, requester) {
-        switch (response.loadType) {
+        response.loadType = this.convertNodelinkResponseToLavalink(response.loadType);
+        const { loadType, data } = response;
+        switch (loadType) {
             case "playlist": {
-                this.tracks = this.handleTracks(response.data.tracks, requester);
+                this.tracks = this.handleTracks(data.tracks, requester);
                 this.playlistInfo = {
-                    ...response.data.info,
+                    ...data.info,
                     type: "playlist"
                 };
                 break;
@@ -26,7 +28,7 @@ class Response {
             case "search":
             case "track":
                 {
-                    this.tracks = this.handleTracks(response.data, requester);
+                    this.tracks = this.handleTracks(data, requester);
                     this.playlistInfo = {
                         type: "noPlaylist"
                     };
@@ -42,7 +44,7 @@ class Response {
             }
         }
         ;
-        this.loadType = response.loadType;
+        this.loadType = loadType;
     }
     ;
     handleTracks(data, requester) {
@@ -51,6 +53,20 @@ class Response {
         }
         else {
             return [new Track_1.Track(data, requester)];
+        }
+        ;
+    }
+    ;
+    convertNodelinkResponseToLavalink(loadType) {
+        switch (loadType) {
+            case "shorts": return "track";
+            case "artist":
+            case "episode":
+            case "station":
+            case "podcast":
+            case "show":
+            case "album": return "playlist";
+            default: return loadType;
         }
         ;
     }

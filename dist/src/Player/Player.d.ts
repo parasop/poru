@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
-import { Node } from "../Node/Node";
+import { Node, NodelinkGetLyricsInterface } from "../Node/Node";
 import { Track } from "../guild/Track";
 import { Connection } from "./Connection";
 import Queue from "../guild/Queue";
@@ -81,6 +81,7 @@ export declare class Player extends EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     skip(): Promise<Player>;
+    getLyrics(encodedTrack?: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null>;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.

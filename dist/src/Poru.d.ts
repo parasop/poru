@@ -1,5 +1,5 @@
 /// <reference types="node" />
-import { Node, NodeStats } from "./Node/Node";
+import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
 import { Player } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
@@ -335,6 +335,7 @@ export declare class Poru extends EventEmitter {
      * @returns {Promise<NodeStatsResponse>} The status of the node.
      */
     getLavalinkStatus(name: string): Promise<NodeStatsResponse>;
+    getLyrics(encodedTrack: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null>;
     /**
      * Retrieves the Lavalink version for a node.
      * @param {string} name - The name of the node.

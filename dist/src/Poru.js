@@ -94,7 +94,7 @@ class Poru extends events_1.EventEmitter {
                 break;
             }
             case "other": {
-                if (!this.send)
+                if (!this.send || !this.options.send)
                     throw new Error("Send function is required in Poru Options");
                 this.send = this.options.send ?? null;
                 break;
@@ -298,6 +298,18 @@ class Poru extends events_1.EventEmitter {
         if (!node)
             throw new Error("Node not found!");
         return await node.rest.get(`/v4/stats`);
+    }
+    ;
+    async getLyrics(encodedTrack, language = "en") {
+        const node = Array.from(this.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
+        if (!node)
+            return null;
+        // Just to be extra sure
+        if (!node.isNodeLink)
+            throw new Error("[Poru Exception] The node must be a Nodelink node.");
+        if (!encodedTrack)
+            throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+        return await node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`);
     }
     ;
     /**
