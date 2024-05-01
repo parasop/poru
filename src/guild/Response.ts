@@ -1,17 +1,18 @@
+import { NodeLinkV2LoadTypes } from "../Node/Node"
 import { Track, trackData } from "./Track"
 
-export type LoadType = "track" | "playlist" | "search" | "empty" | "error"
+export type LavaLinkLoadTypes = "track" | "playlist" | "search" | "empty" | "error"
+export type Severity = "common" | "suspicious" | "fault"
 
-interface PlaylistInfo {
+export interface PlaylistInfo {
   type: "playlist",
   name: string
   selectedTrack: number
 };
 
-interface NoPlaylistInfo {
+export interface NoPlaylistInfo {
   type: "noPlaylist",
 };
-
 
 export interface LoadTrackResponseTrack {
   loadType: "track",
@@ -27,8 +28,6 @@ export interface LoadTrackResponseEmpty {
   loadType: "empty",
   data: {}
 };
-
-export type Severity = "common" | "suspicious" | "fault"
 
 export interface LoadTrackResponseError {
   loadType: "error",
@@ -72,15 +71,19 @@ export type LoadTrackResponse = LoadTrackResponseTrack | LoadTrackResponseSearch
 
 export class Response {
   public tracks: Track[]
-  public loadType: LoadType
+  public loadType: LavaLinkLoadTypes
   public playlistInfo: PlaylistInfo | NoPlaylistInfo;
 
   constructor(response: LoadTrackResponse, requester: any) {
-    switch (response.loadType) {
+    response.loadType = this.convertNodelinkResponseToLavalink(response.loadType);
+
+    const { loadType, data } = response;
+
+    switch (loadType) {
       case "playlist": {
-        this.tracks = this.handleTracks(response.data.tracks, requester)
+        this.tracks = this.handleTracks(data.tracks, requester)
         this.playlistInfo = {
-          ...response.data.info,
+          ...data.info,
           type: "playlist"
         };
 
@@ -89,7 +92,7 @@ export class Response {
 
       case "search":
       case "track": {
-        this.tracks = this.handleTracks(response.data, requester)
+        this.tracks = this.handleTracks(data, requester)
         this.playlistInfo = {
           type: "noPlaylist"
         };
@@ -106,7 +109,8 @@ export class Response {
         break;
       }
     };
-    this.loadType = response.loadType
+    
+    this.loadType = loadType
   };
 
   private handleTracks(data: trackData | trackData[], requester: any) {
@@ -115,6 +119,21 @@ export class Response {
 
     } else {
       return [new Track(data, requester)]
+    };
+  };
+
+  private convertNodelinkResponseToLavalink(loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes): LavaLinkLoadTypes {
+    switch (loadType) {
+        case "shorts": return "track";
+
+        case "artist":
+        case "episode":
+        case "station":
+        case "podcast":
+        case "show":
+        case "album": return "playlist";
+
+        default: return loadType;
     };
   };
 }
