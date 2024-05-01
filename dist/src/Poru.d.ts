@@ -253,13 +253,13 @@ export declare class Poru extends EventEmitter {
     /**
      * Initializes Poru and adds nodes.
      */
-    init(): Promise<this>;
+    init(): Promise<this | undefined>;
     /**
      * Handles Voice State Update and Voice Server Update packets.
      * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    packetUpdate(packet: Packet): void;
+    packetUpdate(packet: Packet): Promise<void>;
     /**
      * Adds a node to the Poru instance.
      * @param {NodeGroup} options - Node group options.
@@ -271,7 +271,7 @@ export declare class Poru extends EventEmitter {
       * @param {string} identifier - The name of the node.
       * @returns {boolean} A boolean indicating if the node was successfully removed.
       */
-    removeNode(identifier: string): boolean;
+    removeNode(identifier: string): Promise<boolean>;
     /**
      * Retrieves nodes by region.
      * @param {string} region - Region of the node.
@@ -294,7 +294,7 @@ export declare class Poru extends EventEmitter {
     /**
      * Removes a player from the Poru instance.
      * @param {string} guildId - Guild ID.
-     * @returns {Promise<boolean>} A promise indicating if the player was successfully removed.
+     * @returns {Promise<boolean>} A promise indicating a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     removeConnection(guildId: string): Promise<boolean>;
     /**
@@ -315,7 +315,7 @@ export declare class Poru extends EventEmitter {
      * @param {Node} [node] - The node to decode on.
      * @returns {Promise<trackData>} The decoded track.
      */
-    decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData>;
+    decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData | null>;
     /**
      * Decodes multiple tracks.
      * @param {string[]} encodedTrackString - Array of encoded track strings.
@@ -346,6 +346,6 @@ export declare class Poru extends EventEmitter {
      * @param {string} guildId - Guild ID.
      * @returns {Player} The player instance for the specified guild.
      */
-    get(guildId: string): Player;
+    get(guildId: string): Player | null;
 }
 export {};

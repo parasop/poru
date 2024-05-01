@@ -38,14 +38,13 @@ class Connection {
      * Set the voice server update
      * @param data The data from the voice server update
      */
-    setServersUpdate(data) {
+    async setServersUpdate(data) {
         if (!data.endpoint)
-            throw new Error("NO Session id found");
+            throw new Error("[Poru Error] No Session id found.");
         this.voice.endpoint = data.endpoint;
         this.voice.token = data.token;
-        this.region =
-            data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
-        this.player.node.rest.updatePlayer({
+        this.region = data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
+        await this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
@@ -67,6 +66,8 @@ class Connection {
         this.self_mute = self_mute;
         this.voice.sessionId = session_id || null;
     }
+    ;
 }
 exports.Connection = Connection;
+;
 //# sourceMappingURL=Connection.js.map

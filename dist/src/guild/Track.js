@@ -2,6 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Track = void 0;
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+;
+;
 class Track {
     track;
     info;
@@ -12,17 +14,18 @@ class Track {
         this.pluginInfo = data.pluginInfo,
             this.userData = data.userData,
             this.info = {
-                isrc: data.info.isrc || null,
+                ...data.info,
                 uri: data.info.uri || null,
                 artworkUrl: data.info.artworkUrl || null,
-                ...data.info,
+                isrc: data.info.isrc || null,
                 requester
             };
     }
+    ;
     /**
      * This function will resolve the track and return the track as resolved
      * @param {Poru} poru The poru instance
-     * @returns {Promise<Track>} The resolved track
+     * @returns {Promise<Track | null>} The resolved track
      */
     async resolve(poru) {
         const query = [this.info.author, this.info.title]
@@ -30,7 +33,7 @@ class Track {
             .join(" - ");
         const result = await poru.resolve({ query, source: poru.options.defaultPlatform || "ytsearch", requester: this.info.requester });
         if (!result || !result.tracks.length)
-            return;
+            return null;
         if (this.info.author) {
             const author = [this.info.author, `${this.info.author} - Topic`];
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
@@ -45,7 +48,7 @@ class Track {
             const sameDuration = result.tracks.find((track) => track.info.length >= (this.info.length ? this.info.length : 0) - 2000 &&
                 track.info.length <= (this.info.length ? this.info.length : 0) + 2000);
             if (sameDuration) {
-                //this.info.identifier = sameDuration.info.identifier;
+                // this.info.identifier = sameDuration.info.identifier;
                 this.track = sameDuration.track;
                 return this;
             }
@@ -54,6 +57,8 @@ class Track {
         this.track = result.tracks[0].track;
         return this;
     }
+    ;
 }
 exports.Track = Track;
+;
 //# sourceMappingURL=Track.js.map

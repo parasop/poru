@@ -5,8 +5,6 @@ import { Filters } from "./Filters";
  * @extends Filters
  */
 export declare class customFilter extends Filters {
-    band: number;
-    gain: number;
     slowmode: boolean;
     nightcore: boolean;
     vaporwave: boolean;
@@ -18,33 +16,33 @@ export declare class customFilter extends Filters {
      */
     constructor(player: Player);
     /**
-     * Set the bassboost value
+     * Set a custom bassboost value
      * @param val The value of the bassboost
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setBassboost(val: number): this;
+    setBassboost(val: number): Promise<customFilter>;
     /**
-     * Set slowmode filter
+     * Set a custom slowmode filter
      * @param val The value of the band
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setSlowmode(val: boolean): this;
+    setSlowmode(val: boolean): Promise<customFilter>;
     /**
-     * Set Nightcore filter
+     * Set a custom Nightcore filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setNightcore(val: boolean): boolean;
+    setNightcore(val: boolean): Promise<customFilter>;
     /**
-     * Set Vaporwave filter
+     * Set a custom Vaporwave filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setVaporwave(val: boolean): void;
+    setVaporwave(val: boolean): Promise<customFilter>;
     /**
-     * Set 8D filter
+     * Set a custom 8D filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    set8D(val: boolean): void;
+    set8D(val: boolean): Promise<this>;
 }

@@ -21,7 +21,7 @@ export interface NodeStats {
         sent: number;
         nulled: number;
         deficit: number;
-    };
+    } | null;
 }
 /**
  * This interface represents the LavaLink V4 Error Responses
@@ -62,8 +62,8 @@ export declare class Node {
     readonly socketURL: string;
     password: string;
     readonly secure: boolean;
-    readonly regions: Array<string>;
-    sessionId: string;
+    readonly regions: Array<string> | null;
+    sessionId: string | null;
     rest: Rest;
     ws: WebSocket | null;
     readonly resumeKey: string | null;
@@ -99,7 +99,7 @@ export declare class Node {
      * @param payload any
      * @returns {void}
      */
-    reconnect(): void;
+    reconnect(): Promise<void>;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
@@ -123,8 +123,8 @@ export declare class Node {
     private setStats;
     /**
      * This will send a message to the node
-     * @param {any} payload any
-     * @returns {Promise<void>} void
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
      */
     private message;
     /**

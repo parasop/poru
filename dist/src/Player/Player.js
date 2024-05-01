@@ -85,6 +85,8 @@ class Player extends events_1.EventEmitter {
         this.position = 0;
         this.ping = 0;
         this.timestamp = null;
+        this.isAutoPlay = false;
+        this.isQuietMode = false;
         this.isConnected = false;
         this.loop = "NONE";
         this.data = {};
@@ -105,23 +107,20 @@ class Player extends events_1.EventEmitter {
      */
     async play() {
         if (!this.queue.length)
-            return;
-        this.currentTrack = this.queue.shift();
-        if (!this.currentTrack.track)
+            return this;
+        this.currentTrack = this.queue.shift() ?? null;
+        if (this.currentTrack && !this.currentTrack?.track)
             this.currentTrack = await this.resolveTrack(this.currentTrack);
-        if (this.currentTrack.track) {
+        if (this.currentTrack?.track) {
             await this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
-                    track: { encoded: this.currentTrack?.track },
+                    track: { encoded: this.currentTrack.track },
                 },
             });
             this.isPlaying = true;
             this.position = 0;
-        }
-        else {
-            //  return this.play();
-            // Here joniii: What is that?
+            this.isAutoPlay = false;
         }
         ;
         return this;
@@ -138,7 +137,7 @@ class Player extends events_1.EventEmitter {
             .join(" - ");
         const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
         if (!result || !result.tracks.length)
-            return;
+            return null;
         if (track.info?.author) {
             const author = [track.info.author, `${track.info.author} - Topic`];
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
@@ -166,7 +165,7 @@ class Player extends events_1.EventEmitter {
      * @param {ConnectionOptions} [options=this] - The options for the connection.
      */
     connect(options = this) {
-        let { guildId, voiceChannel, deaf, mute } = options;
+        const { guildId, voiceChannel, deaf, mute } = options;
         this.send({
             guild_id: guildId,
             channel_id: voiceChannel,
@@ -208,10 +207,11 @@ class Player extends events_1.EventEmitter {
      * @param {number} position - The position to seek to (in milliseconds).
      */
     async seekTo(position) {
-        if (this.position + position >= this.currentTrack.info.length)
-            position = this.currentTrack.info.length;
+        if (this.position + position >= (this.currentTrack?.info.length ?? 0))
+            position = this.currentTrack?.info.length ?? 0;
         await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
+    ;
     /**
      * Sets the volume level of the player.
      * @param {number} volume - The volume level (0 to 1000).
@@ -308,7 +308,7 @@ class Player extends events_1.EventEmitter {
      */
     async disconnect() {
         if (!this.voiceChannel)
-            return;
+            return this;
         await this.pause(true);
         this.isConnected = false;
         this.send({
@@ -317,12 +317,12 @@ class Player extends events_1.EventEmitter {
             self_mute: false,
             self_deaf: false,
         });
-        this.voiceChannel = null;
         return this;
     }
+    ;
     /**
      * Destroys the player and cleans up associated resources.
-     * @returns {Promise<boolean>} - A Promise that resolves to a boolean indicating the success of destruction.
+     * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     async destroy() {
         await this.disconnect();
@@ -338,7 +338,7 @@ class Player extends events_1.EventEmitter {
      */
     async restart() {
         if (!this.currentTrack?.track && !this.queue.length)
-            return;
+            return this;
         if (!this.currentTrack?.track)
             return await this.play();
         await this.node.rest.updatePlayer({
@@ -359,7 +359,7 @@ class Player extends events_1.EventEmitter {
     async moveNode(name) {
         const node = this.poru.nodes.get(name);
         if (!node || node.name === this.node.name)
-            return;
+            return this;
         if (!node.isConnected)
             throw new Error("Provided Node is not connected");
         try {
@@ -373,6 +373,7 @@ class Player extends events_1.EventEmitter {
             await this.destroy();
             throw e;
         }
+        ;
     }
     ;
     /**
@@ -382,7 +383,7 @@ class Player extends events_1.EventEmitter {
     async autoMoveNode() {
         if (this.poru.leastUsedNodes.length === 0)
             throw new Error("[Poru Error] No nodes are avaliable");
-        const node = this.poru.nodes.get(this.poru.leastUsedNodes[0].name);
+        const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name);
         if (!node) {
             await this.destroy();
             return;
@@ -397,20 +398,19 @@ class Player extends events_1.EventEmitter {
      */
     async autoplay() {
         try {
-            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
+            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack?.info.identifier || this.currentTrack?.info.identifier}`;
             const response = await this.poru.resolve({
                 query: data,
                 requester: this.previousTrack?.info?.requester ?? this.currentTrack?.info?.requester,
                 source: this.previousTrack?.info?.sourceName ?? this.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
             });
-            if (!response ||
-                !response.tracks ||
-                ["error", "empty"].includes(response.loadType))
+            if (!response || !response.tracks || ["error", "empty"].includes(response.loadType))
                 return await this.skip();
             response.tracks.shift();
             const track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
             this.queue.push(track);
             await this.play();
+            this.isAutoPlay = true;
             return this;
         }
         catch (e) {
@@ -491,7 +491,7 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
     async resolve({ query, source, requester }) {
-        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`);
+        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
     ;
@@ -500,6 +500,8 @@ class Player extends events_1.EventEmitter {
      * @param {any} data - The data to send.
      */
     send(data) {
+        if (!this.poru.send)
+            throw new Error("[Poru Error] The send function is required to send data to discord. Please provide a send function in the Poru options or use one of the supported Libraries.");
         this.poru.send({ op: 4, d: data });
     }
     ;

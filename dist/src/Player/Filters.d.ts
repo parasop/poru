@@ -148,93 +148,93 @@ export declare class Filters {
     player: Player;
     volume: number;
     equalizer: Band[];
-    karaoke: karaokeOptions;
-    tremolo: tremoloOptions;
-    vibrato: vibratoOptions;
-    rotation: rotationOptions;
-    distortion: distortionOptions;
-    channelMix: channelMixOptions;
-    lowPass: lowPassOptions;
-    timescale: timescaleOptions;
-    constructor(player: Player, options?: FiltersOptions);
+    karaoke: karaokeOptions | undefined;
+    tremolo: tremoloOptions | undefined;
+    vibrato: vibratoOptions | undefined;
+    rotation: rotationOptions | undefined;
+    distortion: distortionOptions | undefined;
+    channelMix: channelMixOptions | undefined;
+    lowPass: lowPassOptions | undefined;
+    timescale: timescaleOptions | undefined;
+    constructor(player: Player, options?: Partial<FiltersOptions>);
     /**
      * Set equalizer bands for the currently playing track
      *
      * @param bands An array of bands to set the equalizer to
      * @returns
      */
-    setEqualizer(bands: Band[]): Filters;
+    setEqualizer(bands: Band[]): Promise<Filters>;
     /**
         * Change the karaoke Options applied to the currently playing track
         * @param karaoke An object that conforms to the KaraokeOptions type that defines a range of frequencies to mute
         * @returns The current filter instance
         */
-    setKaraoke(karaoke?: karaokeOptions): Filters;
+    setKaraoke(karaoke?: karaokeOptions): Promise<Filters>;
     /**
      * Change the timescale Options applied to the currently playing track
      * @param timescale An object that conforms to the TimescaleOptions type that defines the timescale to apply
      * @returns The current filter instance
      *
      */
-    setTimescale(timescale?: timescaleOptions): Filters;
+    setTimescale(timescale?: timescaleOptions): Promise<Filters>;
     /**
      * Change the tremolo Options applied to the currently playing track
      *
      * @param tremolo  An object that conforms to the TremoloOptions type that defines the tremolo to apply
      * @returns
      */
-    setTremolo(tremolo?: tremoloOptions): Filters;
+    setTremolo(tremolo?: tremoloOptions): Promise<Filters>;
     /**
      * Change the vibrato Options applied to the currently playing track
      *
      * @param vibrato An object that conforms to the VibratoOptions type that defines the vibrato to apply
      * @returns
      */
-    setVibrato(vibrato?: vibratoOptions): Filters;
+    setVibrato(vibrato?: vibratoOptions): Promise<Filters>;
     /**
      * Change the rotation Options applied to the currently playing track
      *
      * @param rotation An object that conforms to the RotationOptions type that defines the rotation to apply
      * @returns
      */
-    setRotation(rotation?: rotationOptions): Filters;
+    setRotation(rotation?: rotationOptions): Promise<Filters>;
     /**
      * Change the distortion Options applied to the currently playing track
      *
      * @param distortion An object that conforms to the DistortionOptions type that defines the distortion to apply
      * @returns
      */
-    setDistortion(distortion: distortionOptions): Filters;
+    setDistortion(distortion: distortionOptions): Promise<Filters>;
     /**
      * Change the channel mix Options applied to the currently playing track
      *
      * @param mix An object that conforms to the ChannelMixOptions type that defines the channel mix to apply
      * @returns
      */
-    setChannelMix(mix: channelMixOptions): Filters;
+    setChannelMix(mix: channelMixOptions): Promise<Filters>;
     /**
      * Change the low pass Options applied to the currently playing track
      *
      * @param pass An object that conforms to the LowPassOptions type that defines the low pass to apply
      * @returns
      */
-    setLowPass(pass: lowPassOptions): Filters;
+    setLowPass(pass: lowPassOptions): Promise<Filters>;
     /**
      * Change the filters of the currently playing track
      *
      * @param options An object that conforms to the FiltersOptions type that defines the filters to apply
      * @returns
      */
-    setFilters(options: Filters | FiltersOptions): this;
+    setFilters(options: Filters | FiltersOptions): Promise<Filters>;
     /**
-     *
+     * Clears all of the filters to their default values
      * @returns The current filters applied to the currently playing track
      */
-    clearFilters(): Filters;
+    clearFilters(): Promise<Filters>;
     /**
-     *
+     * Updates all the filters applied to the currently playing track
      * @returns the updated filters applied to the currently playing track
      */
-    updateFilters(): Filters;
+    updateFilters(): Promise<Filters>;
 }
 export {};
