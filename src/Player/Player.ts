@@ -1,5 +1,5 @@
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru"
-import { Node } from "../Node/Node"
+import { Node, NodelinkGetLyricsInterface } from "../Node/Node"
 import { Track } from "../guild/Track"
 import { Connection } from "./Connection"
 import Queue from "../guild/Queue"
@@ -211,7 +211,17 @@ export class Player extends EventEmitter {
     this.isPlaying = false
 
     return this
-  }
+  };
+
+  public async getLyrics(track?: string | null, language: string = "en"): Promise<NodelinkGetLyricsInterface | null> {
+    if (!this.node.isNodeLink) return null;
+
+    if (!track && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.") ;
+
+    track = this.currentTrack?.track;
+
+    return await this.node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(track ?? "")}&language=${encodeURIComponent(language)}`)
+  };
 
   /**
    * Pauses or resumes playback.
@@ -551,6 +561,7 @@ export class Player extends EventEmitter {
    */
   public async resolve({ query, source, requester }: ResolveOptions): Promise<Response> {
     const response = await this.node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
+    
     return new Response(response, requester);
   };
 
