@@ -213,14 +213,17 @@ export class Player extends EventEmitter {
     return this
   };
 
-  public async getLyrics(track?: string | null, language: string = "en"): Promise<NodelinkGetLyricsInterface | null> {
-    if (!this.node.isNodeLink) return null;
+  public async getLyrics(encodedTrack?: string | null, language: string = "en"): Promise<NodelinkGetLyricsInterface | null> {
+    let node: Node | undefined = this.node;
 
-    if (!track && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.") ;
+    if (!this.node.isNodeLink) node = (Array.from(this.poru.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
+    if (!node || !node.isNodeLink) throw new Error("[Poru Exception] No NodeLink node found in the Poru instance.");
 
-    track = this.currentTrack?.track;
+    if (!encodedTrack && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.") ;
 
-    return await this.node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(track ?? "")}&language=${encodeURIComponent(language)}`)
+    encodedTrack = this.currentTrack?.track;
+
+    return await this.node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`)
   };
 
   /**
@@ -561,7 +564,7 @@ export class Player extends EventEmitter {
    */
   public async resolve({ query, source, requester }: ResolveOptions): Promise<Response> {
     const response = await this.node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
-    
+
     return new Response(response, requester);
   };
 
