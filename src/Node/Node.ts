@@ -136,7 +136,7 @@ export class Node {
     public reconnectTries: number;
     public reconnectAttempt: NodeJS.Timeout | null;
     public attempt: number;
-    public stats: NodeStats | null;
+    public stats: NodeStats;
     public options: NodeGroup;
     public clientName: string;
     public isNodeLink: boolean
@@ -167,9 +167,29 @@ export class Node {
         this.reconnectAttempt = null;
         this.attempt = 0;
         this.isConnected = false;
-        this.stats = null;
         this.clientName = options.clientName || `${config.clientName}/${config.version}`;
         this.isNodeLink = false;
+        this.stats = {
+            players: 0,
+            playingPlayers: 0,
+            uptime: 0,
+            memory: {
+                free: 0,
+                used: 0,
+                allocated: 0,
+                reservable: 0,
+            },
+            cpu: {
+                cores: 0,
+                systemLoad: 0,
+                lavalinkLoad: 0,
+            },
+            frameStats: {
+                sent: 0,
+                nulled: 0,
+                deficit: 0,
+            }
+        }
     };
 
     /**
@@ -270,7 +290,7 @@ export class Node {
     public get penalties(): number {
         let penalties = 0;
 
-        if (!this.isConnected || !this.stats) return penalties;
+        if (!this.isConnected) return penalties;
 
         penalties += this.stats.players;
         penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
