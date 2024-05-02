@@ -427,7 +427,7 @@ export class Player extends EventEmitter {
       throw new Error("Provided Node is not connected")
 
     try {
-      await this.node.rest.destroyPlayer(this.guildId)
+      await this.node.rest.destroyPlayer(this.guildId).catch(() => {})
       this.poru.players.delete(this.guildId)
       this.node = node
       this.poru.players.set(this.guildId, this)
