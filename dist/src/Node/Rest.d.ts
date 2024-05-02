@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { ErrorResponses, Node } from "./Node";
 import { Poru } from "../Poru";
 import { trackData } from "../guild/Track";
@@ -36,6 +37,7 @@ export interface PlayerState {
     ping: number;
 }
 export type RouteLike = `/${string}`;
+export type HeadersInit = string[][] | Record<string, string | ReadonlyArray<string>> | Headers;
 export declare enum RequestMethod {
     "Get" = "GET",
     "Delete" = "DELETE",
@@ -48,6 +50,7 @@ export declare class Rest {
     private password;
     url: string;
     poru: Poru;
+    isNodeLink: boolean;
     constructor(poru: Poru, node: Node);
     setSessionId(sessionId: string): void;
     /**
@@ -66,4 +69,5 @@ export declare class Rest {
     patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T | null>;
     post<T = unknown>(endpoint: RouteLike, body: any): Promise<T | null>;
     delete<T = unknown>(endpoint: RouteLike): Promise<T | null>;
+    protected get headers(): HeadersInit;
 }

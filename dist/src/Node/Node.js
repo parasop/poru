@@ -62,9 +62,29 @@ class Node {
         this.reconnectAttempt = null;
         this.attempt = 0;
         this.isConnected = false;
-        this.stats = null;
         this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
         this.isNodeLink = false;
+        this.stats = {
+            players: 0,
+            playingPlayers: 0,
+            uptime: 0,
+            memory: {
+                free: 0,
+                used: 0,
+                allocated: 0,
+                reservable: 0,
+            },
+            cpu: {
+                cores: 0,
+                systemLoad: 0,
+                lavalinkLoad: 0,
+            },
+            frameStats: {
+                sent: 0,
+                nulled: 0,
+                deficit: 0,
+            }
+        };
     }
     ;
     /**
@@ -162,7 +182,7 @@ class Node {
      */
     get penalties() {
         let penalties = 0;
-        if (!this.isConnected || !this.stats)
+        if (!this.isConnected)
             return penalties;
         penalties += this.stats.players;
         penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
