@@ -29,7 +29,6 @@
   "homepage": "https://github.com/parasop/poru#readme",
   "dependencies": {
     "gen-esm-wrapper": "^1.1.3",
-    "undici": "^6.12.0",
     "ws": "^8.16.0"
   },
   "engines": {
