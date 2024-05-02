@@ -88,7 +88,7 @@ export declare class Node {
     reconnectTries: number;
     reconnectAttempt: NodeJS.Timeout | null;
     attempt: number;
-    stats: NodeStats | null;
+    stats: NodeStats;
     options: NodeGroup;
     clientName: string;
     isNodeLink: boolean;
