@@ -1,5 +1,4 @@
 import { ErrorResponses, Node } from "./Node";
-import { BodyInit, fetch } from "undici";
 import { Poru } from "../Poru";
 import { Track, trackData } from "../guild/Track";
 import { FiltersOptions } from '../Player/Filters';
@@ -55,12 +54,14 @@ export class Rest {
     private password: string;
     public url: string;
     public poru: Poru;
+    public isNodeLink: boolean;
 
     constructor(poru: Poru, node: Node) {
         this.poru = poru;
         this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${node.options.port}`;
         this.sessionId = node.sessionId;
         this.password = node.password;
+        this.isNodeLink = node.isNodeLink;
     }
 
     public setSessionId(sessionId: string) {
@@ -90,11 +91,12 @@ export class Rest {
 
     public async get<T = unknown>(path: RouteLike): Promise<T | null> {
         try {
-            const req = await fetch(this.url + path, {
+            const req = await globalThis.fetch(this.url + path, {
                 method: RequestMethod.Get,
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: this.password,
+                    
                 },
             });
 
@@ -106,7 +108,7 @@ export class Rest {
 
     public async patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
-            let req = await fetch(this.url + endpoint, {
+            let req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
                 headers: {
                     "Content-Type": "application/json",
@@ -123,7 +125,7 @@ export class Rest {
 
     public async post<T = unknown>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
-            let req = await fetch(this.url + endpoint, {
+            let req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
                 headers: {
                     "Content-Type": "application/json",
@@ -140,7 +142,7 @@ export class Rest {
 
     public async delete<T = unknown>(endpoint: RouteLike): Promise<T | null> {
         try {
-            let req = await fetch(this.url + endpoint, {
+            let req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
                 headers: {
                     "Content-Type": "application/json",
