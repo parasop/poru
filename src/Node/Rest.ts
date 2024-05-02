@@ -119,7 +119,7 @@ export class Rest {
 
     public async post<T = unknown>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
-            let req = await globalThis.fetch(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
                 headers: this.headers,
                 body: JSON.stringify(body),
@@ -133,7 +133,7 @@ export class Rest {
 
     public async delete<T = unknown>(endpoint: RouteLike): Promise<T | null> {
         try {
-            let req = await globalThis.fetch(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
                 headers: this.headers
             });
