@@ -40,6 +40,7 @@ export interface PlayerState {
 };
 
 export type RouteLike = `/${string}`;
+export type HeadersInit = string[][] | Record<string, string | ReadonlyArray<string>> | Headers;
 
 export enum RequestMethod {
     "Get" = "GET",
@@ -66,7 +67,7 @@ export class Rest {
 
     public setSessionId(sessionId: string) {
         this.sessionId = sessionId;
-    }
+    };
 
     /**
      * Gets all players in this specific session
@@ -93,27 +94,20 @@ export class Rest {
         try {
             const req = await globalThis.fetch(this.url + path, {
                 method: RequestMethod.Get,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                    
-                },
+                headers: this.headers
             });
 
             return req.headers.get("content-type") === "application/json" ? await req.json() as T : await req.text() as T;
         } catch (e) {
             return null;
         }
-    }
+    };
 
     public async patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T | null> {
         try {
-            let req = await globalThis.fetch(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers,
                 body: JSON.stringify(body),
             });
 
@@ -127,10 +121,7 @@ export class Rest {
         try {
             let req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers,
                 body: JSON.stringify(body),
             });
 
@@ -144,15 +135,26 @@ export class Rest {
         try {
             let req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers
             });
 
             return await req.json() as T;
         } catch (e) {
             return null;
         }
+    };
+
+    protected get headers(): HeadersInit {
+        const headers: HeadersInit = {
+            "Content-Type": "application/json",
+            Authorization: this.password,
+        };
+
+        if (this.isNodeLink) {
+            headers["Content-Encoding"] = "brotli", "gzip", "deflate";
+            headers["Accept-Encoding"] = "brotli", "gzip", "deflate";
+        };
+
+        return headers;
     }
 }
