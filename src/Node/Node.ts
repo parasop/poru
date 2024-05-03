@@ -27,7 +27,7 @@ export interface NodeStats {
     } | null;
 };
 
-export type NodeLinkV2LoadTypes = "shorts" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
+export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
   
 export interface NodelinkGetLyricsInterface {
     loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes;
