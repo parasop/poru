@@ -124,7 +124,7 @@ export class Response {
 
   private convertNodelinkResponseToLavalink(loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes): LavaLinkLoadTypes {
     switch (loadType) {
-        case "shorts": return "track";
+        case "short": return "track";
 
         case "artist":
         case "episode":
