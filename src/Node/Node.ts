@@ -3,7 +3,7 @@ import WebSocket from "ws";
 import { Config as config } from "../config";
 import { Rest } from "./Rest";
 import { IncomingMessage } from "http";
-import { LavaLinkLoadTypes } from "../guild/Response";
+import { LavaLinkLoadTypes, Severity } from "../guild/Response";
 
 export interface NodeStats {
     players: number;
@@ -29,18 +29,37 @@ export interface NodeStats {
 
 export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
   
-export interface NodelinkGetLyricsInterface {
-    loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes;
+export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsError | NodeLinkGetLyricsMultiple;
+
+export interface NodeLinkGetLyricsMultiple {
+    loadType: "lyricsMultiple";
+    data: NodeLinkGetLyricsData[]
+};
+
+interface NodeLinkGetLyricsData {
+    name: string;
+    synced: boolean;
     data: {
-          name: string;
-          synced: boolean;
-          data: {
-            startTime: number;
-            endTime: number;
-            text: string;
-          }[];
-          rtl: boolean;
-    } | Record<string, never>;
+        startTime?: number;
+        endTime?: number;
+        text: string;
+    }[];
+    rtl: boolean;
+};
+
+export interface NodeLinkGetLyricsSingle {
+    loadType: "lyricsSingle",
+    data: NodeLinkGetLyricsData
+};
+
+export interface NodeLinkGetLyricsError {
+    loadType: "error",
+    data: {
+        message: string;
+        severity: Severity;
+        cause: string;
+        trace?: string;
+    }
 };
 
 /**
