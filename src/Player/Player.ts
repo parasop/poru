@@ -213,7 +213,16 @@ export class Player extends EventEmitter {
     return this
   };
 
-  public async getLyrics(encodedTrack?: string | null, language: string = "en"): Promise<NodelinkGetLyricsInterface | null> {
+  /**
+   * This function is used to get lyrics of the current track.
+   * 
+   * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+   * 
+   * @param encodedTrack The encoded track to get the lyrics from
+   * @param language The language of the lyrics to get defaults to english
+   * @returns 
+   */
+  public async getLyrics(encodedTrack?: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null> {
     let node: Node | undefined = this.node;
 
     if (!this.node.isNodeLink) node = (Array.from(this.poru.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
@@ -223,7 +232,7 @@ export class Player extends EventEmitter {
 
     encodedTrack = this.currentTrack?.track;
 
-    return await this.node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`)
+    return await this.node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`)
   };
 
   /**
