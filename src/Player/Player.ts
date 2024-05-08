@@ -663,7 +663,9 @@ export class Player extends EventEmitter {
         "Client-Name": this.node.clientName,
       };
 
-      this.voiceReceiverWsClient = new WebSocket(`${this.node.secure ? "wss" : "ws"}://${this.node.host}:${this.node.port}/connection/data`, { headers });
+      const { host, secure, port } = this.node.node
+
+      this.voiceReceiverWsClient = new WebSocket(`${secure ? "wss" : "ws"}://${host}:${port}/connection/data`, { headers });
       this.voiceReceiverWsClient.on("open", this.voiceReceiverOpen.bind(this));
       this.voiceReceiverWsClient.on("error", this.voiceReceiverError.bind(this));
       this.voiceReceiverWsClient.on("message", this.voiceReceiverMessage.bind(this));
