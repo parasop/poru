@@ -118,13 +118,12 @@ export interface ErrorResponses {
 };
 
 export class Node {
+    public readonly node: NodeGroup;
+    public readonly name: string;
     public isConnected: boolean;
     public poru: Poru;
-    public readonly name: string;
     public readonly restURL: string;
     public readonly socketURL: string;
-    public readonly host: string;
-    public readonly port: number;
     public password: string;
     public readonly secure: boolean;
     public readonly regions: Array<string> | null;
@@ -150,16 +149,15 @@ export class Node {
      * @param options PoruOptions
      */
     constructor(poru: Poru, node: NodeGroup, options: PoruOptions) {
+        this.node = node;
+        this.name = node.name
         this.poru = poru;
-        this.name = node.name;
         this.options = node;
-        this.host = node.host;
-        this.port = node.port;
         this.secure = node.secure || false;
-        this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
-        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
-        this.password = node.password || "youshallnotpass";
-        this.regions = node.region || null;
+        this.restURL = `http${this.node.secure ? "s" : ""}://${this.node.host}:${this.node.port}`;
+        this.socketURL = `${this.secure ? "wss" : "ws"}://${this.node.host}:${this.node.port}/v4/websocket`;
+        this.password = this.node.password || "youshallnotpass";
+        this.regions = this.node.region || null;
         this.sessionId = null;
         this.rest = new Rest(poru, this);
         this.ws = null;
@@ -204,8 +202,8 @@ export class Node {
         return new Promise((resolve) => {
             if (this.isConnected) return resolve(true);
             if (this.ws) this.ws.close();
-            if (!this.poru.nodes.get(this.name)) {
-                this.poru.nodes.set(this.name, this)
+            if (!this.poru.nodes.get(this.node.name)) {
+                this.poru.nodes.set(this.node.name, this)
             };
             if (!this.poru.userId) throw new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library.")
 
@@ -250,7 +248,7 @@ export class Node {
         this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
                 throw new Error(
-                    `[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`
+                    `[Poru Websocket] Unable to connect with ${this.node.name} node after ${this.reconnectTries} tries`
                 );
             }
 
@@ -283,7 +281,7 @@ export class Node {
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        this.poru.nodes.delete(this.name);
+        this.poru.nodes.delete(this.node.name);
         this.poru.emit("nodeDisconnect", this);
     };
 
@@ -348,7 +346,7 @@ export class Node {
      */
     private upgrade(request: IncomingMessage) {
         // Checking if this node is a NodeLink or not
-        this.isNodeLink = Boolean(request.headers.isnodelink) ?? false;
+        this.isNodeLink = this.node.isNodeLink ?? Boolean(request.headers.isnodelink) ?? false;
     };
 
     /**
@@ -364,11 +362,11 @@ export class Node {
     
             this.poru.emit("nodeConnect", this);
             this.isConnected = true;
-            this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
+            this.poru.emit("debug", this.node.name, `[Web Socket] Connection ready ${this.socketURL}`);
 
             if (this.autoResume) this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         } catch (error) {
-            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.name}.`, error)
+            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.node.name}.`, error)
         };
     };
 
@@ -383,18 +381,18 @@ export class Node {
             if (!packet?.op) return;
 
             this.poru.emit("raw", "Node", packet)
-            this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+            this.poru.emit("debug", this.node.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
             switch (packet.op) {
                 case "ready": {
                     this.rest.setSessionId(packet.sessionId);
                     this.sessionId = packet.sessionId;
-                    this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+                    this.poru.emit("debug", this.node.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
 
                     // If a resume key was set use it
                     if (this.resumeKey) {
                         await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-                        this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                        this.poru.emit("debug", this.node.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
                     };
 
                     break;
@@ -434,7 +432,7 @@ export class Node {
         try {
             await this.disconnect();
             this.poru.emit("nodeDisconnect", this, event);
-            this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
+            this.poru.emit("debug", this.node.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
     
             if (event !== 1000) await this.reconnect();   
         } catch (error) {
@@ -451,6 +449,6 @@ export class Node {
         if (!event) return;
 
         this.poru.emit("nodeError", this, event);
-        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
+        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.node.name}) has error code: ${event.code || event}`);
     };
 };
