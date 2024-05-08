@@ -2,7 +2,7 @@
 import { Poru, PoruOptions, NodeGroup } from "../Poru";
 import WebSocket from "ws";
 import { Rest } from "./Rest";
-import { LavaLinkLoadTypes } from "../guild/Response";
+import { Severity } from "../guild/Response";
 export interface NodeStats {
     players: number;
     playingPlayers: number;
@@ -25,18 +25,37 @@ export interface NodeStats {
     } | null;
 }
 export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast";
-export interface NodelinkGetLyricsInterface {
-    loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes;
+export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsMultiple | NodeLinkGetLyricsEmpty | NodeLinkGetLyricsError;
+export interface NodeLinkGetLyricsMultiple {
+    loadType: "lyricsMultiple";
+    data: NodeLinkGetLyricsData[];
+}
+export interface NodeLinkGetLyricsEmpty {
+    loadType: "empty";
+    data: {};
+}
+interface NodeLinkGetLyricsData {
+    name: string;
+    synced: boolean;
     data: {
-        name: string;
-        synced: boolean;
-        data: {
-            startTime: number;
-            endTime: number;
-            text: string;
-        }[];
-        rtl: boolean;
-    } | Record<string, never>;
+        startTime?: number;
+        endTime?: number;
+        text: string;
+    }[];
+    rtl: boolean;
+}
+export interface NodeLinkGetLyricsSingle {
+    loadType: "lyricsSingle";
+    data: NodeLinkGetLyricsData;
+}
+export interface NodeLinkGetLyricsError {
+    loadType: "error";
+    data: {
+        message: string;
+        severity: Severity;
+        cause: string;
+        trace?: string;
+    };
 }
 /**
  * This interface represents the LavaLink V4 Error Responses
@@ -70,13 +89,11 @@ export interface ErrorResponses {
     path: string;
 }
 export declare class Node {
+    readonly name: string;
     isConnected: boolean;
     poru: Poru;
-    readonly name: string;
     readonly restURL: string;
     readonly socketURL: string;
-    readonly host: string;
-    readonly port: number;
     password: string;
     readonly secure: boolean;
     readonly regions: Array<string> | null;
@@ -168,3 +185,4 @@ export declare class Node {
      */
     private error;
 }
+export {};
