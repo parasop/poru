@@ -123,6 +123,8 @@ export class Node {
     public readonly name: string;
     public readonly restURL: string;
     public readonly socketURL: string;
+    public readonly host: string;
+    public readonly port: number;
     public password: string;
     public readonly secure: boolean;
     public readonly regions: Array<string> | null;
@@ -151,6 +153,8 @@ export class Node {
         this.poru = poru;
         this.name = node.name;
         this.options = node;
+        this.host = node.host;
+        this.port = node.port;
         this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;

@@ -1,5 +1,5 @@
 import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
-import { Player } from "./Player/Player";
+import { EndSpeakingEventVoiceRecieverData, Player, StartSpeakingEventVoiceRecieverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
 import { Response, LoadTrackResponse } from "./guild/Response";
@@ -245,7 +245,6 @@ export interface PoruEvents {
      */
     playerDestroy: (player: Player) => void;
 
-
     /**
      * Emitted when a socket connection is closed.
      * @param {Player} player - The player associated with the socket.
@@ -253,6 +252,44 @@ export interface PoruEvents {
      * @param {WebSocketClosedEvent} data - Additional data related to the socket closure.
      */
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
+
+    /**
+     * Emitted when a voice Reciever was setup and the user started speaking.
+     * @param {Player} player - The player associated with the voice reciever.
+     * @param {StartSpeakingEventVoiceRecieverData} data - Additional data related to the start of speaking.
+     */
+    startSpeaking: (player: Player, data: StartSpeakingEventVoiceRecieverData) => void;
+
+    /**
+     * Emitted when a voice Reciever was setup and the user stopped speaking.
+     * @param {Player} player - The player associated with the voice reciever.
+     * @param {EndSpeakingEventVoiceRecieverData} data - Additional data related to the end of speaking including the voice data.
+     */
+    endSpeaking: (player: Player, data: EndSpeakingEventVoiceRecieverData) => void;
+
+    /**
+     * Emitted when a voice Reciever encounters an error.
+     * @param player The player associated with the voice reciever.
+     * @param error The error that occurred.
+     * @returns 
+     */
+    voiceRecieverError: (player: Player, error: any) => void;
+
+    /**
+     * Emitted when a voice Reciever connected itself.
+     * @param player The player associated with the voice reciever.
+     * @param reason The reason for the connection.
+     * @returns 
+     */
+    voiceRecieverConnected: (player: Player, status: string) => void;
+
+    /**
+     * Emitted when a voice Reciever disconnected itself.
+     * @param player The player associated with the voice reciever.
+     * @param reason The reason for the disconnection.
+     * @returns 
+     */
+    voiceRecieverDisconnected: (player: Player, reason: string) => void;
 }
 
 export declare interface Poru {
