@@ -1,5 +1,5 @@
 import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
-import { EndSpeakingEventVoiceRecieverData, Player, StartSpeakingEventVoiceRecieverData } from "./Player/Player";
+import { EndSpeakingEventVoiceReceiverData, Player, StartSpeakingEventVoiceReceiverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
 import { Response, LoadTrackResponse } from "./guild/Response";
@@ -17,6 +17,7 @@ export interface NodeGroup {
     password: string;
     secure?: boolean;
     region?: string[];
+    isNodeLink?: boolean;
 }
 
 export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
@@ -158,7 +159,7 @@ export interface NodeInfoResponse {
 
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
-interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceRecieverData, "data"> {
+interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceReceiverData, "data"> {
     data: Buffer 
 };
 
@@ -258,42 +259,42 @@ export interface PoruEvents {
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
 
     /**
-     * Emitted when a voice Reciever was setup and the user started speaking.
-     * @param {Player} player - The player associated with the voice reciever.
-     * @param {StartSpeakingEventVoiceRecieverData} data - Additional data related to the start of speaking.
+     * Emitted when a voice Receiver was setup and the user started speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {StartSpeakingEventVoiceReceiverData} data - Additional data related to the start of speaking.
      */
-    startSpeaking: (player: Player, data: StartSpeakingEventVoiceRecieverData) => void;
+    startSpeaking: (player: Player, data: StartSpeakingEventVoiceReceiverData) => void;
 
     /**
-     * Emitted when a voice Reciever was setup and the user stopped speaking.
-     * @param {Player} player - The player associated with the voice reciever.
-     * @param {EndSpeakingEventVoiceRecieverData} data - Additional data related to the end of speaking including the voice data.
+     * Emitted when a voice Receiver was setup and the user stopped speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {EndSpeakingEventVoiceReceiverData} data - Additional data related to the end of speaking including the voice data.
      */
     endSpeaking: (player: Player, data: EndSpeakingEventWithBufferForVoiceData) => void;
 
     /**
-     * Emitted when a voice Reciever encounters an error.
-     * @param player The player associated with the voice reciever.
+     * Emitted when a voice Receiver encounters an error.
+     * @param player The player associated with the voice Receiver.
      * @param error The error that occurred.
      * @returns 
      */
-    voiceRecieverError: (player: Player, error: any) => void;
+    voiceReceiverError: (player: Player, error: any) => void;
 
     /**
-     * Emitted when a voice Reciever connected itself.
-     * @param player The player associated with the voice reciever.
+     * Emitted when a voice Receiver connected itself.
+     * @param player The player associated with the voice Receiver.
      * @param reason The reason for the connection.
      * @returns 
      */
-    voiceRecieverConnected: (player: Player, status: string) => void;
+    voiceReceiverConnected: (player: Player, status: string) => void;
 
     /**
-     * Emitted when a voice Reciever disconnected itself.
-     * @param player The player associated with the voice reciever.
+     * Emitted when a voice Receiver disconnected itself.
+     * @param player The player associated with the voice Receiver.
      * @param reason The reason for the disconnection.
      * @returns 
      */
-    voiceRecieverDisconnected: (player: Player, reason: string) => void;
+    voiceReceiverDisconnected: (player: Player, reason: string) => void;
 }
 
 export declare interface Poru {
