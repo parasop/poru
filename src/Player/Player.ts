@@ -48,7 +48,7 @@ export interface EndSpeakingEventVoiceRecieverData {
   /**
    * The type of the audio data. Can be either opus or pcm. Older versions may include ogg/opus.
    */
-  type: "opus" | "pcm" | "ogg/opus"
+  type: "opus" | "pcm"
 }
 
 export interface StartSpeakingEventVoiceReciever extends BaseVoiceRecieverEvent {
@@ -776,7 +776,12 @@ export class Player extends EventEmitter {
           break;
         }
         case "endSpeakingEvent": {
-          this.poru.emit("endSpeaking", this, packet.data);
+          const data = {
+            ...packet.data,
+            data: Buffer.from(packet.data.data, "base64")
+          };
+
+          this.poru.emit("endSpeaking", this, data);
           break;
         }
         default: {
