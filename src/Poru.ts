@@ -1,4 +1,4 @@
-import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
+import { Node, NodeLinkGetLyrics, NodeStats } from "./Node/Node";
 import { EndSpeakingEventVoiceReceiverData, Player, StartSpeakingEventVoiceReceiverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
@@ -622,7 +622,7 @@ export class Poru extends EventEmitter {
      * @param language The language of the lyrics to get defaults to english
      * @returns 
      */
-    public async getLyrics(encodedTrack: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null> {
+    public async getLyrics(encodedTrack: string | null, language?: string): Promise<NodeLinkGetLyrics | null> {
         const node = (Array.from(this.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
 
         if (!node) return null;
@@ -630,7 +630,7 @@ export class Poru extends EventEmitter {
         if (!node.isNodeLink) throw new Error("[Poru Exception] The node must be a Nodelink node.");
         if (!encodedTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
 
-        return await node.rest.get<NodelinkGetLyricsInterface>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
+        return await node.rest.get<NodeLinkGetLyrics>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
     };
 
     /**
