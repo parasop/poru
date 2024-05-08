@@ -300,7 +300,16 @@ class Poru extends events_1.EventEmitter {
         return await node.rest.get(`/v4/stats`);
     }
     ;
-    async getLyrics(encodedTrack, language = "en") {
+    /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
+    async getLyrics(encodedTrack, language) {
         const node = Array.from(this.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
         if (!node)
             return null;
@@ -309,7 +318,7 @@ class Poru extends events_1.EventEmitter {
             throw new Error("[Poru Exception] The node must be a Nodelink node.");
         if (!encodedTrack)
             throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
-        return await node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}&language=${encodeURIComponent(language)}`);
+        return await node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
     }
     ;
     /**

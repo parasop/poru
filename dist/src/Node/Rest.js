@@ -75,7 +75,7 @@ class Rest {
     }
     async post(endpoint, body) {
         try {
-            let req = await globalThis.fetch(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
                 headers: this.headers,
                 body: JSON.stringify(body),
@@ -88,7 +88,7 @@ class Rest {
     }
     async delete(endpoint) {
         try {
-            let req = await globalThis.fetch(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
                 headers: this.headers
             });
@@ -104,11 +104,8 @@ class Rest {
             "Content-Type": "application/json",
             Authorization: this.password,
         };
-        if (this.isNodeLink) {
-            headers["Content-Encoding"] = "brotli", "gzip", "deflate";
-            headers["Accept-Encoding"] = "brotli", "gzip", "deflate";
-        }
-        ;
+        if (this.isNodeLink)
+            headers["Accept-Encoding"] = "brotli, gzip, deflate";
         return headers;
     }
 }

@@ -24,7 +24,7 @@ export interface NodeStats {
         deficit: number;
     } | null;
 }
-export type NodeLinkV2LoadTypes = "shorts" | "album" | "artist" | "show" | "episode" | "station" | "podcast";
+export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast";
 export interface NodelinkGetLyricsInterface {
     loadType: NodeLinkV2LoadTypes | LavaLinkLoadTypes;
     data: {
@@ -75,6 +75,8 @@ export declare class Node {
     readonly name: string;
     readonly restURL: string;
     readonly socketURL: string;
+    readonly host: string;
+    readonly port: number;
     password: string;
     readonly secure: boolean;
     readonly regions: Array<string> | null;

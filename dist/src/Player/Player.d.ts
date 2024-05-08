@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
 import { Node, NodelinkGetLyricsInterface } from "../Node/Node";
 import { Track } from "../guild/Track";
@@ -7,7 +8,48 @@ import Queue from "../guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "../guild/Response";
+import WebSocket from "ws";
 type Loop = "NONE" | "TRACK" | "QUEUE";
+interface BaseVoiceRecieverEvent {
+    op: "speak";
+}
+export interface StartSpeakingEventVoiceRecieverData {
+    /**
+      * The user ID of the user who started speaking.
+      */
+    userId: string;
+    /**
+      * The guild ID of the guild where the user started speaking.
+      */
+    guildId: string;
+}
+export interface EndSpeakingEventVoiceRecieverData {
+    /**
+   * The user ID of the user who stopped speaking.
+   */
+    userId: string;
+    /**
+     * The guild ID of the guild where the user stopped speaking.
+     */
+    guildId: string;
+    /**
+     * The audio data received from the user in base64.
+     */
+    data: string;
+    /**
+     * The type of the audio data. Can be either opus or pcm. Older versions may include ogg/opus.
+     */
+    type: "opus" | "pcm" | "ogg/opus";
+}
+export interface StartSpeakingEventVoiceReciever extends BaseVoiceRecieverEvent {
+    type: "startSpeakingEvent";
+    data: StartSpeakingEventVoiceRecieverData;
+}
+export interface EndSpeakingEventVoiceReciever extends BaseVoiceRecieverEvent {
+    type: "endSpeakingEvent";
+    data: EndSpeakingEventVoiceRecieverData;
+}
+export type VoiceRecieverEvent = StartSpeakingEventVoiceReciever | EndSpeakingEventVoiceReciever;
 /**
  * Represents a player capable of playing audio tracks.
  * @extends EventEmitter
@@ -58,6 +100,12 @@ export declare class Player extends EventEmitter {
     deaf: boolean;
     /** The volume of the player (0-1000) */
     volume: number;
+    /** Should only be used when the node is a NodeLink */
+    protected voiceRecieverWsClient: WebSocket | null;
+    protected isConnectToVoiceReciever: boolean;
+    protected voiceRecieverReconnectTimeout: NodeJS.Timeout | null;
+    protected voiceRecieverAttempt: number;
+    protected voiceRecieverReconnectTries: number;
     constructor(poru: Poru, node: Node, options: ConnectionOptions);
     /**
      * Initiates playback of the next track in the queue.
@@ -81,6 +129,15 @@ export declare class Player extends EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     skip(): Promise<Player>;
+    /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
     getLyrics(encodedTrack?: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null>;
     /**
      * Pauses or resumes playback.
@@ -179,5 +236,41 @@ export declare class Player extends EventEmitter {
      * @param {any} data - The data to send.
      */
     send(data: any): void;
+    setupVoiceRecieverConnection(): Promise<boolean>;
+    removeVoiceRecieverConnection(): Promise<boolean>;
+    /**
+      * This will close the connection to the node
+      * @param {any} event any
+      * @returns {void} void
+      */
+    private voiceRecieverClose;
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
+    private voiceRecieverReconnect;
+    /**
+     * This function will make the node disconnect
+     * @returns {Promise<void>} void
+     */
+    private voiceRecieverDisconnect;
+    /**
+      * This function will open up again the node
+      * @returns {Promise<void>} The Promise<void>
+      */
+    private voiceRecieverOpen;
+    /**
+     * This will send a message to the node
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
+     */
+    private voiceRecieverMessage;
+    /**
+      * This function will emit the error so that the user's listeners can get them and listen to them
+      * @param {any} event any
+      * @returns {void} void
+      */
+    private voiceRecieverError;
 }
 export {};

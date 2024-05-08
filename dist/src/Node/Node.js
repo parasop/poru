@@ -19,6 +19,8 @@ class Node {
     name;
     restURL;
     socketURL;
+    host;
+    port;
     password;
     secure;
     regions;
@@ -46,6 +48,8 @@ class Node {
         this.poru = poru;
         this.name = node.name;
         this.options = node;
+        this.host = node.host;
+        this.port = node.port;
         this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
         this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
@@ -205,7 +209,8 @@ class Node {
                 status: 404,
                 error: "Not found.",
                 message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
-                path: "/v4/routeplanner/status"
+                path: "/v4/routeplanner/status",
+                trace: new Error().stack
             };
         return await this.rest.get(`/v4/routeplanner/status`);
     }
@@ -222,7 +227,8 @@ class Node {
                 status: 404,
                 error: "Not found.",
                 message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
-                path: "/v4/routeplanner/free/address"
+                path: "/v4/routeplanner/free/address",
+                trace: new Error().stack
             };
         return this.rest.post(`/v4/routeplanner/free/address`, { address });
     }
