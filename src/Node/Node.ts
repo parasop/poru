@@ -29,11 +29,16 @@ export interface NodeStats {
 
 export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
   
-export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsError | NodeLinkGetLyricsMultiple;
+export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsMultiple | NodeLinkGetLyricsEmpty | NodeLinkGetLyricsError;
 
 export interface NodeLinkGetLyricsMultiple {
     loadType: "lyricsMultiple";
     data: NodeLinkGetLyricsData[]
+};
+
+export interface NodeLinkGetLyricsEmpty {
+    loadType: "empty",
+    data: {}
 };
 
 interface NodeLinkGetLyricsData {
