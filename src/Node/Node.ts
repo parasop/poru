@@ -313,7 +313,8 @@ export class Node {
             status: 404,
             error: "Not found.",
             message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
-            path: "/v4/routeplanner/status"
+            path: "/v4/routeplanner/status",
+            trace: "poru/Node.js:getRoutePlannerStatus"
         } satisfies ErrorResponses;
 
         return await this.rest.get<null | ErrorResponses>(`/v4/routeplanner/status`)
@@ -330,7 +331,8 @@ export class Node {
             status: 404,
             error: "Not found.",
             message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
-            path: "/v4/routeplanner/free/address"
+            path: "/v4/routeplanner/free/address",
+            trace: "poru/Node.js:unmarkFailedAddress"
         } satisfies ErrorResponses;
 
         return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
