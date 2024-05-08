@@ -11,6 +11,7 @@ const Response_1 = require("./guild/Response");
 ;
 ;
 ;
+;
 /**
  * Represents Poru, a library for managing audio players with Lavalink.
  * @extends EventEmitter

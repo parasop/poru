@@ -13,14 +13,16 @@ const Rest_1 = require("./Rest");
 ;
 ;
 ;
+;
+;
+;
+;
 class Node {
+    name;
     isConnected;
     poru;
-    name;
     restURL;
     socketURL;
-    host;
-    port;
     password;
     secure;
     regions;
@@ -45,14 +47,12 @@ class Node {
      * @param options PoruOptions
      */
     constructor(poru, node, options) {
-        this.poru = poru;
         this.name = node.name;
+        this.poru = poru;
         this.options = node;
-        this.host = node.host;
-        this.port = node.port;
         this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
-        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
+        this.socketURL = `${node.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
         this.password = node.password || "youshallnotpass";
         this.regions = node.region || null;
         this.sessionId = null;
@@ -101,8 +101,8 @@ class Node {
                 return resolve(true);
             if (this.ws)
                 this.ws.close();
-            if (!this.poru.nodes.get(this.name)) {
-                this.poru.nodes.set(this.name, this);
+            if (!this.poru.nodes.get(this.options.name)) {
+                this.poru.nodes.set(this.options.name, this);
             }
             ;
             if (!this.poru.userId)
@@ -147,7 +147,7 @@ class Node {
     async reconnect() {
         this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
-                throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`);
+                throw new Error(`[Poru Websocket] Unable to connect with ${this.options.name} node after ${this.reconnectTries} tries`);
             }
             // Delete the ws instance
             this.isConnected = false;
@@ -176,7 +176,7 @@ class Node {
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        this.poru.nodes.delete(this.name);
+        this.poru.nodes.delete(this.options.name);
         this.poru.emit("nodeDisconnect", this);
     }
     ;
@@ -239,7 +239,7 @@ class Node {
      */
     upgrade(request) {
         // Checking if this node is a NodeLink or not
-        this.isNodeLink = Boolean(request.headers.isnodelink) ?? false;
+        this.isNodeLink = this.options.isNodeLink ?? Boolean(request.headers.isnodelink) ?? false;
     }
     ;
     /**
@@ -255,12 +255,12 @@ class Node {
             ;
             this.poru.emit("nodeConnect", this);
             this.isConnected = true;
-            this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection ready ${this.socketURL}`);
             if (this.autoResume)
                 this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         }
         catch (error) {
-            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.name}.`, error);
+            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.options.name}.`, error);
         }
         ;
     }
@@ -276,17 +276,17 @@ class Node {
             if (!packet?.op)
                 return;
             this.poru.emit("raw", "Node", packet);
-            this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
             switch (packet.op) {
                 case "ready":
                     {
                         this.rest.setSessionId(packet.sessionId);
                         this.sessionId = packet.sessionId;
-                        this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+                        this.poru.emit("debug", this.options.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
                         // If a resume key was set use it
                         if (this.resumeKey) {
                             await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-                            this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                            this.poru.emit("debug", this.options.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
                         }
                         ;
                         break;
@@ -329,7 +329,7 @@ class Node {
         try {
             await this.disconnect();
             this.poru.emit("nodeDisconnect", this, event);
-            this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
             if (event !== 1000)
                 await this.reconnect();
         }
@@ -348,7 +348,7 @@ class Node {
         if (!event)
             return;
         this.poru.emit("nodeError", this, event);
-        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
+        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.options.name}) has error code: ${event.code || event}`);
     }
     ;
 }

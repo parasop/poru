@@ -70,11 +70,11 @@ class Player extends events_1.EventEmitter {
     /** The volume of the player (0-1000) */
     volume;
     /** Should only be used when the node is a NodeLink */
-    voiceRecieverWsClient;
-    isConnectToVoiceReciever;
-    voiceRecieverReconnectTimeout;
-    voiceRecieverAttempt;
-    voiceRecieverReconnectTries;
+    voiceReceiverWsClient;
+    isConnectToVoiceReceiver;
+    voiceReceiverReconnectTimeout;
+    voiceReceiverAttempt;
+    voiceReceiverReconnectTries;
     constructor(poru, node, options) {
         super();
         this.poru = poru;
@@ -100,11 +100,11 @@ class Player extends events_1.EventEmitter {
         this.isConnected = false;
         this.loop = "NONE";
         this.data = {};
-        this.voiceRecieverWsClient = null;
-        this.isConnectToVoiceReciever = false;
-        this.voiceRecieverReconnectTimeout = null;
-        this.voiceRecieverAttempt = 0;
-        this.voiceRecieverReconnectTries = 3;
+        this.voiceReceiverWsClient = null;
+        this.isConnectToVoiceReceiver = false;
+        this.voiceReceiverReconnectTimeout = null;
+        this.voiceReceiverAttempt = 0;
+        this.voiceReceiverReconnectTries = 3;
         this.poru.emit("playerCreate", this);
         this.on("playerUpdate", (packet) => {
             (this.isConnected = packet.state.connected),
@@ -542,37 +542,38 @@ class Player extends events_1.EventEmitter {
         this.poru.send({ op: 4, d: data });
     }
     ;
-    async setupVoiceRecieverConnection() {
+    async setupVoiceReceiverConnection() {
         return new Promise(async (resolve, reject) => {
             if (!this.node.isNodeLink)
                 return reject(new Error("[Poru Exception] This function is only available for NodeLink nodes."));
             if (!this.poru.userId)
                 return reject(new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library."));
-            if (this.voiceRecieverWsClient)
-                await this.removeVoiceRecieverConnection();
+            if (this.voiceReceiverWsClient)
+                await this.removeVoiceReceiverConnection();
             const headers = {
                 Authorization: this.node.password,
                 "User-Id": this.poru.userId,
                 "Guild-Id": this.guildId,
                 "Client-Name": this.node.clientName,
             };
-            this.voiceRecieverWsClient = new ws_1.default(`${this.node.secure ? "wss" : "ws"}://${this.node.host}:${this.node.port}/connection/data`, { headers });
-            this.voiceRecieverWsClient.on("open", this.voiceRecieverOpen.bind(this));
-            this.voiceRecieverWsClient.on("error", this.voiceRecieverError.bind(this));
-            this.voiceRecieverWsClient.on("message", this.voiceRecieverMessage.bind(this));
-            this.voiceRecieverWsClient.on("close", this.voiceRecieverClose.bind(this));
+            const { host, secure, port } = this.node.options;
+            this.voiceReceiverWsClient = new ws_1.default(`${secure ? "wss" : "ws"}://${host}:${port}/connection/data`, { headers });
+            this.voiceReceiverWsClient.on("open", this.voiceReceiverOpen.bind(this));
+            this.voiceReceiverWsClient.on("error", this.voiceReceiverError.bind(this));
+            this.voiceReceiverWsClient.on("message", this.voiceReceiverMessage.bind(this));
+            this.voiceReceiverWsClient.on("close", this.voiceReceiverClose.bind(this));
             return resolve(true);
         });
     }
     ;
-    async removeVoiceRecieverConnection() {
+    async removeVoiceReceiverConnection() {
         return new Promise((resolve, reject) => {
             if (!this.node.isNodeLink)
                 return reject(new Error("[Poru Exception] This function is only available for NodeLink nodes."));
-            this.voiceRecieverWsClient?.close(1000, "destroy");
-            this.voiceRecieverWsClient?.removeAllListeners();
-            this.voiceRecieverWsClient = null;
-            this.isConnectToVoiceReciever = false;
+            this.voiceReceiverWsClient?.close(1000, "destroy");
+            this.voiceReceiverWsClient?.removeAllListeners();
+            this.voiceReceiverWsClient = null;
+            this.isConnectToVoiceReceiver = false;
             return resolve(true);
         });
     }
@@ -583,15 +584,15 @@ class Player extends events_1.EventEmitter {
       * @param {any} event any
       * @returns {void} void
       */
-    async voiceRecieverClose(event) {
+    async voiceReceiverClose(event) {
         try {
-            await this.voiceRecieverDisconnect();
-            this.poru.emit("debug", this.node.name, `[Voice Reciever Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"}`);
+            await this.voiceReceiverDisconnect();
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"}`);
             if (event !== 1000)
-                await this.voiceRecieverReconnect();
+                await this.voiceReceiverReconnect();
         }
         catch (error) {
-            this.poru.emit("debug", "[Voice Reciever Web Socket] Error while closing the connection with the node.", error);
+            this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
         }
         ;
     }
@@ -601,18 +602,18 @@ class Player extends events_1.EventEmitter {
      * @param payload any
      * @returns {void}
      */
-    async voiceRecieverReconnect() {
-        this.voiceRecieverReconnectTimeout = setTimeout(async () => {
-            if (this.voiceRecieverAttempt > this.voiceRecieverReconnectTries) {
-                throw new Error(`[Poru Voice Reciever Websocket] Unable to connect with ${this.node.name} node to the voice Reciever Websocket after ${this.voiceRecieverReconnectTries} tries`);
+    async voiceReceiverReconnect() {
+        this.voiceReceiverReconnectTimeout = setTimeout(async () => {
+            if (this.voiceReceiverAttempt > this.voiceReceiverReconnectTries) {
+                throw new Error(`[Poru Voice Receiver Websocket] Unable to connect with ${this.node.name} node to the voice Receiver Websocket after ${this.voiceReceiverReconnectTries} tries`);
             }
             // Delete the ws instance
             this.isConnected = false;
-            this.voiceRecieverWsClient?.removeAllListeners();
-            this.voiceRecieverWsClient = null;
-            this.poru.emit("debug", this.node.name, `[Voice Reciever Web Socket] Reconnecting to the voice Reciever Websocket...`);
-            await this.setupVoiceRecieverConnection();
-            this.voiceRecieverAttempt++;
+            this.voiceReceiverWsClient?.removeAllListeners();
+            this.voiceReceiverWsClient = null;
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Reconnecting to the voice Receiver Websocket...`);
+            await this.setupVoiceReceiverConnection();
+            this.voiceReceiverAttempt++;
         }, this.node.reconnectTimeout);
     }
     ;
@@ -620,31 +621,31 @@ class Player extends events_1.EventEmitter {
      * This function will make the node disconnect
      * @returns {Promise<void>} void
      */
-    async voiceRecieverDisconnect() {
-        if (!this.isConnectToVoiceReciever)
+    async voiceReceiverDisconnect() {
+        if (!this.isConnectToVoiceReceiver)
             return;
-        this.voiceRecieverWsClient?.close(1000, "destroy");
-        this.voiceRecieverWsClient?.removeAllListeners();
-        this.voiceRecieverWsClient = null;
-        this.poru.emit("voiceRecieverDisconnected", this, `[Voice Reciever Web Socket] Connection was closed.`);
+        this.voiceReceiverWsClient?.close(1000, "destroy");
+        this.voiceReceiverWsClient?.removeAllListeners();
+        this.voiceReceiverWsClient = null;
+        this.poru.emit("voiceReceiverDisconnected", this, `[Voice Receiver Web Socket] Connection was closed.`);
     }
     ;
     /**
       * This function will open up again the node
       * @returns {Promise<void>} The Promise<void>
       */
-    async voiceRecieverOpen() {
+    async voiceReceiverOpen() {
         try {
-            if (this.voiceRecieverReconnectTimeout) {
-                clearTimeout(this.voiceRecieverReconnectTimeout);
-                this.voiceRecieverReconnectTimeout = null;
+            if (this.voiceReceiverReconnectTimeout) {
+                clearTimeout(this.voiceReceiverReconnectTimeout);
+                this.voiceReceiverReconnectTimeout = null;
             }
             ;
-            this.isConnectToVoiceReciever = true;
-            this.poru.emit("voiceRecieverConnected", this, `[Voice Reciever Web Socket] Connection ready ${this.node.socketURL}/connection/data`);
+            this.isConnectToVoiceReceiver = true;
+            this.poru.emit("voiceReceiverConnected", this, `[Voice Receiver Web Socket] Connection ready ${this.node.socketURL}/connection/data`);
         }
         catch (error) {
-            this.poru.emit("debug", `[Voice Reciever Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Reciever Websocket.`, error);
+            this.poru.emit("debug", `[Voice Receiver Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Receiver Websocket.`, error);
         }
         ;
     }
@@ -654,29 +655,33 @@ class Player extends events_1.EventEmitter {
      * @param {string} payload The sent payload we recieved in stringified form
      * @returns {Promise<void>} Return void
      */
-    async voiceRecieverMessage(payload) {
+    async voiceReceiverMessage(payload) {
         try {
             const packet = JSON.parse(payload);
             if (!packet?.op)
                 return;
-            this.poru.emit("debug", this.node.name, `[Voice Reciever Web Socket] Recieved a payload: ${payload}`);
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Recieved a payload: ${payload}`);
             switch (packet.type) {
                 case "startSpeakingEvent": {
                     this.poru.emit("startSpeaking", this, packet.data);
                     break;
                 }
                 case "endSpeakingEvent": {
-                    this.poru.emit("endSpeaking", this, packet.data);
+                    const data = {
+                        ...packet.data,
+                        data: Buffer.from(packet.data.data, "base64")
+                    };
+                    this.poru.emit("endSpeaking", this, data);
                     break;
                 }
                 default: {
-                    this.poru.emit("debug", this.node.name, `[Voice Reciever Web Socket] Recieved an unknown payload: ${payload}`);
+                    this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Recieved an unknown payload: ${payload}`);
                     break;
                 }
             }
         }
         catch (err) {
-            this.poru.emit("voiceRecieverError", this, "[Voice Reciever Web Socket] Error while parsing the payload. " + err);
+            this.poru.emit("voiceReceiverError", this, "[Voice Receiver Web Socket] Error while parsing the payload. " + err);
         }
         ;
     }
@@ -686,11 +691,11 @@ class Player extends events_1.EventEmitter {
       * @param {any} event any
       * @returns {void} void
       */
-    voiceRecieverError(event) {
+    voiceReceiverError(event) {
         if (!event)
             return;
-        this.poru.emit("voiceRecieverError", this, event);
-        this.poru.emit("debug", `[Voice Reciever Web Socket] Connection for NodeLink Voice Reciever (${this.node.name}) has the following error code: ${event.code || event}`);
+        this.poru.emit("voiceReceiverError", this, event);
+        this.poru.emit("debug", `[Voice Receiver Web Socket] Connection for NodeLink Voice Receiver (${this.node.name}) has the following error code: ${event.code || event}`);
     }
     ;
 }

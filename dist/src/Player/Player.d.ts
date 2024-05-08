@@ -1,7 +1,7 @@
 /// <reference types="node" />
 /// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
-import { Node, NodelinkGetLyricsInterface } from "../Node/Node";
+import { Node, NodeLinkGetLyrics } from "../Node/Node";
 import { Track } from "../guild/Track";
 import { Connection } from "./Connection";
 import Queue from "../guild/Queue";
@@ -10,10 +10,10 @@ import { Filters } from "./Filters";
 import { Response } from "../guild/Response";
 import WebSocket from "ws";
 type Loop = "NONE" | "TRACK" | "QUEUE";
-interface BaseVoiceRecieverEvent {
+interface BaseVoiceReceiverEvent {
     op: "speak";
 }
-export interface StartSpeakingEventVoiceRecieverData {
+export interface StartSpeakingEventVoiceReceiverData {
     /**
       * The user ID of the user who started speaking.
       */
@@ -23,7 +23,7 @@ export interface StartSpeakingEventVoiceRecieverData {
       */
     guildId: string;
 }
-export interface EndSpeakingEventVoiceRecieverData {
+export interface EndSpeakingEventVoiceReceiverData {
     /**
    * The user ID of the user who stopped speaking.
    */
@@ -39,17 +39,17 @@ export interface EndSpeakingEventVoiceRecieverData {
     /**
      * The type of the audio data. Can be either opus or pcm. Older versions may include ogg/opus.
      */
-    type: "opus" | "pcm" | "ogg/opus";
+    type: "opus" | "pcm";
 }
-export interface StartSpeakingEventVoiceReciever extends BaseVoiceRecieverEvent {
+export interface StartSpeakingEventVoiceReceiver extends BaseVoiceReceiverEvent {
     type: "startSpeakingEvent";
-    data: StartSpeakingEventVoiceRecieverData;
+    data: StartSpeakingEventVoiceReceiverData;
 }
-export interface EndSpeakingEventVoiceReciever extends BaseVoiceRecieverEvent {
+export interface EndSpeakingEventVoiceReceiver extends BaseVoiceReceiverEvent {
     type: "endSpeakingEvent";
-    data: EndSpeakingEventVoiceRecieverData;
+    data: EndSpeakingEventVoiceReceiverData;
 }
-export type VoiceRecieverEvent = StartSpeakingEventVoiceReciever | EndSpeakingEventVoiceReciever;
+export type VoiceReceiverEvent = StartSpeakingEventVoiceReceiver | EndSpeakingEventVoiceReceiver;
 /**
  * Represents a player capable of playing audio tracks.
  * @extends EventEmitter
@@ -101,11 +101,11 @@ export declare class Player extends EventEmitter {
     /** The volume of the player (0-1000) */
     volume: number;
     /** Should only be used when the node is a NodeLink */
-    protected voiceRecieverWsClient: WebSocket | null;
-    protected isConnectToVoiceReciever: boolean;
-    protected voiceRecieverReconnectTimeout: NodeJS.Timeout | null;
-    protected voiceRecieverAttempt: number;
-    protected voiceRecieverReconnectTries: number;
+    protected voiceReceiverWsClient: WebSocket | null;
+    protected isConnectToVoiceReceiver: boolean;
+    protected voiceReceiverReconnectTimeout: NodeJS.Timeout | null;
+    protected voiceReceiverAttempt: number;
+    protected voiceReceiverReconnectTries: number;
     constructor(poru: Poru, node: Node, options: ConnectionOptions);
     /**
      * Initiates playback of the next track in the queue.
@@ -138,7 +138,7 @@ export declare class Player extends EventEmitter {
      * @param language The language of the lyrics to get defaults to english
      * @returns
      */
-    getLyrics(encodedTrack?: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null>;
+    getLyrics(encodedTrack?: string | null, language?: string): Promise<NodeLinkGetLyrics | null>;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
@@ -236,41 +236,41 @@ export declare class Player extends EventEmitter {
      * @param {any} data - The data to send.
      */
     send(data: any): void;
-    setupVoiceRecieverConnection(): Promise<boolean>;
-    removeVoiceRecieverConnection(): Promise<boolean>;
+    setupVoiceReceiverConnection(): Promise<boolean>;
+    removeVoiceReceiverConnection(): Promise<boolean>;
     /**
       * This will close the connection to the node
       * @param {any} event any
       * @returns {void} void
       */
-    private voiceRecieverClose;
+    private voiceReceiverClose;
     /**
      * Handles the message event
      * @param payload any
      * @returns {void}
      */
-    private voiceRecieverReconnect;
+    private voiceReceiverReconnect;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
      */
-    private voiceRecieverDisconnect;
+    private voiceReceiverDisconnect;
     /**
       * This function will open up again the node
       * @returns {Promise<void>} The Promise<void>
       */
-    private voiceRecieverOpen;
+    private voiceReceiverOpen;
     /**
      * This will send a message to the node
      * @param {string} payload The sent payload we recieved in stringified form
      * @returns {Promise<void>} Return void
      */
-    private voiceRecieverMessage;
+    private voiceReceiverMessage;
     /**
       * This function will emit the error so that the user's listeners can get them and listen to them
       * @param {any} event any
       * @returns {void} void
       */
-    private voiceRecieverError;
+    private voiceReceiverError;
 }
 export {};
