@@ -59,7 +59,7 @@ class Response {
     ;
     convertNodelinkResponseToLavalink(loadType) {
         switch (loadType) {
-            case "shorts": return "track";
+            case "short": return "track";
             case "artist":
             case "episode":
             case "station":

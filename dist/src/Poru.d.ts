@@ -1,6 +1,6 @@
 /// <reference types="node" />
 import { Node, NodelinkGetLyricsInterface, NodeStats } from "./Node/Node";
-import { Player } from "./Player/Player";
+import { EndSpeakingEventVoiceRecieverData, Player, StartSpeakingEventVoiceRecieverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
@@ -222,6 +222,39 @@ export interface PoruEvents {
      * @param {WebSocketClosedEvent} data - Additional data related to the socket closure.
      */
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
+    /**
+     * Emitted when a voice Reciever was setup and the user started speaking.
+     * @param {Player} player - The player associated with the voice reciever.
+     * @param {StartSpeakingEventVoiceRecieverData} data - Additional data related to the start of speaking.
+     */
+    startSpeaking: (player: Player, data: StartSpeakingEventVoiceRecieverData) => void;
+    /**
+     * Emitted when a voice Reciever was setup and the user stopped speaking.
+     * @param {Player} player - The player associated with the voice reciever.
+     * @param {EndSpeakingEventVoiceRecieverData} data - Additional data related to the end of speaking including the voice data.
+     */
+    endSpeaking: (player: Player, data: EndSpeakingEventVoiceRecieverData) => void;
+    /**
+     * Emitted when a voice Reciever encounters an error.
+     * @param player The player associated with the voice reciever.
+     * @param error The error that occurred.
+     * @returns
+     */
+    voiceRecieverError: (player: Player, error: any) => void;
+    /**
+     * Emitted when a voice Reciever connected itself.
+     * @param player The player associated with the voice reciever.
+     * @param reason The reason for the connection.
+     * @returns
+     */
+    voiceRecieverConnected: (player: Player, status: string) => void;
+    /**
+     * Emitted when a voice Reciever disconnected itself.
+     * @param player The player associated with the voice reciever.
+     * @param reason The reason for the disconnection.
+     * @returns
+     */
+    voiceRecieverDisconnected: (player: Player, reason: string) => void;
 }
 export declare interface Poru {
     on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
@@ -335,6 +368,15 @@ export declare class Poru extends EventEmitter {
      * @returns {Promise<NodeStatsResponse>} The status of the node.
      */
     getLavalinkStatus(name: string): Promise<NodeStatsResponse>;
+    /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
     getLyrics(encodedTrack: string | null, language?: string): Promise<NodelinkGetLyricsInterface | null>;
     /**
      * Retrieves the Lavalink version for a node.
