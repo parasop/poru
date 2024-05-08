@@ -158,6 +158,10 @@ export interface NodeInfoResponse {
 
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
+interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceRecieverData, "data"> {
+    data: Buffer 
+};
+
 export interface PoruEvents {
     /**
      * Emitted for debugging purposes, providing information for debugging.
@@ -265,7 +269,7 @@ export interface PoruEvents {
      * @param {Player} player - The player associated with the voice reciever.
      * @param {EndSpeakingEventVoiceRecieverData} data - Additional data related to the end of speaking including the voice data.
      */
-    endSpeaking: (player: Player, data: EndSpeakingEventVoiceRecieverData) => void;
+    endSpeaking: (player: Player, data: EndSpeakingEventWithBufferForVoiceData) => void;
 
     /**
      * Emitted when a voice Reciever encounters an error.
