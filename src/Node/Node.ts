@@ -1,7 +1,9 @@
 import { Poru, PoruOptions, NodeGroup, EventData } from "../Poru";
 import WebSocket from "ws";
 import { Config as config } from "../config";
-import { PartialNull, Rest } from "./Rest";
+import { Rest } from "./Rest";
+import { IncomingMessage } from "http";
+import { LavaLinkLoadTypes, Severity } from "../guild/Response";
 
 export interface NodeStats {
     players: number;
@@ -23,6 +25,46 @@ export interface NodeStats {
         nulled: number;
         deficit: number;
     } | null;
+};
+
+export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
+  
+export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsMultiple | NodeLinkGetLyricsEmpty | NodeLinkGetLyricsError;
+
+export interface NodeLinkGetLyricsMultiple {
+    loadType: "lyricsMultiple";
+    data: NodeLinkGetLyricsData[]
+};
+
+export interface NodeLinkGetLyricsEmpty {
+    loadType: "empty",
+    data: {}
+};
+
+interface NodeLinkGetLyricsData {
+    name: string;
+    synced: boolean;
+    data: {
+        startTime?: number;
+        endTime?: number;
+        text: string;
+    }[];
+    rtl: boolean;
+};
+
+export interface NodeLinkGetLyricsSingle {
+    loadType: "lyricsSingle",
+    data: NodeLinkGetLyricsData
+};
+
+export interface NodeLinkGetLyricsError {
+    loadType: "error",
+    data: {
+        message: string;
+        severity: Severity;
+        cause: string;
+        trace?: string;
+    }
 };
 
 /**
@@ -100,9 +142,9 @@ export interface ErrorResponses {
 };
 
 export class Node {
+    public readonly name: string;
     public isConnected: boolean;
     public poru: Poru;
-    public readonly name: string;
     public readonly restURL: string;
     public readonly socketURL: string;
     public password: string;
@@ -118,9 +160,11 @@ export class Node {
     public reconnectTries: number;
     public reconnectAttempt: NodeJS.Timeout | null;
     public attempt: number;
-    public stats: NodeStats | null;
+    public stats: NodeStats;
     public options: NodeGroup;
     public clientName: string;
+    public isNodeLink: boolean
+
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -128,12 +172,12 @@ export class Node {
      * @param options PoruOptions
      */
     constructor(poru: Poru, node: NodeGroup, options: PoruOptions) {
+        this.name = node.name
         this.poru = poru;
-        this.name = node.name;
         this.options = node;
         this.secure = node.secure || false;
         this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
-        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
+        this.socketURL = `${node.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
         this.password = node.password || "youshallnotpass";
         this.regions = node.region || null;
         this.sessionId = null;
@@ -147,8 +191,29 @@ export class Node {
         this.reconnectAttempt = null;
         this.attempt = 0;
         this.isConnected = false;
-        this.stats = null;
         this.clientName = options.clientName || `${config.clientName}/${config.version}`;
+        this.isNodeLink = false;
+        this.stats = {
+            players: 0,
+            playingPlayers: 0,
+            uptime: 0,
+            memory: {
+                free: 0,
+                used: 0,
+                allocated: 0,
+                reservable: 0,
+            },
+            cpu: {
+                cores: 0,
+                systemLoad: 0,
+                lavalinkLoad: 0,
+            },
+            frameStats: {
+                sent: 0,
+                nulled: 0,
+                deficit: 0,
+            }
+        }
     };
 
     /**
@@ -159,8 +224,8 @@ export class Node {
         return new Promise((resolve) => {
             if (this.isConnected) return resolve(true);
             if (this.ws) this.ws.close();
-            if (!this.poru.nodes.get(this.name)) {
-                this.poru.nodes.set(this.name, this)
+            if (!this.poru.nodes.get(this.options.name)) {
+                this.poru.nodes.set(this.options.name, this)
             };
             if (!this.poru.userId) throw new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library.")
 
@@ -177,6 +242,7 @@ export class Node {
             this.ws.on("error", this.error.bind(this));
             this.ws.on("message", this.message.bind(this));
             this.ws.on("close", this.close.bind(this));
+            this.ws.on("upgrade", (request) => this.upgrade(request))
             resolve(true);
         })
     };
@@ -204,7 +270,7 @@ export class Node {
         this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
                 throw new Error(
-                    `[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`
+                    `[Poru Websocket] Unable to connect with ${this.options.name} node after ${this.reconnectTries} tries`
                 );
             }
 
@@ -237,7 +303,7 @@ export class Node {
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        this.poru.nodes.delete(this.name);
+        this.poru.nodes.delete(this.options.name);
         this.poru.emit("nodeDisconnect", this);
     };
 
@@ -248,9 +314,9 @@ export class Node {
     public get penalties(): number {
         let penalties = 0;
 
-        if (!this.isConnected || !this.stats) return penalties;
+        if (!this.isConnected) return penalties;
 
-        penalties += this.stats.players;
+        penalties += this.stats?.players ?? 0;
         penalties += Math.round(Math.pow(1.05, 100 * this.stats.cpu.systemLoad) * 10 - 10);
 
         if (this.stats.frameStats) {
@@ -259,6 +325,50 @@ export class Node {
         };
 
         return penalties;
+    };
+
+    /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
+    public async getRoutePlannerStatus(): Promise<null | ErrorResponses> {
+        if (this.isNodeLink) return {
+            timestamp: Date.now(),
+            status: 404,
+            error: "Not found.",
+            message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+            path: "/v4/routeplanner/status",
+            trace: new Error().stack
+        } satisfies ErrorResponses;
+
+        return await this.rest.get<null | ErrorResponses>(`/v4/routeplanner/status`)
+    };
+
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
+    public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
+        if (this.isNodeLink) return {
+            timestamp: Date.now(),
+            status: 404,
+            error: "Not found.",
+            message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+            path: "/v4/routeplanner/free/address",
+            trace: new Error().stack
+        } satisfies ErrorResponses;
+
+        return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
+    };
+
+    /**
+     * This function will get the upgrade event from the ws connection
+     * @param {IncomingMessage} request The request from the upgraded WS connection
+     */
+    private upgrade(request: IncomingMessage) {
+        // Checking if this node is a NodeLink or not
+        this.isNodeLink = this.options.isNodeLink ?? Boolean(request.headers.isnodelink) ?? false;
     };
 
     /**
@@ -274,22 +384,13 @@ export class Node {
     
             this.poru.emit("nodeConnect", this);
             this.isConnected = true;
-            this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
-    
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection ready ${this.socketURL}`);
+
             if (this.autoResume) this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         } catch (error) {
-            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.name}.`, error)
+            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.options.name}.`, error)
         };
     };
-
-    /**
-     * This function will set the stats accordingly from the NodeStats
-     * @param {NodeStats} packet The NodeStats
-     * @returns {void} void 
-     */
-    private setStats(packet: NodeStats): void {
-        this.stats = packet;
-    }
 
     /**
      * This will send a message to the node
@@ -302,18 +403,18 @@ export class Node {
             if (!packet?.op) return;
 
             this.poru.emit("raw", "Node", packet)
-            this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
 
             switch (packet.op) {
                 case "ready": {
                     this.rest.setSessionId(packet.sessionId);
                     this.sessionId = packet.sessionId;
-                    this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+                    this.poru.emit("debug", this.options.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
 
                     // If a resume key was set use it
                     if (this.resumeKey) {
                         await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-                        this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                        this.poru.emit("debug", this.options.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
                     };
 
                     break;
@@ -321,7 +422,7 @@ export class Node {
 
                 // If the packet has stats about the node in it update them on the Node's class
                 case "stats": {
-                    delete (packet as NodeStats & { op: string | undefined}).op;
+                    delete (packet as NodeStats & { op: string | undefined }).op;
 
                     this.stats = packet;
 
@@ -353,7 +454,7 @@ export class Node {
         try {
             await this.disconnect();
             this.poru.emit("nodeDisconnect", this, event);
-            this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
     
             if (event !== 1000) await this.reconnect();   
         } catch (error) {
@@ -370,23 +471,6 @@ export class Node {
         if (!event) return;
 
         this.poru.emit("nodeError", this, event);
-        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
-    };
-
-    /**
-     * This function will get the RoutePlanner status
-     * @returns {Promise<null>}
-     */
-    public async getRoutePlannerStatus(): Promise<null> {
-        return await this.rest.get<null>(`/v4/routeplanner/status`)
-    }
-
-    /**
-     * This function will Unmark a failed address
-     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
-     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
-     */
-    public async unmarkFailedAddress(address: string): Promise<null | ErrorResponses> {
-        return this.rest.post<null | ErrorResponses>(`/v4/routeplanner/free/address`, { address })
+        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.options.name}) has error code: ${event.code || event}`);
     };
 };

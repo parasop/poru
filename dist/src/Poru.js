@@ -11,6 +11,7 @@ const Response_1 = require("./guild/Response");
 ;
 ;
 ;
+;
 /**
  * Represents Poru, a library for managing audio players with Lavalink.
  * @extends EventEmitter
@@ -67,7 +68,7 @@ class Poru extends events_1.EventEmitter {
                         guild.shard?.send(packet);
                 };
                 this.client.on("raw", async (packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -78,7 +79,7 @@ class Poru extends events_1.EventEmitter {
                         guild.shard.sendWS(packet?.op, packet?.d);
                 };
                 this.client.on("rawWS", async (packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
@@ -89,14 +90,14 @@ class Poru extends events_1.EventEmitter {
                         guild.shard.send(packet?.op, packet?.d);
                 };
                 this.client.on("packet", async (packet) => {
-                    this.packetUpdate(packet);
+                    await this.packetUpdate(packet);
                 });
                 break;
             }
             case "other": {
-                if (!this.send)
+                if (!this.send || !this.options.send)
                     throw new Error("Send function is required in Poru Options");
-                this.send = this.options.send;
+                this.send = this.options.send ?? null;
                 break;
             }
         }
@@ -107,7 +108,7 @@ class Poru extends events_1.EventEmitter {
      * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    packetUpdate(packet) {
+    async packetUpdate(packet) {
         if (!["VOICE_STATE_UPDATE", "VOICE_SERVER_UPDATE"].includes(packet.t))
             return;
         if (!("guild_id" in packet.d))
@@ -116,7 +117,7 @@ class Poru extends events_1.EventEmitter {
         if (!player)
             return;
         if (packet.t === "VOICE_SERVER_UPDATE") {
-            player.connection.setServersUpdate(packet.d);
+            await player.connection.setServersUpdate(packet.d);
         }
         if (packet.t === "VOICE_STATE_UPDATE") {
             if (packet.d.user_id !== this.userId)
@@ -140,13 +141,14 @@ class Poru extends events_1.EventEmitter {
       * @param {string} identifier - The name of the node.
       * @returns {boolean} A boolean indicating if the node was successfully removed.
       */
-    removeNode(identifier) {
+    async removeNode(identifier) {
         const node = this.nodes.get(identifier);
         if (!node)
-            return;
-        node.disconnect();
+            return true;
+        await node.disconnect();
         return this.nodes.delete(identifier);
     }
+    ;
     /**
      * Retrieves nodes by region.
      * @param {string} region - Region of the node.
@@ -156,10 +158,10 @@ class Poru extends events_1.EventEmitter {
         return [...this.nodes.values()]
             .filter((node) => node.isConnected && node.regions?.includes(region?.toLowerCase()))
             .sort((a, b) => {
-            const aLoad = a.stats.cpu
+            const aLoad = a.stats?.cpu
                 ? (a.stats.cpu.systemLoad / a.stats.cpu.cores) * 100
                 : 0;
-            const bLoad = b.stats.cpu
+            const bLoad = b.stats?.cpu
                 ? (b.stats.cpu.systemLoad / b.stats.cpu.cores) * 100
                 : 0;
             return aLoad - bLoad;
@@ -219,13 +221,14 @@ class Poru extends events_1.EventEmitter {
         player.connect(options);
         return player;
     }
+    ;
     /**
      * Removes a player from the Poru instance.
      * @param {string} guildId - Guild ID.
-     * @returns {Promise<boolean>} A promise indicating if the player was successfully removed.
+     * @returns {Promise<boolean>} A promise indicating a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     async removeConnection(guildId) {
-        return await this.players.get(guildId)?.destroy();
+        return await this.players.get(guildId)?.destroy() ?? false;
     }
     ;
     /**
@@ -250,7 +253,7 @@ class Poru extends events_1.EventEmitter {
             node = this.leastUsedNodes[0];
         if (!node)
             throw new Error("No nodes are available.");
-        const response = await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`);
+        const response = (await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
     /**
@@ -299,6 +302,27 @@ class Poru extends events_1.EventEmitter {
     }
     ;
     /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
+    async getLyrics(encodedTrack, language) {
+        const node = Array.from(this.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
+        if (!node)
+            return null;
+        // Just to be extra sure
+        if (!node.isNodeLink)
+            throw new Error("[Poru Exception] The node must be a Nodelink node.");
+        if (!encodedTrack)
+            throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+        return await node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
+    }
+    ;
+    /**
      * Retrieves the Lavalink version for a node.
      * @param {string} name - The name of the node.
      * @returns {Promise<string>} The version of the node.
@@ -316,8 +340,10 @@ class Poru extends events_1.EventEmitter {
      * @returns {Player} The player instance for the specified guild.
      */
     get(guildId) {
-        return this.players.get(guildId);
+        return this.players.get(guildId) ?? null;
     }
+    ;
 }
 exports.Poru = Poru;
+;
 //# sourceMappingURL=Poru.js.map

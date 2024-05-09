@@ -8,10 +8,19 @@ const ws_1 = __importDefault(require("ws"));
 const config_1 = require("../config");
 const Rest_1 = require("./Rest");
 ;
+;
+;
+;
+;
+;
+;
+;
+;
+;
 class Node {
+    name;
     isConnected;
     poru;
-    name;
     restURL;
     socketURL;
     password;
@@ -30,6 +39,7 @@ class Node {
     stats;
     options;
     clientName;
+    isNodeLink;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -37,13 +47,13 @@ class Node {
      * @param options PoruOptions
      */
     constructor(poru, node, options) {
-        this.poru = poru;
         this.name = node.name;
+        this.poru = poru;
         this.options = node;
-        this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
-        this.socketURL = `${this.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
-        this.password = node.password || "youshallnotpass";
         this.secure = node.secure || false;
+        this.restURL = `http${node.secure ? "s" : ""}://${node.host}:${node.port}`;
+        this.socketURL = `${node.secure ? "wss" : "ws"}://${node.host}:${node.port}/v4/websocket`;
+        this.password = node.password || "youshallnotpass";
         this.regions = node.region || null;
         this.sessionId = null;
         this.rest = new Rest_1.Rest(poru, this);
@@ -56,8 +66,29 @@ class Node {
         this.reconnectAttempt = null;
         this.attempt = 0;
         this.isConnected = false;
-        this.stats = null;
         this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
+        this.isNodeLink = false;
+        this.stats = {
+            players: 0,
+            playingPlayers: 0,
+            uptime: 0,
+            memory: {
+                free: 0,
+                used: 0,
+                allocated: 0,
+                reservable: 0,
+            },
+            cpu: {
+                cores: 0,
+                systemLoad: 0,
+                lavalinkLoad: 0,
+            },
+            frameStats: {
+                sent: 0,
+                nulled: 0,
+                deficit: 0,
+            }
+        };
     }
     ;
     /**
@@ -70,9 +101,12 @@ class Node {
                 return resolve(true);
             if (this.ws)
                 this.ws.close();
-            if (!this.poru.nodes.get(this.name)) {
-                this.poru.nodes.set(this.name, this);
+            if (!this.poru.nodes.get(this.options.name)) {
+                this.poru.nodes.set(this.options.name, this);
             }
+            ;
+            if (!this.poru.userId)
+                throw new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library.");
             const headers = {
                 Authorization: this.password,
                 "User-Id": this.poru.userId,
@@ -85,6 +119,7 @@ class Node {
             this.ws.on("error", this.error.bind(this));
             this.ws.on("message", this.message.bind(this));
             this.ws.on("close", this.close.bind(this));
+            this.ws.on("upgrade", (request) => this.upgrade(request));
             resolve(true);
         });
     }
@@ -95,6 +130,8 @@ class Node {
      * @returns {void}
      */
     send(payload) {
+        if (!this.isConnected || !this.ws)
+            throw new Error("[Poru Error] The node is not connected");
         const data = JSON.stringify(payload);
         this.ws.send(data, (error) => {
             if (error)
@@ -107,19 +144,22 @@ class Node {
      * @param payload any
      * @returns {void}
      */
-    reconnect() {
-        this.reconnectAttempt = setTimeout(() => {
+    async reconnect() {
+        this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
-                throw new Error(`[Poru Websocket] Unable to connect with ${this.name} node after ${this.reconnectTries} tries`);
+                throw new Error(`[Poru Websocket] Unable to connect with ${this.options.name} node after ${this.reconnectTries} tries`);
             }
+            // Delete the ws instance
             this.isConnected = false;
             this.ws?.removeAllListeners();
             this.ws = null;
+            // Try to reconnect
             this.poru.emit("nodeReconnect", this);
-            this.connect();
+            await this.connect();
             this.attempt++;
         }, this.reconnectTimeout);
     }
+    ;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
@@ -133,13 +173,13 @@ class Node {
             }
             ;
         });
-        this.ws.close(1000, "destroy");
+        this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
         this.ws = null;
-        //    this.reconnect = 1;
-        this.poru.nodes.delete(this.name);
+        this.poru.nodes.delete(this.options.name);
         this.poru.emit("nodeDisconnect", this);
     }
+    ;
     /**
      * This function will get the penalties from the current node
      * @returns {number} The amount of penalties
@@ -154,76 +194,151 @@ class Node {
             penalties += this.stats.frameStats.deficit;
             penalties += this.stats.frameStats.nulled * 2;
         }
+        ;
         return penalties;
     }
+    ;
+    /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
+    async getRoutePlannerStatus() {
+        if (this.isNodeLink)
+            return {
+                timestamp: Date.now(),
+                status: 404,
+                error: "Not found.",
+                message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+                path: "/v4/routeplanner/status",
+                trace: new Error().stack
+            };
+        return await this.rest.get(`/v4/routeplanner/status`);
+    }
+    ;
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
+    async unmarkFailedAddress(address) {
+        if (this.isNodeLink)
+            return {
+                timestamp: Date.now(),
+                status: 404,
+                error: "Not found.",
+                message: "The specified node is a NodeLink. NodeLink's do not have the routeplanner feature.",
+                path: "/v4/routeplanner/free/address",
+                trace: new Error().stack
+            };
+        return this.rest.post(`/v4/routeplanner/free/address`, { address });
+    }
+    ;
+    /**
+     * This function will get the upgrade event from the ws connection
+     * @param {IncomingMessage} request The request from the upgraded WS connection
+     */
+    upgrade(request) {
+        // Checking if this node is a NodeLink or not
+        this.isNodeLink = this.options.isNodeLink ?? Boolean(request.headers.isnodelink) ?? false;
+    }
+    ;
     /**
      * This function will open up again the node
      * @returns {Promise<void>} The Promise<void>
      */
     async open() {
-        if (this.reconnectAttempt) {
-            clearTimeout(this.reconnectAttempt);
-            delete this.reconnectAttempt;
-        }
-        this.poru.emit("nodeConnect", this);
-        this.isConnected = true;
-        this.poru.emit("debug", this.name, `[Web Socket] Connection ready ${this.socketURL}`);
-        if (this.autoResume) {
-            for (const player of this.poru.players.values()) {
-                if (player.node === this) {
-                    await player.restart();
-                }
+        try {
+            if (this.reconnectAttempt) {
+                clearTimeout(this.reconnectAttempt);
+                this.reconnectAttempt = null;
             }
+            ;
+            this.poru.emit("nodeConnect", this);
+            this.isConnected = true;
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection ready ${this.socketURL}`);
+            if (this.autoResume)
+                this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
         }
+        catch (error) {
+            this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.options.name}.`, error);
+        }
+        ;
     }
-    /**
-     * This function will set the stats accordingly from the NodeStats
-     * @param {NodeStats} packet The NodeStats
-     * @returns {void} void
-     */
-    setStats(packet) {
-        this.stats = packet;
-    }
+    ;
     /**
      * This will send a message to the node
-     * @param {any} payload any
-     * @returns {Promise<void>} void
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
      */
     async message(payload) {
-        const packet = JSON.parse(payload);
-        if (!packet?.op)
-            return;
-        this.poru.emit("raw", "Node", packet);
-        this.poru.emit("debug", this.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
-        if (packet.op === "stats") {
-            delete packet.op;
-            this.setStats(packet);
-        }
-        if (packet.op === "ready") {
-            this.rest.setSessionId(packet.sessionId);
-            this.sessionId = packet.sessionId;
-            this.poru.emit("debug", this.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
-            if (this.resumeKey) {
-                await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
-                this.poru.emit("debug", this.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+        try {
+            const packet = JSON.parse(payload);
+            if (!packet?.op)
+                return;
+            this.poru.emit("raw", "Node", packet);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Lavalink Node Update : ${JSON.stringify(packet)} `);
+            switch (packet.op) {
+                case "ready":
+                    {
+                        this.rest.setSessionId(packet.sessionId);
+                        this.sessionId = packet.sessionId;
+                        this.poru.emit("debug", this.options.name, `[Web Socket] Ready Payload received ${JSON.stringify(packet)}`);
+                        // If a resume key was set use it
+                        if (this.resumeKey) {
+                            await this.rest.patch(`/v4/sessions/${this.sessionId}`, { resumingKey: this.resumeKey, timeout: this.resumeTimeout });
+                            this.poru.emit("debug", this.options.name, `[Lavalink Rest]  Resuming configured on Lavalink`);
+                        }
+                        ;
+                        break;
+                    }
+                    ;
+                // If the packet has stats about the node in it update them on the Node's class
+                case "stats":
+                    {
+                        delete packet.op;
+                        this.stats = packet;
+                        break;
+                    }
+                    ;
+                // If the packet is an event or playerUpdate emit the event to the player
+                case "event":
+                case "playerUpdate":
+                    {
+                        const player = this.poru.players.get(packet.guildId);
+                        if (packet.guildId && player)
+                            player.emit(packet.op, packet);
+                        break;
+                    }
+                    ;
+                default: break;
             }
+            ;
         }
-        const player = this.poru.players.get(packet.guildId);
-        if (packet.guildId && player)
-            player.emit(packet.op, packet);
+        catch (err) {
+            this.poru.emit("debug", "[Web Socket] Error while parsing the payload.", err);
+        }
+        ;
     }
+    ;
     /**
      * This will close the connection to the node
      * @param {any} event any
      * @returns {void} void
      */
-    close(event) {
-        this.disconnect();
-        this.poru.emit("nodeDisconnect", this, event);
-        this.poru.emit("debug", this.name, `[Web Socket] Connection closed with Error code : ${event || "Unknown code"}`);
-        if (event !== 1000)
-            this.reconnect();
+    async close(event) {
+        try {
+            await this.disconnect();
+            this.poru.emit("nodeDisconnect", this, event);
+            this.poru.emit("debug", this.options.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
+            if (event !== 1000)
+                await this.reconnect();
+        }
+        catch (error) {
+            this.poru.emit("debug", "[Web Socket] Error while closing the connection with the node.", error);
+        }
+        ;
     }
+    ;
     /**
      * This function will emit the error so that the user's listeners can get them and listen to them
      * @param {any} event any
@@ -233,23 +348,10 @@ class Node {
         if (!event)
             return;
         this.poru.emit("nodeError", this, event);
-        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.name}) has error code: ${event.code || event}`);
+        this.poru.emit("debug", `[Web Socket] Connection for Lavalink Node (${this.options.name}) has error code: ${event.code || event}`);
     }
-    /**
-     * This function will get the RoutePlanner status
-     * @returns {Promise<null>}
-     */
-    async getRoutePlannerStatus() {
-        return await this.rest.get(`/v4/routeplanner/status`);
-    }
-    /**
-     * This function will Unmark a failed address
-     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
-     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
-     */
-    async unmarkFailedAddress(address) {
-        return this.rest.post(`/v4/routeplanner/free/address`, { address });
-    }
+    ;
 }
 exports.Node = Node;
+;
 //# sourceMappingURL=Node.js.map

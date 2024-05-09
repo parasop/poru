@@ -7,8 +7,6 @@ const Filters_1 = require("./Filters");
  * @extends Filters
  */
 class customFilter extends Filters_1.Filters {
-    band;
-    gain;
     slowmode;
     nightcore;
     vaporwave;
@@ -22,77 +20,92 @@ class customFilter extends Filters_1.Filters {
         super(player);
         this.player = player;
         this.bassboost = 0;
+        this._8d = false;
+        this.vaporwave = false;
+        this.nightcore = false;
+        this.slowmode = false;
     }
+    ;
     /**
-     * Set the bassboost value
+     * Set a custom bassboost value
      * @param val The value of the bassboost
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setBassboost(val) {
+    async setBassboost(val) {
         if (!this.player)
-            return;
+            return this;
         if (val < 0 && val > 6)
-            throw Error('bassboost value must be between 0 to 5');
+            throw Error('[Poru Error] Bassboost value must be between 0 to 5');
         this.bassboost = val;
-        let num = (val - 1) * (1.25 / 9) - 0.25;
-        this.setEqualizer(Array(13).fill(0).map((n, i) => ({
+        const num = (val - 1) * (1.25 / 9) - 0.25;
+        await this.setEqualizer(Array(13).fill(0).map((n, i) => ({
             band: i,
             gain: num
         })));
         return this;
     }
+    ;
     /**
-     * Set slowmode filter
+     * Set a custom slowmode filter
      * @param val The value of the band
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setSlowmode(val) {
+    async setSlowmode(val) {
         if (!this.player)
-            return;
+            return this;
         this.slowmode = val;
-        this.setFilters(val ? { timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } : this.clearFilters());
+        await this.setFilters(val ? { timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } : await this.clearFilters());
+        return this;
     }
     ;
     /**
-     * Set Nightcore filter
+     * Set a custom Nightcore filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setNightcore(val) {
+    async setNightcore(val) {
         if (!this.player)
-            return;
+            return this;
         this.nightcore = val;
-        this.setTimescale(val ? { rate: 1.5 } : null);
+        await this.setTimescale(val ? { rate: 1.5 } : undefined);
         if (val) {
             this.vaporwave = false;
         }
-        return val;
+        ;
+        return this;
     }
+    ;
     /**
-     * Set Vaporwave filter
+     * Set a custom Vaporwave filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    setVaporwave(val) {
+    async setVaporwave(val) {
         if (!this.player)
-            return;
+            return this;
         this.vaporwave = val;
         if (val) {
             this.nightcore = false;
         }
-        this.setTimescale(val ? { pitch: 0.5 } : null);
+        ;
+        await this.setTimescale(val ? { pitch: 0.5 } : undefined);
+        return this;
     }
+    ;
     /**
-     * Set 8D filter
+     * Set a custom 8D filter
      * @param val Boolean
-     * @returns
+     * @returns A promise that resolves into the updated customFilter class
      */
-    set8D(val) {
+    async set8D(val) {
         if (!this.player)
-            return;
+            return this;
         this._8d = val;
-        this.setRotation(val ? { rotationHz: 0.2 } : null);
+        await this.setRotation(val ? { rotationHz: 0.2 } : undefined);
+        return this;
     }
+    ;
 }
 exports.customFilter = customFilter;
+;
 //# sourceMappingURL=CustomFilters.js.map

@@ -1,5 +1,5 @@
-import { Node, NodeStats } from "./Node/Node";
-import { Player } from "./Player/Player";
+import { Node, NodeLinkGetLyrics, NodeStats } from "./Node/Node";
+import { EndSpeakingEventVoiceReceiverData, Player, StartSpeakingEventVoiceReceiverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Config as config } from "./config";
 import { Response, LoadTrackResponse } from "./guild/Response";
@@ -17,6 +17,7 @@ export interface NodeGroup {
     password: string;
     secure?: boolean;
     region?: string[];
+    isNodeLink?: boolean;
 }
 
 export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
@@ -158,6 +159,10 @@ export interface NodeInfoResponse {
 
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
+interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceReceiverData, "data"> {
+    data: Buffer 
+};
+
 export interface PoruEvents {
     /**
      * Emitted for debugging purposes, providing information for debugging.
@@ -245,7 +250,6 @@ export interface PoruEvents {
      */
     playerDestroy: (player: Player) => void;
 
-
     /**
      * Emitted when a socket connection is closed.
      * @param {Player} player - The player associated with the socket.
@@ -253,6 +257,44 @@ export interface PoruEvents {
      * @param {WebSocketClosedEvent} data - Additional data related to the socket closure.
      */
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
+
+    /**
+     * Emitted when a voice Receiver was setup and the user started speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {StartSpeakingEventVoiceReceiverData} data - Additional data related to the start of speaking.
+     */
+    startSpeaking: (player: Player, data: StartSpeakingEventVoiceReceiverData) => void;
+
+    /**
+     * Emitted when a voice Receiver was setup and the user stopped speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {EndSpeakingEventVoiceReceiverData} data - Additional data related to the end of speaking including the voice data.
+     */
+    endSpeaking: (player: Player, data: EndSpeakingEventWithBufferForVoiceData) => void;
+
+    /**
+     * Emitted when a voice Receiver encounters an error.
+     * @param player The player associated with the voice Receiver.
+     * @param error The error that occurred.
+     * @returns 
+     */
+    voiceReceiverError: (player: Player, error: any) => void;
+
+    /**
+     * Emitted when a voice Receiver connected itself.
+     * @param player The player associated with the voice Receiver.
+     * @param reason The reason for the connection.
+     * @returns 
+     */
+    voiceReceiverConnected: (player: Player, status: string) => void;
+
+    /**
+     * Emitted when a voice Receiver disconnected itself.
+     * @param player The player associated with the voice Receiver.
+     * @param reason The reason for the disconnection.
+     * @returns 
+     */
+    voiceReceiverDisconnected: (player: Player, reason: string) => void;
 }
 
 export declare interface Poru {
@@ -349,7 +391,7 @@ export class Poru extends EventEmitter {
                 break;
             }
             case "other": {
-                if (!this.send)
+                if (!this.send || !this.options.send)
                     throw new Error("Send function is required in Poru Options");
 
                 this.send = this.options.send ?? null;
@@ -514,7 +556,7 @@ export class Poru extends EventEmitter {
         if (!node) node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
         
-        const response = (await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
+        const response = (await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
 
         return new Response(response, requester);
     }
@@ -572,6 +614,26 @@ export class Poru extends EventEmitter {
     };
   
     /**
+     * This function is used to get lyrics of the current track.
+     * 
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     * 
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns 
+     */
+    public async getLyrics(encodedTrack: string | null, language?: string): Promise<NodeLinkGetLyrics | null> {
+        const node = (Array.from(this.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
+
+        if (!node) return null;
+        // Just to be extra sure
+        if (!node.isNodeLink) throw new Error("[Poru Exception] The node must be a Nodelink node.");
+        if (!encodedTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+
+        return await node.rest.get<NodeLinkGetLyrics>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
+    };
+
+    /**
      * Retrieves the Lavalink version for a node.
      * @param {string} name - The name of the node.
      * @returns {Promise<string>} The version of the node.
@@ -592,4 +654,8 @@ export class Poru extends EventEmitter {
     public get(guildId: string): Player | null {
         return this.players.get(guildId) ?? null;
     };
+
+    private startsWithMultiple (s: string, words: string[]) {
+        return words.some( w => s.startsWith(w))
+      };
 };

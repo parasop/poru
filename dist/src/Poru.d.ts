@@ -1,6 +1,7 @@
 /// <reference types="node" />
-import { Node, NodeStats } from "./Node/Node";
-import { Player } from "./Player/Player";
+/// <reference types="node" />
+import { Node, NodeLinkGetLyrics, NodeStats } from "./Node/Node";
+import { EndSpeakingEventVoiceReceiverData, Player, StartSpeakingEventVoiceReceiverData } from "./Player/Player";
 import { EventEmitter } from "events";
 import { Response } from "./guild/Response";
 import { Plugin } from "./Plugin";
@@ -15,6 +16,7 @@ export interface NodeGroup {
     password: string;
     secure?: boolean;
     region?: string[];
+    isNodeLink?: boolean;
 }
 export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
 interface PacketVoiceStateUpdate {
@@ -141,6 +143,9 @@ export interface NodeInfoResponse {
     }[];
 }
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
+interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceReceiverData, "data"> {
+    data: Buffer;
+}
 export interface PoruEvents {
     /**
      * Emitted for debugging purposes, providing information for debugging.
@@ -222,6 +227,39 @@ export interface PoruEvents {
      * @param {WebSocketClosedEvent} data - Additional data related to the socket closure.
      */
     socketClose: (player: Player, track: Track, data: WebSocketClosedEvent) => void;
+    /**
+     * Emitted when a voice Receiver was setup and the user started speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {StartSpeakingEventVoiceReceiverData} data - Additional data related to the start of speaking.
+     */
+    startSpeaking: (player: Player, data: StartSpeakingEventVoiceReceiverData) => void;
+    /**
+     * Emitted when a voice Receiver was setup and the user stopped speaking.
+     * @param {Player} player - The player associated with the voice Receiver.
+     * @param {EndSpeakingEventVoiceReceiverData} data - Additional data related to the end of speaking including the voice data.
+     */
+    endSpeaking: (player: Player, data: EndSpeakingEventWithBufferForVoiceData) => void;
+    /**
+     * Emitted when a voice Receiver encounters an error.
+     * @param player The player associated with the voice Receiver.
+     * @param error The error that occurred.
+     * @returns
+     */
+    voiceReceiverError: (player: Player, error: any) => void;
+    /**
+     * Emitted when a voice Receiver connected itself.
+     * @param player The player associated with the voice Receiver.
+     * @param reason The reason for the connection.
+     * @returns
+     */
+    voiceReceiverConnected: (player: Player, status: string) => void;
+    /**
+     * Emitted when a voice Receiver disconnected itself.
+     * @param player The player associated with the voice Receiver.
+     * @param reason The reason for the disconnection.
+     * @returns
+     */
+    voiceReceiverDisconnected: (player: Player, reason: string) => void;
 }
 export declare interface Poru {
     on<K extends keyof PoruEvents>(event: K, listener: PoruEvents[K]): this;
@@ -253,13 +291,13 @@ export declare class Poru extends EventEmitter {
     /**
      * Initializes Poru and adds nodes.
      */
-    init(): Promise<this>;
+    init(): Promise<this | undefined>;
     /**
      * Handles Voice State Update and Voice Server Update packets.
      * @param {Packet} packet - Packet from Discord API.
      * @returns {void}
      */
-    packetUpdate(packet: Packet): void;
+    packetUpdate(packet: Packet): Promise<void>;
     /**
      * Adds a node to the Poru instance.
      * @param {NodeGroup} options - Node group options.
@@ -271,7 +309,7 @@ export declare class Poru extends EventEmitter {
       * @param {string} identifier - The name of the node.
       * @returns {boolean} A boolean indicating if the node was successfully removed.
       */
-    removeNode(identifier: string): boolean;
+    removeNode(identifier: string): Promise<boolean>;
     /**
      * Retrieves nodes by region.
      * @param {string} region - Region of the node.
@@ -294,7 +332,7 @@ export declare class Poru extends EventEmitter {
     /**
      * Removes a player from the Poru instance.
      * @param {string} guildId - Guild ID.
-     * @returns {Promise<boolean>} A promise indicating if the player was successfully removed.
+     * @returns {Promise<boolean>} A promise indicating a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     removeConnection(guildId: string): Promise<boolean>;
     /**
@@ -315,7 +353,7 @@ export declare class Poru extends EventEmitter {
      * @param {Node} [node] - The node to decode on.
      * @returns {Promise<trackData>} The decoded track.
      */
-    decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData>;
+    decodeTrack(encodedTrackString: string, node?: Node): Promise<trackData | null>;
     /**
      * Decodes multiple tracks.
      * @param {string[]} encodedTrackString - Array of encoded track strings.
@@ -336,6 +374,16 @@ export declare class Poru extends EventEmitter {
      */
     getLavalinkStatus(name: string): Promise<NodeStatsResponse>;
     /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
+    getLyrics(encodedTrack: string | null, language?: string): Promise<NodeLinkGetLyrics | null>;
+    /**
      * Retrieves the Lavalink version for a node.
      * @param {string} name - The name of the node.
      * @returns {Promise<string>} The version of the node.
@@ -346,6 +394,6 @@ export declare class Poru extends EventEmitter {
      * @param {string} guildId - Guild ID.
      * @returns {Player} The player instance for the specified guild.
      */
-    get(guildId: string): Player;
+    get(guildId: string): Player | null;
 }
 export {};

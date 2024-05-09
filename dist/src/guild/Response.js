@@ -7,26 +7,44 @@ const Track_1 = require("./Track");
 ;
 ;
 ;
+;
+;
 class Response {
     tracks;
     loadType;
     playlistInfo;
     constructor(response, requester) {
-        switch (response.loadType) {
+        response.loadType = this.convertNodelinkResponseToLavalink(response.loadType);
+        const { loadType, data } = response;
+        switch (loadType) {
             case "playlist": {
-                this.tracks = response.data.tracks.map((track) => new Track_1.Track(track, requester));
-                this.playlistInfo = response.data.info;
+                this.tracks = this.handleTracks(data.tracks, requester);
+                this.playlistInfo = {
+                    ...data.info,
+                    type: "playlist"
+                };
                 break;
             }
             case "search":
-            case "track": {
-                this.tracks = this.handleTracks(response.data, requester);
+            case "track":
+                {
+                    this.tracks = this.handleTracks(data, requester);
+                    this.playlistInfo = {
+                        type: "noPlaylist"
+                    };
+                    break;
+                }
+                ;
+            default: {
+                this.tracks = [];
+                this.playlistInfo = {
+                    type: "noPlaylist"
+                };
                 break;
             }
-            default: break;
         }
         ;
-        this.loadType = response.loadType;
+        this.loadType = loadType;
     }
     ;
     handleTracks(data, requester) {
@@ -35,6 +53,20 @@ class Response {
         }
         else {
             return [new Track_1.Track(data, requester)];
+        }
+        ;
+    }
+    ;
+    convertNodelinkResponseToLavalink(loadType) {
+        switch (loadType) {
+            case "short": return "track";
+            case "artist":
+            case "episode":
+            case "station":
+            case "podcast":
+            case "show":
+            case "album": return "playlist";
+            default: return loadType;
         }
         ;
     }

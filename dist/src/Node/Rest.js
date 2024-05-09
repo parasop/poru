@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Rest = exports.RequestMethod = void 0;
-const undici_1 = require("undici");
 ;
 ;
 ;
@@ -18,18 +17,30 @@ class Rest {
     password;
     url;
     poru;
+    isNodeLink;
     constructor(poru, node) {
         this.poru = poru;
         this.url = `http${node.secure ? "s" : ""}://${node.options.host}:${node.options.port}`;
         this.sessionId = node.sessionId;
         this.password = node.password;
+        this.isNodeLink = node.isNodeLink;
     }
     setSessionId(sessionId) {
         this.sessionId = sessionId;
     }
+    ;
+    /**
+     * Gets all players in this specific session
+     * @returns Returns a list of players in this specific session.
+     */
     async getAllPlayers() {
         return await this.get(`/v4/sessions/${this.sessionId}/players`); // This will never be a string!
     }
+    /**
+     * Updates a specific player in this session in the specified guild
+     * @param options
+     * @returns A player object from the API
+     */
     async updatePlayer(options) {
         return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
@@ -38,12 +49,9 @@ class Rest {
     }
     async get(path) {
         try {
-            const req = await (0, undici_1.fetch)(this.url + path, {
+            const req = await globalThis.fetch(this.url + path, {
                 method: RequestMethod.Get,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers
             });
             return req.headers.get("content-type") === "application/json" ? await req.json() : await req.text();
         }
@@ -51,14 +59,12 @@ class Rest {
             return null;
         }
     }
+    ;
     async patch(endpoint, body) {
         try {
-            let req = await (0, undici_1.fetch)(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Patch,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers,
                 body: JSON.stringify(body),
             });
             return await req.json();
@@ -69,12 +75,9 @@ class Rest {
     }
     async post(endpoint, body) {
         try {
-            let req = await (0, undici_1.fetch)(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Post,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers,
                 body: JSON.stringify(body),
             });
             return await req.json();
@@ -85,18 +88,25 @@ class Rest {
     }
     async delete(endpoint) {
         try {
-            let req = await (0, undici_1.fetch)(this.url + endpoint, {
+            const req = await globalThis.fetch(this.url + endpoint, {
                 method: RequestMethod.Delete,
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: this.password,
-                },
+                headers: this.headers
             });
             return await req.json();
         }
         catch (e) {
             return null;
         }
+    }
+    ;
+    get headers() {
+        const headers = {
+            "Content-Type": "application/json",
+            Authorization: this.password,
+        };
+        if (this.isNodeLink)
+            headers["Accept-Encoding"] = "brotli, gzip, deflate";
+        return headers;
     }
 }
 exports.Rest = Rest;

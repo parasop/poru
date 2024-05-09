@@ -1,8 +1,12 @@
+/// <reference types="node" />
 import { ErrorResponses, Node } from "./Node";
 import { Poru } from "../Poru";
 import { trackData } from "../guild/Track";
 import { FiltersOptions } from '../Player/Filters';
 import { IVoiceServer } from "../Player/Connection";
+export type PartialNull<T> = {
+    [P in keyof T]: T[P] | null;
+};
 export interface playOptions {
     guildId: string;
     data: {
@@ -12,9 +16,9 @@ export interface playOptions {
         endTime?: number;
         volume?: number;
         position?: number;
-        paused?: Boolean;
-        filters?: Object;
-        voice?: any;
+        paused?: boolean;
+        filters?: Partial<FiltersOptions>;
+        voice?: IVoiceServer | PartialNull<IVoiceServer> | null;
     };
 }
 export interface PlayerObjectFromAPI {
@@ -33,6 +37,7 @@ export interface PlayerState {
     ping: number;
 }
 export type RouteLike = `/${string}`;
+export type HeadersInit = string[][] | Record<string, string | ReadonlyArray<string>> | Headers;
 export declare enum RequestMethod {
     "Get" = "GET",
     "Delete" = "DELETE",
@@ -45,13 +50,24 @@ export declare class Rest {
     private password;
     url: string;
     poru: Poru;
+    isNodeLink: boolean;
     constructor(poru: Poru, node: Node);
     setSessionId(sessionId: string): void;
-    getAllPlayers(): Promise<PlayerObjectFromAPI | ErrorResponses>;
-    updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses>;
+    /**
+     * Gets all players in this specific session
+     * @returns Returns a list of players in this specific session.
+     */
+    getAllPlayers(): Promise<PlayerObjectFromAPI[] | ErrorResponses | null>;
+    /**
+     * Updates a specific player in this session in the specified guild
+     * @param options
+     * @returns A player object from the API
+     */
+    updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses | null>;
     destroyPlayer(guildId: string): Promise<null | ErrorResponses>;
-    get<T = unknown>(path: RouteLike): Promise<T>;
-    patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T>;
-    post<T = unknown>(endpoint: RouteLike, body: any): Promise<T>;
-    delete<T = unknown>(endpoint: RouteLike): Promise<T>;
+    get<T = unknown>(path: RouteLike): Promise<T | null>;
+    patch<T = unknown | null>(endpoint: RouteLike, body: any): Promise<T | null>;
+    post<T = unknown>(endpoint: RouteLike, body: any): Promise<T | null>;
+    delete<T = unknown>(endpoint: RouteLike): Promise<T | null>;
+    protected get headers(): HeadersInit;
 }

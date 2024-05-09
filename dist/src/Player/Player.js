@@ -9,12 +9,16 @@ const Queue_1 = __importDefault(require("../guild/Queue"));
 const events_1 = require("events");
 const Filters_1 = require("./Filters");
 const Response_1 = require("../guild/Response");
+const ws_1 = __importDefault(require("ws"));
 const escapeRegExp = (str) => {
     try {
         str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
     catch { }
 };
+;
+;
+;
 /**
  * Represents a player capable of playing audio tracks.
  * @extends EventEmitter
@@ -65,6 +69,12 @@ class Player extends events_1.EventEmitter {
     deaf;
     /** The volume of the player (0-1000) */
     volume;
+    /** Should only be used when the node is a NodeLink */
+    voiceReceiverWsClient;
+    isConnectToVoiceReceiver;
+    voiceReceiverReconnectTimeout;
+    voiceReceiverAttempt;
+    voiceReceiverReconnectTries;
     constructor(poru, node, options) {
         super();
         this.poru = poru;
@@ -85,9 +95,16 @@ class Player extends events_1.EventEmitter {
         this.position = 0;
         this.ping = 0;
         this.timestamp = null;
+        this.isAutoPlay = false;
+        this.isQuietMode = false;
         this.isConnected = false;
         this.loop = "NONE";
         this.data = {};
+        this.voiceReceiverWsClient = null;
+        this.isConnectToVoiceReceiver = false;
+        this.voiceReceiverReconnectTimeout = null;
+        this.voiceReceiverAttempt = 0;
+        this.voiceReceiverReconnectTries = 3;
         this.poru.emit("playerCreate", this);
         this.on("playerUpdate", (packet) => {
             (this.isConnected = packet.state.connected),
@@ -105,23 +122,20 @@ class Player extends events_1.EventEmitter {
      */
     async play() {
         if (!this.queue.length)
-            return;
-        this.currentTrack = this.queue.shift();
-        if (!this.currentTrack.track)
+            return this;
+        this.currentTrack = this.queue.shift() ?? null;
+        if (this.currentTrack && !this.currentTrack?.track)
             this.currentTrack = await this.resolveTrack(this.currentTrack);
-        if (this.currentTrack.track) {
+        if (this.currentTrack?.track) {
             await this.node.rest.updatePlayer({
                 guildId: this.guildId,
                 data: {
-                    track: { encoded: this.currentTrack?.track },
+                    track: { encoded: this.currentTrack.track },
                 },
             });
             this.isPlaying = true;
             this.position = 0;
-        }
-        else {
-            //  return this.play();
-            // Here joniii: What is that?
+            this.isAutoPlay = false;
         }
         ;
         return this;
@@ -138,7 +152,7 @@ class Player extends events_1.EventEmitter {
             .join(" - ");
         const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
         if (!result || !result.tracks.length)
-            return;
+            return null;
         if (track.info?.author) {
             const author = [track.info.author, `${track.info.author} - Topic`];
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
@@ -166,7 +180,7 @@ class Player extends events_1.EventEmitter {
      * @param {ConnectionOptions} [options=this] - The options for the connection.
      */
     connect(options = this) {
-        let { guildId, voiceChannel, deaf, mute } = options;
+        const { guildId, voiceChannel, deaf, mute } = options;
         this.send({
             guild_id: guildId,
             channel_id: voiceChannel,
@@ -189,6 +203,28 @@ class Player extends events_1.EventEmitter {
         this.isPlaying = false;
         return this;
     }
+    ;
+    /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
+    async getLyrics(encodedTrack, language) {
+        let node = this.node;
+        if (!this.node.isNodeLink)
+            node = Array.from(this.poru.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
+        if (!node || !node.isNodeLink)
+            throw new Error("[Poru Exception] No NodeLink node found in the Poru instance.");
+        if (!encodedTrack && !this.currentTrack)
+            throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
+        encodedTrack = this.currentTrack?.track;
+        return await this.node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
+    }
+    ;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
@@ -208,10 +244,11 @@ class Player extends events_1.EventEmitter {
      * @param {number} position - The position to seek to (in milliseconds).
      */
     async seekTo(position) {
-        if (this.position + position >= this.currentTrack.info.length)
-            position = this.currentTrack.info.length;
+        if (this.position + position >= (this.currentTrack?.info.length ?? 0))
+            position = this.currentTrack?.info.length ?? 0;
         await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
+    ;
     /**
      * Sets the volume level of the player.
      * @param {number} volume - The volume level (0 to 1000).
@@ -308,7 +345,7 @@ class Player extends events_1.EventEmitter {
      */
     async disconnect() {
         if (!this.voiceChannel)
-            return;
+            return this;
         await this.pause(true);
         this.isConnected = false;
         this.send({
@@ -317,12 +354,12 @@ class Player extends events_1.EventEmitter {
             self_mute: false,
             self_deaf: false,
         });
-        this.voiceChannel = null;
         return this;
     }
+    ;
     /**
      * Destroys the player and cleans up associated resources.
-     * @returns {Promise<boolean>} - A Promise that resolves to a boolean indicating the success of destruction.
+     * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     async destroy() {
         await this.disconnect();
@@ -338,7 +375,7 @@ class Player extends events_1.EventEmitter {
      */
     async restart() {
         if (!this.currentTrack?.track && !this.queue.length)
-            return;
+            return this;
         if (!this.currentTrack?.track)
             return await this.play();
         await this.node.rest.updatePlayer({
@@ -359,11 +396,11 @@ class Player extends events_1.EventEmitter {
     async moveNode(name) {
         const node = this.poru.nodes.get(name);
         if (!node || node.name === this.node.name)
-            return;
+            return this;
         if (!node.isConnected)
             throw new Error("Provided Node is not connected");
         try {
-            await this.node.rest.destroyPlayer(this.guildId);
+            await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
             this.poru.players.delete(this.guildId);
             this.node = node;
             this.poru.players.set(this.guildId, this);
@@ -373,6 +410,7 @@ class Player extends events_1.EventEmitter {
             await this.destroy();
             throw e;
         }
+        ;
     }
     ;
     /**
@@ -382,7 +420,7 @@ class Player extends events_1.EventEmitter {
     async autoMoveNode() {
         if (this.poru.leastUsedNodes.length === 0)
             throw new Error("[Poru Error] No nodes are avaliable");
-        const node = this.poru.nodes.get(this.poru.leastUsedNodes[0].name);
+        const node = this.poru.nodes.get(this.poru.leastUsedNodes[0]?.name);
         if (!node) {
             await this.destroy();
             return;
@@ -397,20 +435,19 @@ class Player extends events_1.EventEmitter {
      */
     async autoplay() {
         try {
-            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack.info.identifier || this.currentTrack.info.identifier}`;
+            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack?.info.identifier || this.currentTrack?.info.identifier}`;
             const response = await this.poru.resolve({
                 query: data,
                 requester: this.previousTrack?.info?.requester ?? this.currentTrack?.info?.requester,
                 source: this.previousTrack?.info?.sourceName ?? this.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
             });
-            if (!response ||
-                !response.tracks ||
-                ["error", "empty"].includes(response.loadType))
+            if (!response || !response.tracks || ["error", "empty"].includes(response.loadType))
                 return await this.skip();
             response.tracks.shift();
             const track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
             this.queue.push(track);
             await this.play();
+            this.isAutoPlay = true;
             return this;
         }
         catch (e) {
@@ -491,7 +528,7 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
     async resolve({ query, source, requester }) {
-        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((query.startsWith('https://') ? '' : `${source || 'ytsearch'}:`) + query)}`);
+        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
     ;
@@ -500,7 +537,165 @@ class Player extends events_1.EventEmitter {
      * @param {any} data - The data to send.
      */
     send(data) {
+        if (!this.poru.send)
+            throw new Error("[Poru Error] The send function is required to send data to discord. Please provide a send function in the Poru options or use one of the supported Libraries.");
         this.poru.send({ op: 4, d: data });
+    }
+    ;
+    async setupVoiceReceiverConnection() {
+        return new Promise(async (resolve, reject) => {
+            if (!this.node.isNodeLink)
+                return reject(new Error("[Poru Exception] This function is only available for NodeLink nodes."));
+            if (!this.poru.userId)
+                return reject(new Error("[Poru Error] No user id found in the Poru instance. Consider using a supported library."));
+            if (this.voiceReceiverWsClient)
+                await this.removeVoiceReceiverConnection();
+            const headers = {
+                Authorization: this.node.password,
+                "User-Id": this.poru.userId,
+                "Guild-Id": this.guildId,
+                "Client-Name": this.node.clientName,
+            };
+            const { host, secure, port } = this.node.options;
+            this.voiceReceiverWsClient = new ws_1.default(`${secure ? "wss" : "ws"}://${host}:${port}/connection/data`, { headers });
+            this.voiceReceiverWsClient.on("open", this.voiceReceiverOpen.bind(this));
+            this.voiceReceiverWsClient.on("error", this.voiceReceiverError.bind(this));
+            this.voiceReceiverWsClient.on("message", this.voiceReceiverMessage.bind(this));
+            this.voiceReceiverWsClient.on("close", this.voiceReceiverClose.bind(this));
+            return resolve(true);
+        });
+    }
+    ;
+    async removeVoiceReceiverConnection() {
+        return new Promise((resolve, reject) => {
+            if (!this.node.isNodeLink)
+                return reject(new Error("[Poru Exception] This function is only available for NodeLink nodes."));
+            this.voiceReceiverWsClient?.close(1000, "destroy");
+            this.voiceReceiverWsClient?.removeAllListeners();
+            this.voiceReceiverWsClient = null;
+            this.isConnectToVoiceReceiver = false;
+            return resolve(true);
+        });
+    }
+    ;
+    // Private stuff
+    /**
+      * This will close the connection to the node
+      * @param {any} event any
+      * @returns {void} void
+      */
+    async voiceReceiverClose(event) {
+        try {
+            await this.voiceReceiverDisconnect();
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"}`);
+            if (event !== 1000)
+                await this.voiceReceiverReconnect();
+        }
+        catch (error) {
+            this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
+        }
+        ;
+    }
+    ;
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
+    async voiceReceiverReconnect() {
+        this.voiceReceiverReconnectTimeout = setTimeout(async () => {
+            if (this.voiceReceiverAttempt > this.voiceReceiverReconnectTries) {
+                throw new Error(`[Poru Voice Receiver Websocket] Unable to connect with ${this.node.name} node to the voice Receiver Websocket after ${this.voiceReceiverReconnectTries} tries`);
+            }
+            // Delete the ws instance
+            this.isConnected = false;
+            this.voiceReceiverWsClient?.removeAllListeners();
+            this.voiceReceiverWsClient = null;
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Reconnecting to the voice Receiver Websocket...`);
+            await this.setupVoiceReceiverConnection();
+            this.voiceReceiverAttempt++;
+        }, this.node.reconnectTimeout);
+    }
+    ;
+    /**
+     * This function will make the node disconnect
+     * @returns {Promise<void>} void
+     */
+    async voiceReceiverDisconnect() {
+        if (!this.isConnectToVoiceReceiver)
+            return;
+        this.voiceReceiverWsClient?.close(1000, "destroy");
+        this.voiceReceiverWsClient?.removeAllListeners();
+        this.voiceReceiverWsClient = null;
+        this.poru.emit("voiceReceiverDisconnected", this, `[Voice Receiver Web Socket] Connection was closed.`);
+    }
+    ;
+    /**
+      * This function will open up again the node
+      * @returns {Promise<void>} The Promise<void>
+      */
+    async voiceReceiverOpen() {
+        try {
+            if (this.voiceReceiverReconnectTimeout) {
+                clearTimeout(this.voiceReceiverReconnectTimeout);
+                this.voiceReceiverReconnectTimeout = null;
+            }
+            ;
+            this.isConnectToVoiceReceiver = true;
+            this.poru.emit("voiceReceiverConnected", this, `[Voice Receiver Web Socket] Connection ready ${this.node.socketURL}/connection/data`);
+        }
+        catch (error) {
+            this.poru.emit("debug", `[Voice Receiver Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Receiver Websocket.`, error);
+        }
+        ;
+    }
+    ;
+    /**
+     * This will send a message to the node
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
+     */
+    async voiceReceiverMessage(payload) {
+        try {
+            const packet = JSON.parse(payload);
+            if (!packet?.op)
+                return;
+            this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Recieved a payload: ${payload}`);
+            switch (packet.type) {
+                case "startSpeakingEvent": {
+                    this.poru.emit("startSpeaking", this, packet.data);
+                    break;
+                }
+                case "endSpeakingEvent": {
+                    const data = {
+                        ...packet.data,
+                        data: Buffer.from(packet.data.data, "base64")
+                    };
+                    this.poru.emit("endSpeaking", this, data);
+                    break;
+                }
+                default: {
+                    this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Recieved an unknown payload: ${payload}`);
+                    break;
+                }
+            }
+        }
+        catch (err) {
+            this.poru.emit("voiceReceiverError", this, "[Voice Receiver Web Socket] Error while parsing the payload. " + err);
+        }
+        ;
+    }
+    ;
+    /**
+      * This function will emit the error so that the user's listeners can get them and listen to them
+      * @param {any} event any
+      * @returns {void} void
+      */
+    voiceReceiverError(event) {
+        if (!event)
+            return;
+        this.poru.emit("voiceReceiverError", this, event);
+        this.poru.emit("debug", `[Voice Receiver Web Socket] Connection for NodeLink Voice Receiver (${this.node.name}) has the following error code: ${event.code || event}`);
     }
     ;
 }

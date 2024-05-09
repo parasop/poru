@@ -2,6 +2,7 @@
 import { Poru, PoruOptions, NodeGroup } from "../Poru";
 import WebSocket from "ws";
 import { Rest } from "./Rest";
+import { Severity } from "../guild/Response";
 export interface NodeStats {
     players: number;
     playingPlayers: number;
@@ -21,6 +22,39 @@ export interface NodeStats {
         sent: number;
         nulled: number;
         deficit: number;
+    } | null;
+}
+export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast";
+export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsMultiple | NodeLinkGetLyricsEmpty | NodeLinkGetLyricsError;
+export interface NodeLinkGetLyricsMultiple {
+    loadType: "lyricsMultiple";
+    data: NodeLinkGetLyricsData[];
+}
+export interface NodeLinkGetLyricsEmpty {
+    loadType: "empty";
+    data: {};
+}
+interface NodeLinkGetLyricsData {
+    name: string;
+    synced: boolean;
+    data: {
+        startTime?: number;
+        endTime?: number;
+        text: string;
+    }[];
+    rtl: boolean;
+}
+export interface NodeLinkGetLyricsSingle {
+    loadType: "lyricsSingle";
+    data: NodeLinkGetLyricsData;
+}
+export interface NodeLinkGetLyricsError {
+    loadType: "error";
+    data: {
+        message: string;
+        severity: Severity;
+        cause: string;
+        trace?: string;
     };
 }
 /**
@@ -55,15 +89,15 @@ export interface ErrorResponses {
     path: string;
 }
 export declare class Node {
+    readonly name: string;
     isConnected: boolean;
     poru: Poru;
-    readonly name: string;
     readonly restURL: string;
     readonly socketURL: string;
     password: string;
     readonly secure: boolean;
-    readonly regions: Array<string>;
-    sessionId: string;
+    readonly regions: Array<string> | null;
+    sessionId: string | null;
     rest: Rest;
     ws: WebSocket | null;
     readonly resumeKey: string | null;
@@ -73,9 +107,10 @@ export declare class Node {
     reconnectTries: number;
     reconnectAttempt: NodeJS.Timeout | null;
     attempt: number;
-    stats: NodeStats | null;
+    stats: NodeStats;
     options: NodeGroup;
     clientName: string;
+    isNodeLink: boolean;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -99,7 +134,7 @@ export declare class Node {
      * @param payload any
      * @returns {void}
      */
-    reconnect(): void;
+    reconnect(): Promise<void>;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
@@ -111,20 +146,30 @@ export declare class Node {
      */
     get penalties(): number;
     /**
+     * This function will get the RoutePlanner status
+     * @returns {Promise<null>}
+     */
+    getRoutePlannerStatus(): Promise<null | ErrorResponses>;
+    /**
+     * This function will Unmark a failed address
+     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
+     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
+     */
+    unmarkFailedAddress(address: string): Promise<null | ErrorResponses>;
+    /**
+     * This function will get the upgrade event from the ws connection
+     * @param {IncomingMessage} request The request from the upgraded WS connection
+     */
+    private upgrade;
+    /**
      * This function will open up again the node
      * @returns {Promise<void>} The Promise<void>
      */
     private open;
     /**
-     * This function will set the stats accordingly from the NodeStats
-     * @param {NodeStats} packet The NodeStats
-     * @returns {void} void
-     */
-    private setStats;
-    /**
      * This will send a message to the node
-     * @param {any} payload any
-     * @returns {Promise<void>} void
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
      */
     private message;
     /**
@@ -139,15 +184,5 @@ export declare class Node {
      * @returns {void} void
      */
     private error;
-    /**
-     * This function will get the RoutePlanner status
-     * @returns {Promise<null>}
-     */
-    getRoutePlannerStatus(): Promise<null>;
-    /**
-     * This function will Unmark a failed address
-     * @param {string} address The address to unmark as failed. This address must be in the same ip block.
-     * @returns {null | ErrorResponses} This function will most likely error if you havn't enabled the route planner
-     */
-    unmarkFailedAddress(address: string): Promise<null | ErrorResponses>;
 }
+export {};

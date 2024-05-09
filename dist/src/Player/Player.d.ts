@@ -1,13 +1,55 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
-import { Node } from "../Node/Node";
+import { Node, NodeLinkGetLyrics } from "../Node/Node";
 import { Track } from "../guild/Track";
 import { Connection } from "./Connection";
 import Queue from "../guild/Queue";
 import { EventEmitter } from "events";
 import { Filters } from "./Filters";
 import { Response } from "../guild/Response";
+import WebSocket from "ws";
 type Loop = "NONE" | "TRACK" | "QUEUE";
+interface BaseVoiceReceiverEvent {
+    op: "speak";
+}
+export interface StartSpeakingEventVoiceReceiverData {
+    /**
+      * The user ID of the user who started speaking.
+      */
+    userId: string;
+    /**
+      * The guild ID of the guild where the user started speaking.
+      */
+    guildId: string;
+}
+export interface EndSpeakingEventVoiceReceiverData {
+    /**
+   * The user ID of the user who stopped speaking.
+   */
+    userId: string;
+    /**
+     * The guild ID of the guild where the user stopped speaking.
+     */
+    guildId: string;
+    /**
+     * The audio data received from the user in base64.
+     */
+    data: string;
+    /**
+     * The type of the audio data. Can be either opus or pcm. Older versions may include ogg/opus.
+     */
+    type: "opus" | "pcm";
+}
+export interface StartSpeakingEventVoiceReceiver extends BaseVoiceReceiverEvent {
+    type: "startSpeakingEvent";
+    data: StartSpeakingEventVoiceReceiverData;
+}
+export interface EndSpeakingEventVoiceReceiver extends BaseVoiceReceiverEvent {
+    type: "endSpeakingEvent";
+    data: EndSpeakingEventVoiceReceiverData;
+}
+export type VoiceReceiverEvent = StartSpeakingEventVoiceReceiver | EndSpeakingEventVoiceReceiver;
 /**
  * Represents a player capable of playing audio tracks.
  * @extends EventEmitter
@@ -31,9 +73,9 @@ export declare class Player extends EventEmitter {
     /** The text channel ID associated with the player. */
     textChannel: string;
     /** The currently playing track */
-    currentTrack: Track;
+    currentTrack: Track | null;
     /** The previously played track */
-    previousTrack: Track;
+    previousTrack: Track | null;
     /** Indicates whether the player is currently playing a track. */
     isPlaying: boolean;
     /** Indicates whether the player is connected to a voice channel. */
@@ -51,13 +93,19 @@ export declare class Player extends EventEmitter {
     /** The current delay estimate of the player (in milliseconds) */
     ping: number;
     /** The timestamp of the player's state */
-    timestamp: number;
+    timestamp: number | null;
     /** Indicates whether the player is set to be muted. */
     mute: boolean;
     /** Indicated whether the player is set to be deafened */
     deaf: boolean;
     /** The volume of the player (0-1000) */
     volume: number;
+    /** Should only be used when the node is a NodeLink */
+    protected voiceReceiverWsClient: WebSocket | null;
+    protected isConnectToVoiceReceiver: boolean;
+    protected voiceReceiverReconnectTimeout: NodeJS.Timeout | null;
+    protected voiceReceiverAttempt: number;
+    protected voiceReceiverReconnectTries: number;
     constructor(poru: Poru, node: Node, options: ConnectionOptions);
     /**
      * Initiates playback of the next track in the queue.
@@ -81,6 +129,16 @@ export declare class Player extends EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     skip(): Promise<Player>;
+    /**
+     * This function is used to get lyrics of the current track.
+     *
+     * @attention This function is only available for [NodeLink](https://github.com/PerformanC/NodeLink) nodes.
+     *
+     * @param encodedTrack The encoded track to get the lyrics from
+     * @param language The language of the lyrics to get defaults to english
+     * @returns
+     */
+    getLyrics(encodedTrack?: string | null, language?: string): Promise<NodeLinkGetLyrics | null>;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
@@ -134,10 +192,10 @@ export declare class Player extends EventEmitter {
      * Disconnects the player from the voice channel.
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
-    disconnect(): Promise<Player>;
+    protected disconnect(): Promise<Player>;
     /**
      * Destroys the player and cleans up associated resources.
-     * @returns {Promise<boolean>} - A Promise that resolves to a boolean indicating the success of destruction.
+     * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     destroy(): Promise<boolean>;
     /**
@@ -178,5 +236,41 @@ export declare class Player extends EventEmitter {
      * @param {any} data - The data to send.
      */
     send(data: any): void;
+    setupVoiceReceiverConnection(): Promise<boolean>;
+    removeVoiceReceiverConnection(): Promise<boolean>;
+    /**
+      * This will close the connection to the node
+      * @param {any} event any
+      * @returns {void} void
+      */
+    private voiceReceiverClose;
+    /**
+     * Handles the message event
+     * @param payload any
+     * @returns {void}
+     */
+    private voiceReceiverReconnect;
+    /**
+     * This function will make the node disconnect
+     * @returns {Promise<void>} void
+     */
+    private voiceReceiverDisconnect;
+    /**
+      * This function will open up again the node
+      * @returns {Promise<void>} The Promise<void>
+      */
+    private voiceReceiverOpen;
+    /**
+     * This will send a message to the node
+     * @param {string} payload The sent payload we recieved in stringified form
+     * @returns {Promise<void>} Return void
+     */
+    private voiceReceiverMessage;
+    /**
+      * This function will emit the error so that the user's listeners can get them and listen to them
+      * @param {any} event any
+      * @returns {void} void
+      */
+    private voiceReceiverError;
 }
 export {};
