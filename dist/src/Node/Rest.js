@@ -105,7 +105,7 @@ class Rest {
             Authorization: this.password,
         };
         if (this.isNodeLink)
-            headers["Accept-Encoding"] = "brotli, gzip, deflate";
+            headers["Accept-Encoding"] = "br, gzip, deflate";
         return headers;
     }
 }
