@@ -528,7 +528,7 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
     async resolve({ query, source, requester }) {
-        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((/^https?:\/\//.test(query) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
+        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
     ;
@@ -595,6 +595,10 @@ class Player extends events_1.EventEmitter {
             this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
         }
         ;
+    }
+    ;
+    startsWithMultiple(s, words) {
+        return words.some(w => s.startsWith(w));
     }
     ;
     /**

@@ -11,7 +11,9 @@ export interface PlaylistInfo {
 };
 
 export interface NoPlaylistInfo {
-  type: "noPlaylist",
+  type?: "noPlaylist",
+  name?: null,
+  selectedTrack?:0
 };
 
 export interface LoadTrackResponseTrack {

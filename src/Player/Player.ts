@@ -596,7 +596,7 @@ export class Player extends EventEmitter {
 
       case "TrackStuckEvent": {
         this.poru.emit("trackError", this, this.currentTrack!, data)
-        await this.skip()
+        await this.skip();
         break
       }
       case "TrackExceptionEvent": {

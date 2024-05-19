@@ -244,6 +244,7 @@ export declare class Player extends EventEmitter {
       * @returns {void} void
       */
     private voiceReceiverClose;
+    private startsWithMultiple;
     /**
      * Handles the message event
      * @param payload any
