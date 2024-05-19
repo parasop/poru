@@ -42,7 +42,7 @@ class Rest {
      * @returns A player object from the API
      */
     async updatePlayer(options) {
-        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=true`, options.data);
+        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
     async destroyPlayer(guildId) {
         return await this.delete(`/v4/sessions/${this.sessionId}/players/${guildId}`);

@@ -83,7 +83,7 @@ export class Rest {
      * @returns A player object from the API
      */
     public async updatePlayer(options: playOptions): Promise<PlayerObjectFromAPI | ErrorResponses | null> {
-        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=true`, options.data);
+        return await this.patch(`/v4/sessions/${this.sessionId}/players/${options.guildId}?noReplace=false`, options.data);
     }
 
     public async destroyPlayer(guildId: string): Promise<null | ErrorResponses> {
