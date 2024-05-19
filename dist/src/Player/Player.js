@@ -213,7 +213,7 @@ class Player extends events_1.EventEmitter {
      * @param language The language of the lyrics to get defaults to english
      * @returns
      */
-    async getLyrics(encodedTrack, language) {
+    async getLyrics(encodedTrack) {
         let node = this.node;
         if (!this.node.isNodeLink)
             node = Array.from(this.poru.nodes)?.find(([, node]) => node.isNodeLink)?.[1];
@@ -222,7 +222,7 @@ class Player extends events_1.EventEmitter {
         if (!encodedTrack && !this.currentTrack)
             throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
         encodedTrack = this.currentTrack?.track;
-        return await this.node.rest.get(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`);
+        return await this.node.rest.get(`/v4/lyrics?track=${encodeURIComponent(encodedTrack ?? "")}`);
     }
     ;
     /**
