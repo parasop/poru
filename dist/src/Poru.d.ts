@@ -395,5 +395,6 @@ export declare class Poru extends EventEmitter {
      * @returns {Player} The player instance for the specified guild.
      */
     get(guildId: string): Player | null;
+    private startsWithMultiple;
 }
 export {};

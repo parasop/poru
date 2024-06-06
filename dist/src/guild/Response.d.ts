@@ -7,7 +7,9 @@ export interface PlaylistInfo {
     selectedTrack: number;
 }
 export interface NoPlaylistInfo {
-    type: "noPlaylist";
+    type?: "noPlaylist";
+    name?: null;
+    selectedTrack?: 0;
 }
 export interface LoadTrackResponseTrack {
     loadType: "track";

@@ -138,7 +138,7 @@ export declare class Player extends EventEmitter {
      * @param language The language of the lyrics to get defaults to english
      * @returns
      */
-    getLyrics(encodedTrack?: string | null, language?: string): Promise<NodeLinkGetLyrics | null>;
+    getLyrics(encodedTrack?: string | null): Promise<NodeLinkGetLyrics | null>;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
@@ -244,6 +244,7 @@ export declare class Player extends EventEmitter {
       * @returns {void} void
       */
     private voiceReceiverClose;
+    private startsWithMultiple;
     /**
      * Handles the message event
      * @param payload any

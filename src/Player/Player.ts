@@ -284,7 +284,7 @@ export class Player extends EventEmitter {
    * @param language The language of the lyrics to get defaults to english
    * @returns 
    */
-  public async getLyrics(encodedTrack?: string | null, language?: string): Promise<NodeLinkGetLyrics | null> {
+  public async getLyrics(encodedTrack?: string | null): Promise<NodeLinkGetLyrics | null> {
     let node: Node | undefined = this.node;
 
     if (!this.node.isNodeLink) node = (Array.from(this.poru.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
@@ -294,7 +294,7 @@ export class Player extends EventEmitter {
 
     encodedTrack = this.currentTrack?.track;
 
-    return await this.node.rest.get<NodeLinkGetLyrics>(`/v4/loadlyrics?encodedTrack=${encodeURIComponent(encodedTrack ?? "")}${language ? `&language=${encodeURIComponent(language)}` : ""}`)
+    return await this.node.rest.get<NodeLinkGetLyrics>(`/v4/lyrics?track=${encodeURIComponent(encodedTrack ?? "")}`)
   };
 
   /**
@@ -571,6 +571,10 @@ export class Player extends EventEmitter {
       }
       case "TrackEndEvent": {
         this.previousTrack = this.currentTrack
+        if (["loadFailed", "cleanup","replaced"].includes(data.reason)) {
+          return this.poru.emit("trackEnd", this, this.currentTrack!, data)
+      }
+   
         if (this.loop === "TRACK") {
           this.queue.unshift(this.previousTrack!)
           this.poru.emit("trackEnd", this, this.currentTrack!, data)
@@ -596,7 +600,7 @@ export class Player extends EventEmitter {
 
       case "TrackStuckEvent": {
         this.poru.emit("trackError", this, this.currentTrack!, data)
-        await this.skip()
+        await this.skip();
         break
       }
       case "TrackExceptionEvent": {
