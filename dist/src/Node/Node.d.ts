@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Poru, PoruOptions, NodeGroup } from "../Poru";
 import WebSocket from "ws";
 import { Rest } from "./Rest";

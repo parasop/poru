@@ -33,18 +33,18 @@ export interface StartSpeakingEventVoiceReceiverData {
 };
 
 export interface EndSpeakingEventVoiceReceiverData {
-   /**
-  * The user ID of the user who stopped speaking.
-  */
+  /**
+ * The user ID of the user who stopped speaking.
+ */
   userId: string;
   /**
    * The guild ID of the guild where the user stopped speaking.
    */
-  guildId: string; 
+  guildId: string;
   /**
    * The audio data received from the user in base64.
    */
-  data: string; 
+  data: string;
   /**
    * The type of the audio data. Can be either opus or pcm. Older versions may include ogg/opus.
    */
@@ -290,7 +290,7 @@ export class Player extends EventEmitter {
     if (!this.node.isNodeLink) node = (Array.from(this.poru.nodes) as [string, Node][])?.find(([, node]) => node.isNodeLink)?.[1];
     if (!node || !node.isNodeLink) throw new Error("[Poru Exception] No NodeLink node found in the Poru instance.");
 
-    if (!encodedTrack && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.") ;
+    if (!encodedTrack && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
 
     encodedTrack = this.currentTrack?.track;
 
@@ -498,7 +498,7 @@ export class Player extends EventEmitter {
       throw new Error("Provided Node is not connected")
 
     try {
-      await this.node.rest.destroyPlayer(this.guildId).catch(() => {})
+      await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
       this.poru.players.delete(this.guildId)
       this.node = node
       this.poru.players.set(this.guildId, this)
@@ -571,17 +571,17 @@ export class Player extends EventEmitter {
       }
       case "TrackEndEvent": {
         this.previousTrack = this.currentTrack
-        if (["loadFailed", "cleanup","replaced"].includes(data.reason)) {
+        if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
           return this.poru.emit("trackEnd", this, this.currentTrack!, data)
-      }
-   
+        }
+
         if (this.loop === "TRACK") {
           this.queue.unshift(this.previousTrack!)
-          this.poru.emit("trackEnd", this, this.currentTrack!, data)
+          await this.poru.emit("trackEnd", this, this.currentTrack!, data)
           return await this.play()
         } else if (this.currentTrack && this.loop === "QUEUE") {
           this.queue.push(this.previousTrack!)
-          this.poru.emit("trackEnd", this, this.currentTrack, data)
+          await this.poru.emit("trackEnd", this, this.currentTrack, data)
           return await this.play()
         }
 
@@ -700,17 +700,17 @@ export class Player extends EventEmitter {
     */
   private async voiceReceiverClose(event: any): Promise<void> {
     try {
-        await this.voiceReceiverDisconnect();
-        this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"}`);
+      await this.voiceReceiverDisconnect();
+      this.poru.emit("debug", this.node.name, `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"}`);
 
-        if (event !== 1000) await this.voiceReceiverReconnect();   
+      if (event !== 1000) await this.voiceReceiverReconnect();
     } catch (error) {
-        this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
+      this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
     };
   };
 
-  private startsWithMultiple (s: string, words: string[]) {
-    return words.some( w => s.startsWith(w))
+  private startsWithMultiple(s: string, words: string[]) {
+    return words.some(w => s.startsWith(w))
   };
 
   /**
@@ -721,9 +721,9 @@ export class Player extends EventEmitter {
   private async voiceReceiverReconnect(): Promise<void> {
     this.voiceReceiverReconnectTimeout = setTimeout(async () => {
       if (this.voiceReceiverAttempt > this.voiceReceiverReconnectTries) {
-          throw new Error(
-              `[Poru Voice Receiver Websocket] Unable to connect with ${this.node.name} node to the voice Receiver Websocket after ${this.voiceReceiverReconnectTries} tries`
-          );
+        throw new Error(
+          `[Poru Voice Receiver Websocket] Unable to connect with ${this.node.name} node to the voice Receiver Websocket after ${this.voiceReceiverReconnectTries} tries`
+        );
       }
       // Delete the ws instance
       this.isConnected = false;
@@ -756,15 +756,15 @@ export class Player extends EventEmitter {
     */
   private async voiceReceiverOpen(): Promise<void> {
     try {
-        if (this.voiceReceiverReconnectTimeout) {
-            clearTimeout(this.voiceReceiverReconnectTimeout);
-            this.voiceReceiverReconnectTimeout = null;
-        };
+      if (this.voiceReceiverReconnectTimeout) {
+        clearTimeout(this.voiceReceiverReconnectTimeout);
+        this.voiceReceiverReconnectTimeout = null;
+      };
 
-        this.isConnectToVoiceReceiver = true;
-        this.poru.emit("voiceReceiverConnected", this, `[Voice Receiver Web Socket] Connection ready ${this.node.socketURL}/connection/data`)
+      this.isConnectToVoiceReceiver = true;
+      this.poru.emit("voiceReceiverConnected", this, `[Voice Receiver Web Socket] Connection ready ${this.node.socketURL}/connection/data`)
     } catch (error) {
-        this.poru.emit("debug", `[Voice Receiver Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Receiver Websocket.`, error)
+      this.poru.emit("debug", `[Voice Receiver Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Receiver Websocket.`, error)
     };
   };
 
@@ -800,7 +800,7 @@ export class Player extends EventEmitter {
         }
       }
     } catch (err) {
-        this.poru.emit("voiceReceiverError", this, "[Voice Receiver Web Socket] Error while parsing the payload. " + err);
+      this.poru.emit("voiceReceiverError", this, "[Voice Receiver Web Socket] Error while parsing the payload. " + err);
     };
   };
   /**
