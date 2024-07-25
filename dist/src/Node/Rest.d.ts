@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { ErrorResponses, Node } from "./Node";
 import { Poru } from "../Poru";
 import { trackData } from "../guild/Track";

@@ -475,12 +475,12 @@ class Player extends events_1.EventEmitter {
                 }
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
-                    this.poru.emit("trackEnd", this, this.currentTrack, data);
+                    await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
                 }
                 else if (this.currentTrack && this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
-                    this.poru.emit("trackEnd", this, this.currentTrack, data);
+                    await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
                 }
                 if (this.queue.length === 0) {
