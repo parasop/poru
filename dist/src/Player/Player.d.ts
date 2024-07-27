@@ -1,3 +1,5 @@
+/// <reference types="node" />
+/// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
 import { Node, NodeLinkGetLyrics } from "../Node/Node";
 import { Track } from "../guild/Track";

@@ -87,6 +87,9 @@ export class Connection {
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
+        setTimeout(async () => {
+            await this.player.pause(false)
+        }, 1000)
 
         this.player.poru.emit(
             "debug",
