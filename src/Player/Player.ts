@@ -578,7 +578,8 @@ export class Player extends EventEmitter {
           if (this.queue.length === 0) {
             return this.poru.emit("queueEnd", this)
           } else {
-            return this.poru.emit("trackEnd", this, this.currentTrack!, data)
+            this.poru.emit("trackEnd", this, this.currentTrack!, data)
+            return this.play();
           }
         }
 
