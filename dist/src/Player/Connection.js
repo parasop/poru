@@ -50,6 +50,10 @@ class Connection {
         });
         setTimeout(async () => {
             await this.player.pause(false);
+            await this.player.node.rest.updatePlayer({
+                guildId: this.player.guildId,
+                data: { paused: false },
+            });
         }, 1000);
         this.player.poru.emit("debug", this.player.node.name, `[Voice] <- [Discord] : Voice Server Update | Server: ${this.region} Guild: ${this.player.guildId}`);
     }
