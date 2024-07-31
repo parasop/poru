@@ -88,7 +88,6 @@ export class Connection {
             data: { voice: this.voice },
         });
         setTimeout(async () => {
-            await this.player.pause(false)
             await this.player.node.rest.updatePlayer({
                 guildId: this.player.guildId,
                 data: { paused: false },
