@@ -474,7 +474,7 @@ class Player extends events_1.EventEmitter {
                 this.previousTrack = this.currentTrack;
                 this.currentTrack = null;
                 if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
-                    if (this.queue.length === 0) {
+                    if (this.queue.length === 0 && this.loop === "NONE") {
                         return this.poru.emit("queueEnd", this);
                     }
                     else {
@@ -487,7 +487,7 @@ class Player extends events_1.EventEmitter {
                     await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
                 }
-                else if (this.currentTrack && this.loop === "QUEUE") {
+                else if (this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
                     await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
