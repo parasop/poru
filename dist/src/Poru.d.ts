@@ -34,11 +34,11 @@ interface AnyOtherPacket {
 }
 export interface ResolveOptions {
     query: string;
-    source?: supportedPlatforms | (string & {});
+    source?: supportedPlatforms | string;
     requester?: any;
 }
 export type supportedLibraries = "discord.js" | "eris" | "oceanic" | "other";
-export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch";
+export type supportedPlatforms = "spsearch" | "dzsearch" | "amsearch" | "scsearch" | "ytsearch" | "ytmsearch" | "spotify";
 export type TrackEndReason = 'finished' | 'loadFailed' | 'stopped' | 'replaced' | 'cleanup';
 export type PlayerEventType = 'TrackStartEvent' | 'TrackEndEvent' | 'TrackExceptionEvent' | 'TrackStuckEvent' | 'WebSocketClosedEvent';
 /**
