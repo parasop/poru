@@ -244,8 +244,6 @@ class Player extends events_1.EventEmitter {
      * @param {number} position - The position to seek to (in milliseconds).
      */
     async seekTo(position) {
-        if (this.position + position >= (this.currentTrack?.info.length ?? 0))
-            position = this.currentTrack?.info.length ?? 0;
         await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
     ;
