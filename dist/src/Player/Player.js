@@ -244,8 +244,6 @@ class Player extends events_1.EventEmitter {
      * @param {number} position - The position to seek to (in milliseconds).
      */
     async seekTo(position) {
-        if (this.position + position >= (this.currentTrack?.info.length ?? 0))
-            position = this.currentTrack?.info.length ?? 0;
         await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
     }
     ;
@@ -465,20 +463,29 @@ class Player extends events_1.EventEmitter {
         switch (data.type) {
             case "TrackStartEvent": {
                 this.isPlaying = true;
+                this.isPaused = false;
+                this.position = 0;
                 this.poru.emit("trackStart", this, this.currentTrack);
                 break;
             }
             case "TrackEndEvent": {
                 this.previousTrack = this.currentTrack;
+                this.currentTrack = null;
                 if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
-                    return this.poru.emit("trackEnd", this, this.currentTrack, data);
+                    if (this.queue.length === 0 && this.loop === "NONE") {
+                        return this.poru.emit("queueEnd", this);
+                    }
+                    else {
+                        this.poru.emit("trackEnd", this, this.currentTrack, data);
+                        return this.play();
+                    }
                 }
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
                     await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
                 }
-                else if (this.currentTrack && this.loop === "QUEUE") {
+                else if (this.loop === "QUEUE") {
                     this.queue.push(this.previousTrack);
                     await this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
@@ -488,6 +495,7 @@ class Player extends events_1.EventEmitter {
                     return this.poru.emit("queueEnd", this);
                 }
                 else if (this.queue.length > 0) {
+                    this.isPlaying = false;
                     this.poru.emit("trackEnd", this, this.currentTrack, data);
                     return await this.play();
                 }
