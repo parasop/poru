@@ -577,7 +577,7 @@ export class Player extends EventEmitter {
             return this.poru.emit("queueEnd", this)
           } else {
             this.poru.emit("trackEnd", this, this.currentTrack!, data)
-            return this.play();
+            return;
           }
         }
 
