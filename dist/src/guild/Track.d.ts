@@ -31,6 +31,7 @@ export declare class Track {
     info: trackInfoExtended;
     pluginInfo: Record<string, unknown>;
     userData: Record<string, unknown>;
+    encoded?: string;
     constructor(data: trackData, requester?: any);
     /**
      * This function will resolve the track and return the track as resolved

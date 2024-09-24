@@ -175,6 +175,7 @@ export class Player extends EventEmitter {
 
     this.currentTrack = this.queue.shift() ?? null
 
+    if(this.currentTrack && this.currentTrack.info.sourceName === "musico") this.currentTrack = await this.resolvePrivateTrack(this.currentTrack)
     if (this.currentTrack && !this.currentTrack?.track) this.currentTrack = await this.resolveTrack(this.currentTrack);
 
     if (this.currentTrack?.track) {
@@ -190,6 +191,20 @@ export class Player extends EventEmitter {
     };
 
     return this
+  }
+
+  private async resolvePrivateTrack(track: Track | any): Promise<Track | any> {
+ 
+    const res = await this.poru.resolve({query:track.track})
+
+
+    if(res.tracks.length){
+      track.track =res.tracks[0].encoded
+    }else {
+      track.track = ""
+    }
+
+    return track
   }
 
   /**

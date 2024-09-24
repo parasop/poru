@@ -9,6 +9,7 @@ class Track {
     info;
     pluginInfo;
     userData;
+    encoded;
     constructor(data, requester) {
         this.track = data.encoded;
         this.pluginInfo = data.pluginInfo,

@@ -34,6 +34,7 @@ export class Track {
     public info: trackInfoExtended;
     public pluginInfo: Record<string, unknown>;
     public userData: Record<string, unknown>;
+    public encoded?: string;
 
     constructor(data: trackData, requester?: any) {
         this.track = data.encoded;

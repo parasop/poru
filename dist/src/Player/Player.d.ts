@@ -110,6 +110,7 @@ export declare class Player extends EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     play(): Promise<Player>;
+    private resolvePrivateTrack;
     /**
      * Resolves a track before playback.
      * @param {Track} track - The track to resolve.
