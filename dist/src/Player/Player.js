@@ -162,11 +162,11 @@ class Player extends events_1.EventEmitter {
         const query = [track.info?.author, track.info?.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
+        const result = await this.poru?.client?.masterSourceManager?.masterResolve({ query, requester: track.info?.requester });
         if (!result || !result.tracks.length)
             return null;
         if (track.info?.author) {
-            const author = [track.info.author, `${track.info.author} - Topic`];
+            const author = [track.info.author, `${track.info.author}`];
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
                 new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {

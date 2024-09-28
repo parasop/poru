@@ -217,13 +217,13 @@ export class Player extends EventEmitter {
     const query = [track.info?.author, track.info?.title]
       .filter((x) => !!x)
       .join(" - ")
-    const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester })
+    const result:any = await this.poru?.client?.masterSourceManager?.masterResolve({ query,requester: track.info?.requester })
     if (!result || !result.tracks.length) return null;
 
     if (track.info?.author) {
-      const author = [track.info.author, `${track.info.author} - Topic`]
+      const author = [track.info.author, `${track.info.author}`]
       const officialAudio = result.tracks.find(
-        (track) =>
+        (track:any) =>
           author.some((name) =>
             new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)
           ) ||
@@ -239,7 +239,7 @@ export class Player extends EventEmitter {
     }
     if (track.info.length) {
       const sameDuration = result.tracks.find(
-        (track) =>
+        (track:any) =>
           track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
           track.info.length <= (track.info.length ? track.info.length : 0) + 2000
       )
