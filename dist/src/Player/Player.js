@@ -481,8 +481,6 @@ class Player extends events_1.EventEmitter {
                 break;
             }
             case "TrackEndEvent": {
-                this.previousTrack = this.currentTrack;
-                this.currentTrack = null;
                 if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
                     if (this.queue.length === 0 && this.loop === "NONE") {
                         return this.poru.emit("queueEnd", this);
@@ -492,6 +490,8 @@ class Player extends events_1.EventEmitter {
                         return;
                     }
                 }
+                this.previousTrack = this.currentTrack;
+                this.currentTrack = null;
                 if (this.loop === "TRACK") {
                     this.queue.unshift(this.previousTrack);
                     await this.poru.emit("trackEnd", this, this.currentTrack, data);
