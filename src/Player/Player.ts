@@ -217,7 +217,7 @@ export class Player extends EventEmitter {
     const query = [track.info?.author, track.info?.title]
       .filter((x) => !!x)
       .join(" - ")
-    const result:any = await this.poru?.client?.masterSourceManager?.masterResolve({ query,requester: track.info?.requester })
+    const result:any = await this.poru?.client?.masterSourceManager?.masterResolve(query,track.info?.requester)
     if (!result || !result.tracks.length) return null;
 
     if (track.info?.author) {
