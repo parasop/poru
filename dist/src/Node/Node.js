@@ -69,7 +69,7 @@ class Node {
         this.isConnected = false;
         this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
         this.isNodeLink = false;
-        this.isPremiumNode = node.isPremiumNode || false;
+        this.isPremiumNode = node.isPremiumNode ?? false;
         this.stats = {
             players: 0,
             playingPlayers: 0,

@@ -194,7 +194,7 @@ export class Node {
         this.isConnected = false;
         this.clientName = options.clientName || `${config.clientName}/${config.version}`;
         this.isNodeLink = false;
-        this.isPremiumNode = node.isPremiumNode || false
+        this.isPremiumNode = node.isPremiumNode ?? false
         this.stats = {
             players: 0,
             playingPlayers: 0,
