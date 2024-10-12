@@ -15,6 +15,7 @@ export interface NodeGroup {
     secure?: boolean;
     region?: string[];
     isNodeLink?: boolean;
+    isPremiumNode?: boolean;
 }
 export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
 interface PacketVoiceStateUpdate {
@@ -115,6 +116,7 @@ export interface ConnectionOptions {
     deaf?: boolean;
     mute?: boolean;
     region?: string;
+    isPremium?: boolean;
 }
 export interface NodeInfoResponse {
     version: {

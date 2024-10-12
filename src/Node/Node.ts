@@ -27,8 +27,8 @@ export interface NodeStats {
     } | null;
 };
 
-export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast" 
-  
+export type NodeLinkV2LoadTypes = "short" | "album" | "artist" | "show" | "episode" | "station" | "podcast"
+
 export type NodeLinkGetLyrics = NodeLinkGetLyricsSingle | NodeLinkGetLyricsMultiple | NodeLinkGetLyricsEmpty | NodeLinkGetLyricsError;
 
 export interface NodeLinkGetLyricsMultiple {
@@ -164,6 +164,7 @@ export class Node {
     public options: NodeGroup;
     public clientName: string;
     public isNodeLink: boolean
+    public isPremiumNode: boolean;
 
     /**
      * The Node class that is used to connect to a lavalink node
@@ -193,6 +194,7 @@ export class Node {
         this.isConnected = false;
         this.clientName = options.clientName || `${config.clientName}/${config.version}`;
         this.isNodeLink = false;
+        this.isPremiumNode = node.isPremiumNode || false
         this.stats = {
             players: 0,
             playingPlayers: 0,
@@ -381,7 +383,7 @@ export class Node {
                 clearTimeout(this.reconnectAttempt);
                 this.reconnectAttempt = null;
             };
-    
+
             this.poru.emit("nodeConnect", this);
             this.isConnected = true;
             this.poru.emit("debug", this.options.name, `[Web Socket] Connection ready ${this.socketURL}`);
@@ -455,8 +457,8 @@ export class Node {
             await this.disconnect();
             this.poru.emit("nodeDisconnect", this, event);
             this.poru.emit("debug", this.options.name, `[Web Socket] Connection closed with Error code: ${event || "Unknown code"}`);
-    
-            if (event !== 1000) await this.reconnect();   
+
+            if (event !== 1000) await this.reconnect();
         } catch (error) {
             this.poru.emit("debug", "[Web Socket] Error while closing the connection with the node.", error);
         };
