@@ -112,6 +112,13 @@ export declare class Player extends EventEmitter {
     play(): Promise<Player>;
     private resolvePrivateTrack;
     /**
+     * validate  a trackURL before playback.
+     * @param {Track} track - The track URL to validate.
+     * @returns {Promise<Track>} - A Promise that resolves to the resolved track.
+     * @private
+     */
+    isValidURL(track: any): boolean;
+    /**
      * Resolves a track before playback.
      * @param {Track} track - The track to resolve.
      * @returns {Promise<Track>} - A Promise that resolves to the resolved track.

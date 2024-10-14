@@ -124,8 +124,9 @@ class Player extends events_1.EventEmitter {
         if (!this.queue.length)
             return this;
         this.currentTrack = this.queue.shift() ?? null;
-        if (this.currentTrack && this.currentTrack.info.sourceName === "musico")
+        if ((this.currentTrack && this.currentTrack.info.sourceName === "musico") || this.isValidURL(this.currentTrack?.track)) {
             this.currentTrack = await this.resolvePrivateTrack(this.currentTrack);
+        }
         if (this.currentTrack && !this.currentTrack?.track)
             this.currentTrack = await this.resolveTrack(this.currentTrack);
         if (this.currentTrack?.track) {
@@ -145,12 +146,27 @@ class Player extends events_1.EventEmitter {
     async resolvePrivateTrack(track) {
         const res = await this.poru.resolve({ query: track.track });
         if (res.tracks.length) {
-            track.track = res.tracks[0].encoded;
+            track.track = res.tracks[0].encoded || res.tracks[0].track;
         }
         else {
             track.track = "";
         }
         return track;
+    }
+    /**
+     * validate  a trackURL before playback.
+     * @param {Track} track - The track URL to validate.
+     * @returns {Promise<Track>} - A Promise that resolves to the resolved track.
+     * @private
+     */
+    isValidURL(track) {
+        try {
+            new URL(track); // If the track is a valid URL, this will succeed
+            return true;
+        }
+        catch (e) {
+            return false; // If it's not a valid URL, this will fail
+        }
     }
     /**
      * Resolves a track before playback.
@@ -165,6 +181,10 @@ class Player extends events_1.EventEmitter {
         const result = await this.poru?.client?.masterSourceManager?.masterResolve(query, track.info?.requester);
         if (!result || !result.tracks.length)
             return null;
+        if (this.isValidURL(result.tracks[0].track)) {
+            let d = this.resolvePrivateTrack(result.tracks[0]);
+            return d;
+        }
         if (track.info?.author) {
             const author = [track.info.author, `${track.info.author}`];
             const officialAudio = result.tracks.find((track) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||

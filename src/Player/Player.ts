@@ -175,7 +175,9 @@ export class Player extends EventEmitter {
 
     this.currentTrack = this.queue.shift() ?? null
 
-    if(this.currentTrack && this.currentTrack.info.sourceName === "musico") this.currentTrack = await this.resolvePrivateTrack(this.currentTrack)
+    if((this.currentTrack && this.currentTrack.info.sourceName === "musico") || this.isValidURL(this.currentTrack?.track)){
+     this.currentTrack = await this.resolvePrivateTrack(this.currentTrack)
+    }
     if (this.currentTrack && !this.currentTrack?.track) this.currentTrack = await this.resolveTrack(this.currentTrack);
 
     if (this.currentTrack?.track) {
@@ -199,13 +201,34 @@ export class Player extends EventEmitter {
 
 
     if(res.tracks.length){
-      track.track =res.tracks[0].encoded
+      track.track = res.tracks[0].encoded || res.tracks[0].track;
     }else {
       track.track = ""
     }
 
     return track
   }
+
+
+  /**
+   * validate  a trackURL before playback.
+   * @param {Track} track - The track URL to validate.
+   * @returns {Promise<Track>} - A Promise that resolves to the resolved track.
+   * @private
+   */
+
+   isValidURL(track:any) {
+    try {
+        new URL(track); // If the track is a valid URL, this will succeed
+        return true;
+    } catch (e) {
+        return false; // If it's not a valid URL, this will fail
+    }
+}
+
+
+
+
 
   /**
    * Resolves a track before playback.
@@ -220,6 +243,13 @@ export class Player extends EventEmitter {
     const result:any = await this.poru?.client?.masterSourceManager?.masterResolve(query,track.info?.requester)
     if (!result || !result.tracks.length) return null;
 
+    if(this.isValidURL(result.tracks[0].track)){
+      let d =  this.resolvePrivateTrack(result.tracks[0])
+      return d;
+  }
+
+
+   
     if (track.info?.author) {
       const author = [track.info.author, `${track.info.author}`]
       const officialAudio = result.tracks.find(
