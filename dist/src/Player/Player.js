@@ -175,10 +175,7 @@ class Player extends events_1.EventEmitter {
      * @private
      */
     async resolveTrack(track) {
-        const query = [track.info?.author, track.info?.title]
-            .filter((x) => !!x)
-            .join(" - ");
-        const result = await this.poru?.client?.masterSourceManager?.masterResolve(query, track.info?.requester);
+        const result = await this.poru?.client?.masterSourceManager?.masterResolve(track, track.info?.requester);
         if (!result || !result.tracks.length)
             return null;
         if (this.isValidURL(result.tracks[0].track)) {
@@ -191,6 +188,7 @@ class Player extends events_1.EventEmitter {
                 new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(track.info.title));
             if (officialAudio) {
                 track.info.identifier = officialAudio.info.identifier;
+                track.info.sourceName = officialAudio.info.sourceName;
                 track.track = officialAudio.track;
                 return track;
             }
@@ -200,11 +198,13 @@ class Player extends events_1.EventEmitter {
                 track.info.length <= (track.info.length ? track.info.length : 0) + 2000);
             if (sameDuration) {
                 track.info.identifier = sameDuration.info.identifier;
+                track.info.sourceName = sameDuration.info.sourceName;
                 track.track = sameDuration.track;
                 return track;
             }
         }
         track.info.identifier = result.tracks[0].info.identifier;
+        track.info.sourceName = result.tracks[0].info.sourceName;
         return track;
     }
     /**

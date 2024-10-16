@@ -236,52 +236,42 @@ export class Player extends EventEmitter {
    * @returns {Promise<Track>} - A Promise that resolves to the resolved track.
    * @private
    */
-  private async resolveTrack(track: Track): Promise<Track | null> {
-    const query = [track.info?.author, track.info?.title]
-      .filter((x) => !!x)
-      .join(" - ")
-    const result:any = await this.poru?.client?.masterSourceManager?.masterResolve(query,track.info?.requester)
-    if (!result || !result.tracks.length) return null;
-
-    if(this.isValidURL(result.tracks[0].track)){
-      let d =  this.resolvePrivateTrack(result.tracks[0])
-      return d;
-  }
-
-
-   
+  private async resolveTrack(track:any) {
+    const result = await this.poru?.client?.masterSourceManager?.masterResolve(track, track.info?.requester);
+    if (!result || !result.tracks.length)
+        return null;
+    if (this.isValidURL(result.tracks[0].track)) {
+        let d = this.resolvePrivateTrack(result.tracks[0]);
+        return d;
+    }
     if (track.info?.author) {
-      const author = [track.info.author, `${track.info.author}`]
-      const officialAudio = result.tracks.find(
-        (track:any) =>
-          author.some((name) =>
-            new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)
-          ) ||
-          new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(
-            track.info.title
-          )
-      )
-      if (officialAudio) {
-        track.info.identifier = officialAudio.info.identifier;
-        track.track = officialAudio.track
-        return track
-      }
+        const author = [track.info.author, `${track.info.author}`];
+        const officialAudio = result.tracks.find((track:any) => author.some((name) => new RegExp(`^${escapeRegExp(name)}$`, "i").test(track.info.author)) ||
+            new RegExp(`^${escapeRegExp(track.info.title)}$`, "i").test(track.info.title));
+        if (officialAudio) {
+            track.info.identifier = officialAudio.info.identifier;
+            track.info.sourceName = officialAudio.info.sourceName
+            track.track = officialAudio.track;
+        
+            return track;
+        }
     }
     if (track.info.length) {
-      const sameDuration = result.tracks.find(
-        (track:any) =>
-          track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
-          track.info.length <= (track.info.length ? track.info.length : 0) + 2000
-      )
-      if (sameDuration) {
-        track.info.identifier = sameDuration.info.identifier;
-        track.track = sameDuration.track
-        return track
-      }
+        const sameDuration = result.tracks.find((track:any) => track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
+            track.info.length <= (track.info.length ? track.info.length : 0) + 2000);
+        if (sameDuration) {
+            track.info.identifier = sameDuration.info.identifier;
+            track.info.sourceName = sameDuration.info.sourceName
+ 
+            track.track = sameDuration.track;
+            return track;
+        }
     }
-    track.info.identifier = result.tracks[0].info.identifier
-    return track
-  }
+    track.info.identifier = result.tracks[0].info.identifier;
+    track.info.sourceName = result.tracks[0].info.sourceName
+ 
+    return track;
+}
 
   /**
    * Connects the player to a voice channel.
