@@ -610,7 +610,7 @@ export class Player extends EventEmitter {
             return this.poru.emit("queueEnd", this)
           } else {
             this.poru.emit("trackEnd", this, this.currentTrack!, data)
-            return;
+            return await this.play()
           }
         }
         this.previousTrack = this.currentTrack
@@ -646,12 +646,12 @@ export class Player extends EventEmitter {
 
       case "TrackStuckEvent": {
         this.poru.emit("trackError", this, this.currentTrack!, data)
-        await this.skip();
+        await this.play();
         break
       }
       case "TrackExceptionEvent": {
         this.poru.emit("trackError", this, this.currentTrack!, data)
-        await this.skip()
+        await this.play()
         break
       }
       case "WebSocketClosedEvent": {
