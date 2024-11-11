@@ -17,7 +17,7 @@ export interface trackInfo {
     artworkUrl: string | null;
     isrc: string | null;
     sourceName: string;
-    isPriority: boolean;
+    isPriority?: boolean;
 }
 interface trackInfoWithUndefinedObjects extends Omit<trackInfo, "uri" | "artworkUrl" | "isrc"> {
     uri: string | null | undefined;
