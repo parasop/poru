@@ -118,6 +118,7 @@ export interface ConnectionOptions {
     mute?: boolean;
     region?: string;
     isPremium?: boolean;
+    isPriority?: boolean;
 }
 export interface NodeInfoResponse {
     version: {

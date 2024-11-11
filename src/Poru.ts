@@ -136,6 +136,7 @@ export interface ConnectionOptions {
     mute?: boolean;
     region?: string;
     isPremium?: boolean;
+    isPriority?:boolean;
 }
 
 export interface NodeInfoResponse {
@@ -526,6 +527,28 @@ export class Poru extends EventEmitter {
                 throw new Error("[Poru Error] No free nodes are available");
             }
         }
+
+
+
+        if (options.isPriority) {
+            // Select a premium node
+            const premiumNodes = this.leastUsedNodes.filter(n => n.isPriority);
+            if (premiumNodes.length > 0) {
+                node = premiumNodes[0];
+            } else {
+                throw new Error("[Poru Error] No premium nodes are available");
+            }
+        } else {
+            // Select a free node
+            const freeNodes = this.leastUsedNodes.filter(n => !n.isPriority);
+            if (freeNodes.length > 0) {
+                node = freeNodes[0];
+            } else {
+                throw new Error("[Poru Error] No free nodes are available");
+            }
+        }
+
+
 
 
         if (!node) throw new Error("[Poru Error] No nodes are available");
