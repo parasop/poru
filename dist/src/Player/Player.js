@@ -429,7 +429,7 @@ class Player extends events_1.EventEmitter {
             const priorityNode = Array.from(this.poru.nodes.values()).find(node => node.isPriority === true && node.isConnected);
             if (priorityNode) {
                 await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
-                this.poru.players.delete(this.guildId);
+                this.destroy();
                 this.node = priorityNode;
                 //   this.poru.createPlayer(priorityNode,this)
                 this.poru.players.set(this.guildId, this);
@@ -443,7 +443,7 @@ class Player extends events_1.EventEmitter {
             const node = Array.from(this.poru.nodes.values()).find(node => node.isPriority === false && node.isConnected);
             if (node) {
                 await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
-                this.poru.players.delete(this.guildId);
+                this.destroy();
                 this.node = node;
                 this.poru.players.set(this.guildId, this);
                 this.connect(this);
