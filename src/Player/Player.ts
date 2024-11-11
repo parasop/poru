@@ -535,8 +535,9 @@ export class Player extends EventEmitter {
         await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
         this.poru.players.delete(this.guildId)
         this.node = priorityNode;
-        this.poru.createPlayer(priorityNode,this)
-    //    this.poru.players.set(this.guildId, this)
+     //   this.poru.createPlayer(priorityNode,this)
+        this.poru.players.set(this.guildId, this)
+        this.connect(this)
       //  await this.restart() 
 
         }
@@ -556,7 +557,8 @@ private async switchToNormalNode(): Promise<void> {
     await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
     this.poru.players.delete(this.guildId)
     this.node = node;
-    this.poru.createPlayer(node,this)
+    this.poru.players.set(this.guildId, this)
+    this.connect(this)
 
 
       }
