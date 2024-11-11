@@ -1,7 +1,7 @@
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru"
 import { Node, NodeLinkGetLyrics } from "../Node/Node"
 import { Track } from "../guild/Track"
-import { Connection } from "./Connection"
+import { Connection, IVoiceServer } from "./Connection"
 import Queue from "../guild/Queue"
 import { EventEmitter } from "events"
 import { Filters } from "./Filters"
@@ -192,8 +192,10 @@ export class Player extends EventEmitter {
           track: { encoded: this.currentTrack.track },
         },
       })
-      this.isPlaying = true
-      this.position = 0
+      setTimeout(()=>{
+        this.isPlaying = true;
+        },2000)
+       this.position = 0
       this.isAutoPlay = false;
     };
 
@@ -554,11 +556,35 @@ private async switchToNormalNode(): Promise<void> {
 
   if (node) {
     
-    await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
-    this.destroy();
     this.node = node;
-    this.poru.players.set(this.guildId, this)
-    this.connect(this)
+    this.poru.players.set(this.guildId, this);
+
+    // Update player information on the new node
+    await this.node.rest.updatePlayer({
+        guildId: this.guildId,
+        data: {
+            voiceChannel: this.voiceChannel,
+            textChannel: this.textChannel,
+            sessionId: this.connection.sessionId,
+            guildId: this.guildId,
+        } as any,
+    });
+
+
+await this.connection.setServersUpdate(this.connection.voice as IVoiceServer);
+
+// Temporarily pause and resume playback to reinitialize audio on the new node
+await this.node.rest.updatePlayer({
+guildId: this.guildId,
+data: { paused: true },
+});
+
+setTimeout(async () => {
+await this.node.rest.updatePlayer({
+guildId: this.guildId,
+data: { paused: false },
+});
+}, 500);
 
 
       }

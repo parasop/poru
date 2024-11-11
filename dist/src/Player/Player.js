@@ -142,7 +142,9 @@ class Player extends events_1.EventEmitter {
                     track: { encoded: this.currentTrack.track },
                 },
             });
-            this.isPlaying = true;
+            setTimeout(() => {
+                this.isPlaying = true;
+            }, 2000);
             this.position = 0;
             this.isAutoPlay = false;
         }
@@ -442,11 +444,30 @@ class Player extends events_1.EventEmitter {
         if (this.node.isPriority === true) {
             const node = Array.from(this.poru.nodes.values()).find(node => node.isPriority === false && node.isConnected);
             if (node) {
-                await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
-                this.destroy();
                 this.node = node;
                 this.poru.players.set(this.guildId, this);
-                this.connect(this);
+                // Update player information on the new node
+                await this.node.rest.updatePlayer({
+                    guildId: this.guildId,
+                    data: {
+                        voiceChannel: this.voiceChannel,
+                        textChannel: this.textChannel,
+                        sessionId: this.connection.sessionId,
+                        guildId: this.guildId,
+                    },
+                });
+                await this.connection.setServersUpdate(this.connection.voice);
+                // Temporarily pause and resume playback to reinitialize audio on the new node
+                await this.node.rest.updatePlayer({
+                    guildId: this.guildId,
+                    data: { paused: true },
+                });
+                setTimeout(async () => {
+                    await this.node.rest.updatePlayer({
+                        guildId: this.guildId,
+                        data: { paused: false },
+                    });
+                }, 500);
             }
         }
     }
