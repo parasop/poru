@@ -523,10 +523,7 @@ export class Player extends EventEmitter {
     return this
   };
 
-
-
-
-
+  
   private async switchToPriorityNode(): Promise<void> {
     
     if(this.node.isPriority === false){
@@ -538,8 +535,9 @@ export class Player extends EventEmitter {
         await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
         this.poru.players.delete(this.guildId)
         this.node = priorityNode;
-        this.poru.players.set(this.guildId, this)
-        await this.restart() 
+        this.poru.createPlayer(priorityNode,this)
+    //    this.poru.players.set(this.guildId, this)
+      //  await this.restart() 
 
         }
 
@@ -555,12 +553,11 @@ private async switchToNormalNode(): Promise<void> {
 
   if (node) {
     
-      await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
-      this.poru.players.delete(this.guildId)
-      this.node = node;
-      this.poru.players.set(this.guildId, this)
-      await this.restart()
-  
+    await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
+    this.poru.players.delete(this.guildId)
+    this.node = node;
+    this.poru.createPlayer(node,this)
+
 
       }
 

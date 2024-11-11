@@ -330,7 +330,7 @@ export declare class Poru extends EventEmitter {
      * @returns {Player} The newly created Player instance.
      */
     createConnection(options: ConnectionOptions): Player;
-    private createPlayer;
+    createPlayer(node: Node, options: ConnectionOptions): Player;
     /**
      * Removes a player from the Poru instance.
      * @param {string} guildId - Guild ID.

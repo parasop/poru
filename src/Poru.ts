@@ -556,7 +556,7 @@ export class Poru extends EventEmitter {
         return this.createPlayer(node, options);
     }
 
-    private createPlayer(node: Node, options: ConnectionOptions): Player {
+    public createPlayer(node: Node, options: ConnectionOptions): Player {
         let player: Player;
 
         if (this.options.customPlayer) {
