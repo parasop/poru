@@ -16,6 +16,7 @@ export interface NodeGroup {
     region?: string[];
     isNodeLink?: boolean;
     isPremiumNode?: boolean;
+    isPriority?: boolean;
 }
 export type Packet = PacketVoiceStateUpdate | PacketVoiceServerUpdate | AnyOtherPacket;
 interface PacketVoiceStateUpdate {

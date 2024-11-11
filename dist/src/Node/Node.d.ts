@@ -111,6 +111,7 @@ export declare class Node {
     clientName: string;
     isNodeLink: boolean;
     isPremiumNode: boolean;
+    isPriority: boolean;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru

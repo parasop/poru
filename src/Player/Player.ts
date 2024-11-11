@@ -175,6 +175,11 @@ export class Player extends EventEmitter {
 
     this.currentTrack = this.queue.shift() ?? null
 
+    if(this.currentTrack?.info.isPriority){
+      this.switchToPriorityNode()
+    } else {
+      this.switchToNormalNode()
+    }
     if((this.currentTrack && this.currentTrack.info.sourceName === "musico") || this.isValidURL(this.currentTrack?.track)){
      this.currentTrack = await this.resolvePrivateTrack(this.currentTrack)
     }
@@ -517,6 +522,55 @@ export class Player extends EventEmitter {
 
     return this
   };
+
+
+
+
+
+  private async switchToPriorityNode(): Promise<void> {
+    
+    if(this.node.isPriority === false){
+ 
+    const priorityNode = Array.from(this.poru.nodes.values()).find(node => node.isPriority === true && node.isConnected);
+
+    if (priorityNode) {
+      
+        await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
+        this.poru.players.delete(this.guildId)
+        this.node = priorityNode;
+        this.poru.players.set(this.guildId, this)
+        await this.restart() 
+
+        }
+
+    }
+    
+}
+
+
+private async switchToNormalNode(): Promise<void> {
+    
+  if(this.node.isPriority === true){
+  const node = Array.from(this.poru.nodes.values()).find(node => node.isPriority === false && node.isConnected);
+
+  if (node) {
+    
+      await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
+      this.poru.players.delete(this.guildId)
+      this.node = node;
+      this.poru.players.set(this.guildId, this)
+      await this.restart()
+  
+
+      }
+
+  }
+  
+}
+
+
+
+
 
   /**
    * Moves the player to a different node.

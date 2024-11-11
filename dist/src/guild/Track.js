@@ -19,6 +19,7 @@ class Track {
                 uri: data.info.uri || null,
                 artworkUrl: data.info.artworkUrl || null,
                 isrc: data.info.isrc || null,
+                isPriority: data.info.isPriority || false,
                 requester
             };
     }

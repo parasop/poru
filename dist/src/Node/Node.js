@@ -41,6 +41,7 @@ class Node {
     clientName;
     isNodeLink;
     isPremiumNode;
+    isPriority;
     /**
      * The Node class that is used to connect to a lavalink node
      * @param poru Poru
@@ -70,6 +71,7 @@ class Node {
         this.clientName = options.clientName || `${config_1.Config.clientName}/${config_1.Config.version}`;
         this.isNodeLink = false;
         this.isPremiumNode = node.isPremiumNode ?? false;
+        this.isPriority = node.isPriority ?? false;
         this.stats = {
             players: 0,
             playingPlayers: 0,

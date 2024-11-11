@@ -165,6 +165,7 @@ export class Node {
     public clientName: string;
     public isNodeLink: boolean
     public isPremiumNode: boolean;
+    public isPriority: boolean;
 
     /**
      * The Node class that is used to connect to a lavalink node
@@ -195,6 +196,8 @@ export class Node {
         this.clientName = options.clientName || `${config.clientName}/${config.version}`;
         this.isNodeLink = false;
         this.isPremiumNode = node.isPremiumNode ?? false
+        this.isPriority = node.isPriority ?? false
+       
         this.stats = {
             players: 0,
             playingPlayers: 0,

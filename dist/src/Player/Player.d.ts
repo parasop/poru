@@ -209,6 +209,8 @@ export declare class Player extends EventEmitter {
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     restart(): Promise<Player>;
+    private switchToPriorityNode;
+    private switchToNormalNode;
     /**
      * Moves the player to a different node.
      * @param {string} name - The name of the target node.
