@@ -510,24 +510,6 @@ export class Poru extends EventEmitter {
             node = this.nodes.get(this.leastUsedNodes[0].name);
         }
 
-       if (options.isPremium) {
-            // Select a premium node
-            const premiumNodes = this.leastUsedNodes.filter(n => n.isPremiumNode);
-            if (premiumNodes.length > 0) {
-                node = premiumNodes[0];
-            } else {
-                throw new Error("[Poru Error] No premium nodes are available");
-            }
-        } else {
-            // Select a free node
-            const freeNodes = this.leastUsedNodes.filter(n => !n.isPremiumNode);
-            if (freeNodes.length > 0) {
-                node = freeNodes[0];
-            } else {
-                throw new Error("[Poru Error] No free nodes are available");
-            }
-        }
-
 
 
         if (options.isPriority) {
@@ -547,6 +529,27 @@ export class Poru extends EventEmitter {
                 throw new Error("[Poru Error] No free nodes are available");
             }
         }
+
+
+        
+       if (options.isPremium) {
+        // Select a premium node
+        const premiumNodes = this.leastUsedNodes.filter(n => n.isPremiumNode);
+        if (premiumNodes.length > 0) {
+            node = premiumNodes[0];
+        } else {
+            throw new Error("[Poru Error] No premium nodes are available");
+        }
+    } else {
+        // Select a free node
+        const freeNodes = this.leastUsedNodes.filter(n => !n.isPremiumNode);
+        if (freeNodes.length > 0) {
+            node = freeNodes[0];
+        } else {
+            throw new Error("[Poru Error] No free nodes are available");
+        }
+    }
+
 
 
 
