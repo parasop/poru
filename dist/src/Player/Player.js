@@ -430,13 +430,29 @@ class Player extends events_1.EventEmitter {
         if (this.node.isPriority === false) {
             const priorityNode = Array.from(this.poru.nodes.values()).find(node => node.isPriority === true && node.isConnected);
             if (priorityNode) {
-                await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
-                this.destroy();
                 this.node = priorityNode;
-                //   this.poru.createPlayer(priorityNode,this)
                 this.poru.players.set(this.guildId, this);
-                this.connect(this);
-                //  await this.restart() 
+                // Update player information on the new node
+                await this.node.rest.updatePlayer({
+                    guildId: this.guildId,
+                    data: {
+                        voiceChannel: this.voiceChannel,
+                        textChannel: this.textChannel,
+                        sessionId: this.connection.sessionId,
+                        guildId: this.guildId,
+                    },
+                });
+                await this.connection.setServersUpdate(this.connection.voice);
+                await this.node.rest.updatePlayer({
+                    guildId: this.guildId,
+                    data: { paused: true },
+                });
+                setTimeout(async () => {
+                    await this.node.rest.updatePlayer({
+                        guildId: this.guildId,
+                        data: { paused: false },
+                    });
+                }, 500);
             }
         }
     }
@@ -446,7 +462,6 @@ class Player extends events_1.EventEmitter {
             if (node) {
                 this.node = node;
                 this.poru.players.set(this.guildId, this);
-                // Update player information on the new node
                 await this.node.rest.updatePlayer({
                     guildId: this.guildId,
                     data: {

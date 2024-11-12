@@ -190,14 +190,17 @@ class Poru extends events_1.EventEmitter {
      * @returns {Player} The newly created Player instance.
      */
     createConnection(options) {
-        if (!this.isActivated)
-            throw new Error(`You have to init poru in your ready event`);
+        if (!this.isActivated) {
+            throw new Error("You have to init Poru in your ready event");
+        }
         const player = this.players.get(options.guildId);
         if (player)
             return player;
-        if (this.leastUsedNodes.length === 0)
+        if (this.leastUsedNodes.length === 0) {
             throw new Error("[Poru Error] No nodes are available");
+        }
         let node;
+        // Check for region-based node selection
         if (options.region) {
             const region = this.getNodeByRegion(options.region)[0];
             node = this.nodes.get(region.name || this.leastUsedNodes[0].name);
@@ -205,41 +208,34 @@ class Poru extends events_1.EventEmitter {
         else {
             node = this.nodes.get(this.leastUsedNodes[0].name);
         }
+        // 1. If `isPriority`, select a premium node from `isPriority` nodes
         if (options.isPriority) {
-            // Select a premium node
-            const premiumNodes = this.leastUsedNodes.filter(n => n.isPriority);
-            if (premiumNodes.length > 0) {
-                node = premiumNodes[0];
+            const priorityNodes = this.leastUsedNodes.filter(n => n.isPriority);
+            if (priorityNodes.length > 0) {
+                node = priorityNodes[0];
+                console.log(node.name, "NODE - Priority Selected");
             }
             else {
-                throw new Error("[Poru Error] No premium nodes are available");
+                throw new Error("[Poru Error] No premium priority nodes are available");
             }
         }
-        else {
-            // Select a free node
-            const freeNodes = this.leastUsedNodes.filter(n => !n.isPriority);
-            if (freeNodes.length > 0) {
-                node = freeNodes[0];
-            }
-            else {
-                throw new Error("[Poru Error] No free nodes are available");
-            }
-        }
-        if (options.isPremium) {
-            // Select a premium node
+        // 2. If `isPremium`, select from premium nodes
+        else if (options.isPremium) {
             const premiumNodes = this.leastUsedNodes.filter(n => n.isPremiumNode);
             if (premiumNodes.length > 0) {
                 node = premiumNodes[0];
+                console.log(node.name, "NODE - Premium Selected");
             }
             else {
                 throw new Error("[Poru Error] No premium nodes are available");
             }
         }
+        // 3. Otherwise, select a free node
         else {
-            // Select a free node
             const freeNodes = this.leastUsedNodes.filter(n => !n.isPremiumNode);
             if (freeNodes.length > 0) {
                 node = freeNodes[0];
+                console.log(node.name, "NODE - Free Selected");
             }
             else {
                 throw new Error("[Poru Error] No free nodes are available");
@@ -247,6 +243,7 @@ class Poru extends events_1.EventEmitter {
         }
         if (!node)
             throw new Error("[Poru Error] No nodes are available");
+        console.log(options, node.name);
         return this.createPlayer(node, options);
     }
     createPlayer(node, options) {

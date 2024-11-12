@@ -534,14 +534,36 @@ export class Player extends EventEmitter {
 
     if (priorityNode) {
       
-        await this.node.rest.destroyPlayer(this.guildId).catch(() => { })
-        this.destroy();
-        this.node = priorityNode;
-     //   this.poru.createPlayer(priorityNode,this)
-        this.poru.players.set(this.guildId, this)
-        this.connect(this)
-      //  await this.restart() 
-
+      this.node = priorityNode;
+      this.poru.players.set(this.guildId, this);
+  
+      // Update player information on the new node
+      await this.node.rest.updatePlayer({
+          guildId: this.guildId,
+          data: {
+              voiceChannel: this.voiceChannel,
+              textChannel: this.textChannel,
+              sessionId: this.connection.sessionId,
+              guildId: this.guildId,
+          } as any,
+      });
+  
+  
+  await this.connection.setServersUpdate(this.connection.voice as IVoiceServer);
+  
+   await this.node.rest.updatePlayer({
+  guildId: this.guildId,
+  data: { paused: true },
+  });
+  
+  setTimeout(async () => {
+  await this.node.rest.updatePlayer({
+  guildId: this.guildId,
+  data: { paused: false },
+  });
+  }, 500);
+  
+  
         }
 
     }
@@ -558,8 +580,6 @@ private async switchToNormalNode(): Promise<void> {
     
     this.node = node;
     this.poru.players.set(this.guildId, this);
-
-    // Update player information on the new node
     await this.node.rest.updatePlayer({
         guildId: this.guildId,
         data: {
