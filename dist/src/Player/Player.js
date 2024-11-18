@@ -610,7 +610,10 @@ class Player extends events_1.EventEmitter {
             }
             case "TrackExceptionEvent": {
                 this.poru.emit("trackError", this, this.currentTrack, data);
-                await this.play();
+                setTimeout(() => {
+                    this.isPlaying = false;
+                }, 3000);
+                //  await this.play()
                 break;
             }
             case "WebSocketClosedEvent": {
