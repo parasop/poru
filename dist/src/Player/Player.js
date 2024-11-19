@@ -69,6 +69,8 @@ class Player extends events_1.EventEmitter {
     deaf;
     /** The volume of the player (0-1000) */
     volume;
+    lastPlayTimestamp;
+    cooldown;
     /** Should only be used when the node is a NodeLink */
     voiceReceiverWsClient;
     isConnectToVoiceReceiver;
@@ -574,8 +576,33 @@ class Player extends events_1.EventEmitter {
                         return this.poru.emit("queueEnd", this);
                     }
                     else {
-                        this.poru.emit("trackEnd", this, this.currentTrack, data);
-                        return await this.play();
+                        await this.poru.emit("trackEnd", this, this.currentTrack, data);
+                        // Cooldown tracking logic for first and second play
+                        const now = Date.now();
+                        if (!this.lastPlayTimestamp) {
+                            this.lastPlayTimestamp = now;
+                            setTimeout(async () => {
+                                await this.play();
+                            }, 3000);
+                            return;
+                        }
+                        const timeSinceLastPlay = now - this.lastPlayTimestamp;
+                        if (timeSinceLastPlay <= 5000) {
+                            // Add a cooldown of 10 seconds
+                            if (!this.cooldown || now - this.cooldown > 10000) {
+                                this.cooldown = now;
+                                this.lastPlayTimestamp = null; // Reset the timestamp to avoid repeated cooldowns
+                                //  this.poru.emit("cooldown", this, 10); // Emit cooldown event (optional)
+                                // this.message.delete().catch(e => null)
+                                console.log("Cooldown active for 10 seconds due to rapid first and second plays.");
+                                return;
+                            }
+                        }
+                        this.lastPlayTimestamp = now; // Update the timestamp for the next play call
+                        setTimeout(async () => {
+                            await this.play();
+                        }, 3000);
+                        return;
                     }
                 }
                 this.previousTrack = this.currentTrack;
