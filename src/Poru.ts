@@ -72,36 +72,36 @@ export interface TrackStartEvent extends PlayerEvent {
  * Represents an event indicating the end of a track.
  */
 export interface TrackEndEvent extends PlayerEvent {
-  type: 'TrackEndEvent';
-  track: Track;
-  reason: TrackEndReason;
+    type: 'TrackEndEvent';
+    track: Track;
+    reason: TrackEndReason;
 }
 
 /**
 * Represents an event indicating that a track got stuck while playing.
 */
 export interface TrackStuckEvent extends PlayerEvent {
-  type: 'TrackStuckEvent';
-  track: Track;
-  thresholdMs: number;
+    type: 'TrackStuckEvent';
+    track: Track;
+    thresholdMs: number;
 }
 
 /**
 * Represents an event indicating an exception occurred with a track.
 */
 export interface TrackExceptionEvent extends PlayerEvent {
-  type: 'TrackExceptionEvent';
-  exception: any;
+    type: 'TrackExceptionEvent';
+    exception: any;
 }
 
 /**
 * Represents an event indicating that a WebSocket connection was closed.
 */
 export interface WebSocketClosedEvent extends PlayerEvent {
-  type: 'WebSocketClosedEvent';
-  code: number;
-  byRemote: boolean;
-  reason: string;
+    type: 'WebSocketClosedEvent';
+    code: number;
+    byRemote: boolean;
+    reason: string;
 }
 
 /**
@@ -160,7 +160,7 @@ export interface NodeInfoResponse {
 export type NodeStatsResponse = Omit<NodeStats, "frameStats">;
 
 interface EndSpeakingEventWithBufferForVoiceData extends Omit<EndSpeakingEventVoiceReceiverData, "data"> {
-    data: Buffer 
+    data: Buffer
 };
 
 export interface PoruEvents {
@@ -434,11 +434,11 @@ export class Poru extends EventEmitter {
         return node;
     }
 
-   /**
-     * Removes a node from the Poru instance.
-     * @param {string} identifier - The name of the node.
-     * @returns {boolean} A boolean indicating if the node was successfully removed.
-     */
+    /**
+      * Removes a node from the Poru instance.
+      * @param {string} identifier - The name of the node.
+      * @returns {boolean} A boolean indicating if the node was successfully removed.
+      */
     public async removeNode(identifier: string): Promise<boolean> {
         const node = this.nodes.get(identifier);
         if (!node) return true;
@@ -555,8 +555,8 @@ export class Poru extends EventEmitter {
 
         if (!node) node = this.leastUsedNodes[0];
         if (!node) throw new Error("No nodes are available.");
-        
-        const response = (await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
+
+        const response = (await node.rest.get<LoadTrackResponse>(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || this?.options?.defaultPlatform || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
 
         return new Response(response, requester);
     }
@@ -581,17 +581,17 @@ export class Poru extends EventEmitter {
      * @param {Node} [node] - The node to decode on.
      * @returns {Promise<trackData[]>} Array of decoded tracks.
      */
-    public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {      
+    public async decodeTracks(encodedTrackString: string[], node?: Node): Promise<trackData[]> {
         if (!node) node = this.leastUsedNodes[0];
 
         return await node.rest.post<trackData[]>(`/v4/decodetracks`, encodedTrackString) as trackData[];
     }
 
-   /**
-     * Retrieves Lavalink info for a node.
-     * @param {string} name - The name of the node.
-     * @returns {Promise<NodeInfoResponse>} Information about the node.
-     */
+    /**
+      * Retrieves Lavalink info for a node.
+      * @param {string} name - The name of the node.
+      * @returns {Promise<NodeInfoResponse>} Information about the node.
+      */
     public async getLavalinkInfo(name: string): Promise<NodeInfoResponse> {
         const node = this.nodes.get(name);
 
@@ -612,7 +612,7 @@ export class Poru extends EventEmitter {
 
         return await node.rest.get<NodeStatsResponse>(`/v4/stats`) as NodeStatsResponse;
     };
-  
+
     /**
      * This function is used to get lyrics of the current track.
      * 
@@ -655,7 +655,7 @@ export class Poru extends EventEmitter {
         return this.players.get(guildId) ?? null;
     };
 
-    private startsWithMultiple (s: string, words: string[]) {
-        return words.some( w => s.startsWith(w))
-      };
+    private startsWithMultiple(s: string, words: string[]) {
+        return words.some(w => s.startsWith(w))
+    };
 };

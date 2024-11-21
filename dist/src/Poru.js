@@ -253,7 +253,7 @@ class Poru extends events_1.EventEmitter {
             node = this.leastUsedNodes[0];
         if (!node)
             throw new Error("No nodes are available.");
-        const response = (await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
+        const response = (await node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || this?.options?.defaultPlatform || 'ytsearch'}:`) + query)}`)) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
     /**
