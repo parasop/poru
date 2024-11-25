@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="node" />
 import { Poru, ResolveOptions, EventData, ConnectionOptions } from "../Poru";
 import { Node, NodeLinkGetLyrics } from "../Node/Node";
 import { Track } from "../guild/Track";
@@ -100,6 +98,8 @@ export declare class Player extends EventEmitter {
     deaf: boolean;
     /** The volume of the player (0-1000) */
     volume: number;
+    lastPlayTimestamp: any;
+    cooldown: any;
     /** Should only be used when the node is a NodeLink */
     protected voiceReceiverWsClient: WebSocket | null;
     protected isConnectToVoiceReceiver: boolean;

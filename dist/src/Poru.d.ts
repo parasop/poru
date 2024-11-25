@@ -1,5 +1,3 @@
-/// <reference types="node" />
-/// <reference types="node" />
 import { Node, NodeLinkGetLyrics, NodeStats } from "./Node/Node";
 import { EndSpeakingEventVoiceReceiverData, Player, StartSpeakingEventVoiceReceiverData } from "./Player/Player";
 import { EventEmitter } from "events";
