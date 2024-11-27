@@ -98,8 +98,6 @@ export declare class Player extends EventEmitter {
     deaf: boolean;
     /** The volume of the player (0-1000) */
     volume: number;
-    lastPlayTimestamp: any;
-    cooldown: any;
     /** Should only be used when the node is a NodeLink */
     protected voiceReceiverWsClient: WebSocket | null;
     protected isConnectToVoiceReceiver: boolean;
