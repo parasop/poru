@@ -13,18 +13,18 @@ interface BaseVoiceReceiverEvent {
 }
 export interface StartSpeakingEventVoiceReceiverData {
     /**
-      * The user ID of the user who started speaking.
-      */
+     * The user ID of the user who started speaking.
+     */
     userId: string;
     /**
-      * The guild ID of the guild where the user started speaking.
-      */
+     * The guild ID of the guild where the user started speaking.
+     */
     guildId: string;
 }
 export interface EndSpeakingEventVoiceReceiverData {
     /**
-   * The user ID of the user who stopped speaking.
-   */
+     * The user ID of the user who stopped speaking.
+     */
     userId: string;
     /**
      * The guild ID of the guild where the user stopped speaking.
@@ -232,7 +232,7 @@ export declare class Player extends EventEmitter {
      * @param {ResolveOptions} options - The options for resolving the query.
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
-    resolve({ query, source, requester }: ResolveOptions): Promise<Response>;
+    resolve({ query, source, requester, }: ResolveOptions): Promise<Response>;
     /**
      * Sends data to the Poru system.
      * @param {any} data - The data to send.
@@ -241,10 +241,10 @@ export declare class Player extends EventEmitter {
     setupVoiceReceiverConnection(): Promise<boolean>;
     removeVoiceReceiverConnection(): Promise<boolean>;
     /**
-      * This will close the connection to the node
-      * @param {any} event any
-      * @returns {void} void
-      */
+     * This will close the connection to the node
+     * @param {any} event any
+     * @returns {void} void
+     */
     private voiceReceiverClose;
     private startsWithMultiple;
     /**
@@ -259,9 +259,9 @@ export declare class Player extends EventEmitter {
      */
     private voiceReceiverDisconnect;
     /**
-      * This function will open up again the node
-      * @returns {Promise<void>} The Promise<void>
-      */
+     * This function will open up again the node
+     * @returns {Promise<void>} The Promise<void>
+     */
     private voiceReceiverOpen;
     /**
      * This will send a message to the node
@@ -270,10 +270,10 @@ export declare class Player extends EventEmitter {
      */
     private voiceReceiverMessage;
     /**
-      * This function will emit the error so that the user's listeners can get them and listen to them
-      * @param {any} event any
-      * @returns {void} void
-      */
+     * This function will emit the error so that the user's listeners can get them and listen to them
+     * @param {any} event any
+     * @returns {void} void
+     */
     private voiceReceiverError;
 }
 export {};

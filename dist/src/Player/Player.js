@@ -16,9 +16,6 @@ const escapeRegExp = (str) => {
     }
     catch { }
 };
-;
-;
-;
 /**
  * Represents a player capable of playing audio tracks.
  * @extends EventEmitter
@@ -86,7 +83,9 @@ class Player extends events_1.EventEmitter {
         this.queue = new Queue_1.default();
         this.connection = new Connection_1.Connection(this);
         this.guildId = options.guildId;
-        this.filters = this.poru.options.customFilter ? new this.poru.options.customFilter(this) : new Filters_1.Filters(this);
+        this.filters = this.poru.options.customFilter
+            ? new this.poru.options.customFilter(this)
+            : new Filters_1.Filters(this);
         this.voiceChannel = options.voiceChannel;
         this.textChannel = options.textChannel;
         this.currentTrack = null;
@@ -127,21 +126,42 @@ class Player extends events_1.EventEmitter {
     async play() {
         if (!this.queue.length)
             return this;
+        // Fetch the next track from the queue
         this.currentTrack = this.queue.shift() ?? null;
-        if (this.currentTrack && !this.currentTrack?.track)
+        // If the current track exists but doesn't have a track identifier, resolve it
+        if (this.currentTrack && !this.currentTrack.track) {
             this.currentTrack = await this.resolveTrack(this.currentTrack);
-        if (this.currentTrack?.track) {
-            await this.node.rest.updatePlayer({
-                guildId: this.guildId,
-                data: {
-                    track: { encoded: this.currentTrack.track },
-                },
-            });
-            this.isPlaying = true;
-            this.position = 0;
-            this.isAutoPlay = false;
         }
-        ;
+        // Handle specific source cases (Spotify, YouTube)
+        if (this.currentTrack?.info.sourceName === "spotify" ||
+            this.currentTrack?.info.sourceName === "youtube") {
+            const data = await this.poru.client.localTrackManager.resolve(this.currentTrack);
+            if (data) {
+                this.currentTrack = data;
+            }
+        }
+        // If the track is fully resolved and valid, start playback
+        if (this.currentTrack?.track) {
+            setTimeout(async () => {
+                try {
+                    await this.node.rest.updatePlayer({
+                        guildId: this.guildId,
+                        data: {
+                            track: { encoded: this.currentTrack.track }, // Use non-null assertion since we've checked
+                        },
+                    });
+                    this.isPlaying = true;
+                    this.position = 0;
+                    this.isAutoPlay = false;
+                }
+                catch (error) {
+                    console.error("Error updating the player:", error);
+                }
+            }, 1000);
+        }
+        else {
+            console.warn("Current track could not be resolved or is invalid.");
+        }
         return this;
     }
     /**
@@ -154,7 +174,11 @@ class Player extends events_1.EventEmitter {
         const query = [track.info?.author, track.info?.title]
             .filter((x) => !!x)
             .join(" - ");
-        const result = await this.resolve({ query, source: this.poru.options?.defaultPlatform || "ytsearch", requester: track.info?.requester });
+        const result = await this.resolve({
+            query,
+            source: this.poru.options?.defaultPlatform || "ytsearch",
+            requester: track.info?.requester,
+        });
         if (!result || !result.tracks.length)
             return null;
         if (track.info?.author) {
@@ -168,8 +192,10 @@ class Player extends events_1.EventEmitter {
             }
         }
         if (track.info.length) {
-            const sameDuration = result.tracks.find((track) => track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
-                track.info.length <= (track.info.length ? track.info.length : 0) + 2000);
+            const sameDuration = result.tracks.find((track) => track.info.length >=
+                (track.info.length ? track.info.length : 0) - 2000 &&
+                track.info.length <=
+                    (track.info.length ? track.info.length : 0) + 2000);
             if (sameDuration) {
                 track.info.identifier = sameDuration.info.identifier;
                 track.track = sameDuration.track;
@@ -207,7 +233,6 @@ class Player extends events_1.EventEmitter {
         this.isPlaying = false;
         return this;
     }
-    ;
     /**
      * This function is used to get lyrics of the current track.
      *
@@ -228,7 +253,6 @@ class Player extends events_1.EventEmitter {
         encodedTrack = this.currentTrack?.track;
         return await this.node.rest.get(`/v4/lyrics?track=${encodeURIComponent(encodedTrack ?? "")}`);
     }
-    ;
     /**
      * Pauses or resumes playback.
      * @param {boolean} [toggle=true] - Specifies whether to pause or resume playback.
@@ -248,9 +272,11 @@ class Player extends events_1.EventEmitter {
      * @param {number} position - The position to seek to (in milliseconds).
      */
     async seekTo(position) {
-        await this.node.rest.updatePlayer({ guildId: this.guildId, data: { position } });
+        await this.node.rest.updatePlayer({
+            guildId: this.guildId,
+            data: { position },
+        });
     }
-    ;
     /**
      * Sets the volume level of the player.
      * @param {number} volume - The volume level (0 to 1000).
@@ -259,7 +285,10 @@ class Player extends events_1.EventEmitter {
     async setVolume(volume) {
         if (volume < 0 || volume > 1000)
             throw new Error("[Poru Exception] Volume must be between 0 to 1000");
-        await this.node.rest.updatePlayer({ guildId: this.guildId, data: { volume } });
+        await this.node.rest.updatePlayer({
+            guildId: this.guildId,
+            data: { volume },
+        });
         this.volume = volume;
         return this;
     }
@@ -358,7 +387,6 @@ class Player extends events_1.EventEmitter {
         });
         return this;
     }
-    ;
     /**
      * Destroys the player and cleans up associated resources.
      * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
@@ -370,7 +398,6 @@ class Player extends events_1.EventEmitter {
         this.poru.emit("playerDestroy", this);
         return this.poru.players.delete(this.guildId);
     }
-    ;
     /**
      * Restarts playback from the current track.
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
@@ -389,7 +416,6 @@ class Player extends events_1.EventEmitter {
         });
         return this;
     }
-    ;
     /**
      * Moves the player to a different node.
      * @param {string} name - The name of the target node.
@@ -412,9 +438,7 @@ class Player extends events_1.EventEmitter {
             await this.destroy();
             throw e;
         }
-        ;
     }
-    ;
     /**
      * Automatically moves the player to a less used node.
      * @returns {Promise<Player | void>} - A Promise that resolves to the Player instance or void.
@@ -427,23 +451,29 @@ class Player extends events_1.EventEmitter {
             await this.destroy();
             return;
         }
-        ;
         return await this.moveNode(node.name);
     }
-    ;
     /**
      * Enables autoplay functionality for the player.
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
      */
     async autoplay() {
         try {
-            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier || this.currentTrack?.info?.identifier}&list=RD${this.previousTrack?.info.identifier || this.currentTrack?.info.identifier}`;
+            const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier ||
+                this.currentTrack?.info?.identifier}&list=RD${this.previousTrack?.info.identifier ||
+                this.currentTrack?.info.identifier}`;
             const response = await this.poru.resolve({
                 query: data,
-                requester: this.previousTrack?.info?.requester ?? this.currentTrack?.info?.requester,
-                source: this.previousTrack?.info?.sourceName ?? this.currentTrack?.info?.sourceName ?? this.poru.options?.defaultPlatform ?? "ytmsearch",
+                requester: this.previousTrack?.info?.requester ??
+                    this.currentTrack?.info?.requester,
+                source: this.previousTrack?.info?.sourceName ??
+                    this.currentTrack?.info?.sourceName ??
+                    this.poru.options?.defaultPlatform ??
+                    "ytmsearch",
             });
-            if (!response || !response.tracks || ["error", "empty"].includes(response.loadType))
+            if (!response ||
+                !response.tracks ||
+                ["error", "empty"].includes(response.loadType))
                 return await this.skip();
             response.tracks.shift();
             const track = response.tracks[Math.floor(Math.random() * Math.floor(response.tracks.length))];
@@ -455,9 +485,7 @@ class Player extends events_1.EventEmitter {
         catch (e) {
             return await this.skip();
         }
-        ;
     }
-    ;
     /**
      * Handles incoming events for the player.
      * @param {EventData} data - The event data.
@@ -561,17 +589,17 @@ class Player extends events_1.EventEmitter {
             }
         }
     }
-    ;
     /**
      * Resolves a query to obtain audio tracks.
      * @param {ResolveOptions} options - The options for resolving the query.
      * @returns {Promise<Response>} - A Promise that resolves to a Response object containing the resolved tracks.
      */
-    async resolve({ query, source, requester }) {
-        const response = await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"]) ? '' : `${source || 'ytsearch'}:`) + query)}`) ?? { loadType: "empty", data: {} };
+    async resolve({ query, source, requester, }) {
+        const response = (await this.node.rest.get(`/v4/loadtracks?identifier=${encodeURIComponent((this.startsWithMultiple(query, ["https://", "http://"])
+            ? ""
+            : `${source || "ytsearch"}:`) + query)}`)) ?? { loadType: "empty", data: {} };
         return new Response_1.Response(response, requester);
     }
-    ;
     /**
      * Sends data to the Poru system.
      * @param {any} data - The data to send.
@@ -581,7 +609,6 @@ class Player extends events_1.EventEmitter {
             throw new Error("[Poru Error] The send function is required to send data to discord. Please provide a send function in the Poru options or use one of the supported Libraries.");
         this.poru.send({ op: 4, d: data });
     }
-    ;
     async setupVoiceReceiverConnection() {
         return new Promise(async (resolve, reject) => {
             if (!this.node.isNodeLink)
@@ -605,7 +632,6 @@ class Player extends events_1.EventEmitter {
             return resolve(true);
         });
     }
-    ;
     async removeVoiceReceiverConnection() {
         return new Promise((resolve, reject) => {
             if (!this.node.isNodeLink)
@@ -617,13 +643,12 @@ class Player extends events_1.EventEmitter {
             return resolve(true);
         });
     }
-    ;
     // Private stuff
     /**
-      * This will close the connection to the node
-      * @param {any} event any
-      * @returns {void} void
-      */
+     * This will close the connection to the node
+     * @param {any} event any
+     * @returns {void} void
+     */
     async voiceReceiverClose(event) {
         try {
             await this.voiceReceiverDisconnect();
@@ -634,13 +659,10 @@ class Player extends events_1.EventEmitter {
         catch (error) {
             this.poru.emit("debug", "[Voice Receiver Web Socket] Error while closing the connection with the node.", error);
         }
-        ;
     }
-    ;
     startsWithMultiple(s, words) {
-        return words.some(w => s.startsWith(w));
+        return words.some((w) => s.startsWith(w));
     }
-    ;
     /**
      * Handles the message event
      * @param payload any
@@ -660,7 +682,6 @@ class Player extends events_1.EventEmitter {
             this.voiceReceiverAttempt++;
         }, this.node.reconnectTimeout);
     }
-    ;
     /**
      * This function will make the node disconnect
      * @returns {Promise<void>} void
@@ -673,27 +694,23 @@ class Player extends events_1.EventEmitter {
         this.voiceReceiverWsClient = null;
         this.poru.emit("voiceReceiverDisconnected", this, `[Voice Receiver Web Socket] Connection was closed.`);
     }
-    ;
     /**
-      * This function will open up again the node
-      * @returns {Promise<void>} The Promise<void>
-      */
+     * This function will open up again the node
+     * @returns {Promise<void>} The Promise<void>
+     */
     async voiceReceiverOpen() {
         try {
             if (this.voiceReceiverReconnectTimeout) {
                 clearTimeout(this.voiceReceiverReconnectTimeout);
                 this.voiceReceiverReconnectTimeout = null;
             }
-            ;
             this.isConnectToVoiceReceiver = true;
             this.poru.emit("voiceReceiverConnected", this, `[Voice Receiver Web Socket] Connection ready ${this.node.socketURL}/connection/data`);
         }
         catch (error) {
             this.poru.emit("debug", `[Voice Receiver Web Socket] Error while opening the connection with the node ${this.node.name}. to the voice Receiver Websocket.`, error);
         }
-        ;
     }
-    ;
     /**
      * This will send a message to the node
      * @param {string} payload The sent payload we recieved in stringified form
@@ -713,7 +730,7 @@ class Player extends events_1.EventEmitter {
                 case "endSpeakingEvent": {
                     const data = {
                         ...packet.data,
-                        data: Buffer.from(packet.data.data, "base64")
+                        data: Buffer.from(packet.data.data, "base64"),
                     };
                     this.poru.emit("endSpeaking", this, data);
                     break;
@@ -727,21 +744,18 @@ class Player extends events_1.EventEmitter {
         catch (err) {
             this.poru.emit("voiceReceiverError", this, "[Voice Receiver Web Socket] Error while parsing the payload. " + err);
         }
-        ;
     }
-    ;
     /**
-      * This function will emit the error so that the user's listeners can get them and listen to them
-      * @param {any} event any
-      * @returns {void} void
-      */
+     * This function will emit the error so that the user's listeners can get them and listen to them
+     * @param {any} event any
+     * @returns {void} void
+     */
     voiceReceiverError(event) {
         if (!event)
             return;
         this.poru.emit("voiceReceiverError", this, event);
         this.poru.emit("debug", `[Voice Receiver Web Socket] Connection for NodeLink Voice Receiver (${this.node.name}) has the following error code: ${event.code || event}`);
     }
-    ;
 }
 exports.Player = Player;
 //# sourceMappingURL=Player.js.map
