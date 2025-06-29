@@ -67,7 +67,8 @@ Note: Send PR to add your repo here
 |-----|----------|------------------------|
 | [Poru Music](https://github.com/parasop/poru-example) | Basic example | Works with the latest Discord.js version |
 | [The world machine](https://github.com/Reishimanfr/TWM-bot) | See GitHub repo for the full list | - |
-| [Lunox](https://github.com/adh319/Lunox) | Look over the repo for the full list of features | Simply powerful Discord Music Bot |
+| [Lunox](https://github.com/adh319/Lunox) | Look over the repo for the full list of features | Simply powerful Discord Music Bot |-
+| [Muzox Clone](https://github.com/aryanm830/Muzox-clone) | Muzox clone built in poru (outdated) |
 
 ## Example usage basic bot
 
