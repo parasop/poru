@@ -12,8 +12,10 @@ type Loop = "NONE" | "TRACK" | "QUEUE"
 
 const escapeRegExp = (str: string) => {
   try {
-    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  } catch { }
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  } catch {
+    return str
+  }
 }
 
 interface BaseVoiceReceiverEvent {
@@ -464,6 +466,7 @@ export class Player extends EventEmitter {
    */
   public async destroy(): Promise<boolean> {
     await this.disconnect()
+    this.connection.cleanup() // Clean up connection resources
     await this.node.rest.destroyPlayer(this.guildId)
     this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`)
     this.poru.emit("playerDestroy", this)

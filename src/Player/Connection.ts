@@ -54,6 +54,7 @@ export class Connection {
     public voice: IVoiceServer | PartialNull<IVoiceServer>;
     public self_mute: boolean;
     public self_deaf: boolean;
+    private unpauseTimeout: NodeJS.Timeout | null;
 
     /**
      * The connection class
@@ -70,6 +71,7 @@ export class Connection {
         };
         this.self_mute = false;
         this.self_deaf = false;
+        this.unpauseTimeout = null;
     }
 
     /**
@@ -87,12 +89,18 @@ export class Connection {
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
-        setTimeout(async () => {
+        
+        // Clear any existing timeout to prevent memory leaks
+        if (this.unpauseTimeout) {
+            clearTimeout(this.unpauseTimeout);
+        }
+        
+        this.unpauseTimeout = setTimeout(async () => {
             await this.player.node.rest.updatePlayer({
                 guildId: this.player.guildId,
                 data: { paused: false },
             })
-
+            this.unpauseTimeout = null;
         }, 1000)
 
         this.player.poru.emit(
@@ -119,5 +127,15 @@ export class Connection {
         this.self_deaf = self_deaf;
         this.self_mute = self_mute;
         this.voice.sessionId = session_id || null;
+    };
+
+    /**
+     * Clean up connection resources
+     */
+    public cleanup(): void {
+        if (this.unpauseTimeout) {
+            clearTimeout(this.unpauseTimeout);
+            this.unpauseTimeout = null;
+        }
     };
 };

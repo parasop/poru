@@ -56,7 +56,11 @@ export class customFilter extends Filters {
         if (!this.player) return this;
         this.slowmode = val;
 
-       await this.setFilters(val ? { timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } as FiltersOptions : await this.clearFilters());
+       if (val) {
+           await this.setFilters({ timescale: { speed: 0.5, pitch: 1.0, rate: 0.8 } } as FiltersOptions);
+       } else {
+           await this.clearFilters();
+       }
        return this;
     };
 
