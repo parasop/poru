@@ -142,22 +142,20 @@ class Player extends events_1.EventEmitter {
         }
         // If the track is fully resolved and valid, start playback
         if (this.currentTrack?.track) {
-            setTimeout(async () => {
-                try {
-                    await this.node.rest.updatePlayer({
-                        guildId: this.guildId,
-                        data: {
-                            track: { encoded: this.currentTrack.track }, // Use non-null assertion since we've checked
-                        },
-                    });
-                    this.isPlaying = true;
-                    this.position = 0;
-                    this.isAutoPlay = false;
-                }
-                catch (error) {
-                    console.error("Error updating the player:", error);
-                }
-            }, 1000);
+            try {
+                await this.node.rest.updatePlayer({
+                    guildId: this.guildId,
+                    data: {
+                        track: { encoded: this.currentTrack.track }, // Use non-null assertion since we've checked
+                    },
+                });
+                this.isPlaying = true;
+                this.position = 0;
+                this.isAutoPlay = false;
+            }
+            catch (error) {
+                console.error("Error updating the player:", error);
+            }
         }
         else {
             console.warn("Current track could not be resolved or is invalid.");
@@ -377,7 +375,6 @@ class Player extends events_1.EventEmitter {
     async disconnect() {
         if (!this.voiceChannel)
             return this;
-        await this.pause(true);
         this.isConnected = false;
         this.send({
             guild_id: this.guildId,

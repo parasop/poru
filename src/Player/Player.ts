@@ -206,7 +206,6 @@ export class Player extends EventEmitter {
   
     // If the track is fully resolved and valid, start playback
     if (this.currentTrack?.track) {
-      setTimeout(async () => {
         try {
           await this.node.rest.updatePlayer({
             guildId: this.guildId,
@@ -220,7 +219,6 @@ export class Player extends EventEmitter {
         } catch (error) {
           console.error("Error updating the player:", error);
         }
-      }, 1000);
     } else {
       console.warn("Current track could not be resolved or is invalid.");
     }
@@ -504,8 +502,6 @@ export class Player extends EventEmitter {
    */
   protected async disconnect(): Promise<Player> {
     if (!this.voiceChannel) return this;
-    await this.pause(true);
-
     this.isConnected = false;
 
     this.send({
