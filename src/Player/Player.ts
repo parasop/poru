@@ -13,7 +13,7 @@ type Loop = "NONE" | "TRACK" | "QUEUE";
 const escapeRegExp = (str: string) => {
   try {
     str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  } catch {}
+  } catch { }
 };
 
 interface BaseVoiceReceiverEvent {
@@ -182,15 +182,15 @@ export class Player extends EventEmitter {
    */
   public async play(): Promise<Player> {
     if (!this.queue.length) return this;
-  
+
     // Fetch the next track from the queue
     this.currentTrack = this.queue.shift() ?? null;
-  
+
     // If the current track exists but doesn't have a track identifier, resolve it
     if (this.currentTrack && !this.currentTrack.track) {
       this.currentTrack = await this.resolveTrack(this.currentTrack);
     }
-  
+
     // Handle specific source cases (Spotify, YouTube)
     if (
       this.currentTrack?.info.sourceName === "spotify" ||
@@ -203,29 +203,29 @@ export class Player extends EventEmitter {
         this.currentTrack = data;
       }
     }
-  
+
     // If the track is fully resolved and valid, start playback
     if (this.currentTrack?.track) {
-        try {
-          await this.node.rest.updatePlayer({
-            guildId: this.guildId,
-            data: {
-              track: { encoded: this.currentTrack!.track }, // Use non-null assertion since we've checked
-            },
-          });
-          this.isPlaying = true;
-          this.position = 0;
-          this.isAutoPlay = false;
-        } catch (error) {
-          console.error("Error updating the player:", error);
-        }
+      try {
+        await this.node.rest.updatePlayer({
+          guildId: this.guildId,
+          data: {
+            track: { encoded: this.currentTrack!.track }, // Use non-null assertion since we've checked
+          },
+        });
+        this.isPlaying = true;
+        this.position = 0;
+        this.isAutoPlay = false;
+      } catch (error) {
+        console.error("Error updating the player:", error);
+      }
     } else {
       console.warn("Current track could not be resolved or is invalid.");
     }
-  
+
     return this;
   }
-  
+
 
   /**
    * Resolves a track before playback.
@@ -265,9 +265,9 @@ export class Player extends EventEmitter {
       const sameDuration = result.tracks.find(
         (track) =>
           track.info.length >=
-            (track.info.length ? track.info.length : 0) - 2000 &&
+          (track.info.length ? track.info.length : 0) - 2000 &&
           track.info.length <=
-            (track.info.length ? track.info.length : 0) + 2000
+          (track.info.length ? track.info.length : 0) + 2000
       );
       if (sameDuration) {
         track.info.identifier = sameDuration.info.identifier;
@@ -557,7 +557,7 @@ export class Player extends EventEmitter {
     if (!node.isConnected) throw new Error("Provided Node is not connected");
 
     try {
-      await this.node.rest.destroyPlayer(this.guildId).catch(() => {});
+      await this.node.rest.destroyPlayer(this.guildId).catch(() => { });
       this.poru.players.delete(this.guildId);
       this.node = node;
       this.poru.players.set(this.guildId, this);
@@ -592,13 +592,11 @@ export class Player extends EventEmitter {
    */
   public async autoplay(): Promise<Player> {
     try {
-      const data = `https://www.youtube.com/watch?v=${
-        this.previousTrack?.info?.identifier ||
+      const data = `https://www.youtube.com/watch?v=${this.previousTrack?.info?.identifier ||
         this.currentTrack?.info?.identifier
-      }&list=RD${
-        this.previousTrack?.info.identifier ||
+        }&list=RD${this.previousTrack?.info.identifier ||
         this.currentTrack?.info.identifier
-      }`;
+        }`;
 
       const response = await this.poru.resolve({
         query: data,
@@ -623,7 +621,7 @@ export class Player extends EventEmitter {
 
       const track =
         response.tracks[
-          Math.floor(Math.random() * Math.floor(response.tracks.length))
+        Math.floor(Math.random() * Math.floor(response.tracks.length))
         ];
 
       this.queue.push(track);
@@ -651,71 +649,31 @@ export class Player extends EventEmitter {
         break;
       }
       case "TrackEndEvent": {
-        if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
-          if (this.queue.length === 0 && this.loop === "NONE") {
-            return this.poru.emit("queueEnd", this);
-          } else {
-            await this.poru.emit("trackEnd", this, this.currentTrack!, data);
+        // Prevent duplicate TrackEnd handling
+        if (!this.currentTrack) return;
 
-            // Cooldown tracking logic for first and second play
-            const now = Date.now();
-            if (!this.lastPlayTimestamp) {
-              this.lastPlayTimestamp = now;
-              setTimeout(async () => {
-                await this.play();
-              }, 3000);
-              return;
-            }
-
-            const timeSinceLastPlay = now - this.lastPlayTimestamp;
-
-            if (timeSinceLastPlay <= 5000) {
-              // Add a cooldown of 10 seconds
-              if (!this.cooldown || now - this.cooldown > 10000) {
-                this.cooldown = now;
-                this.lastPlayTimestamp = null; // Reset the timestamp to avoid repeated cooldowns
-                //  this.poru.emit("cooldown", this, 10); // Emit cooldown event (optional)
-                // this.message.delete().catch(e => null)
-                console.log(
-                  "Cooldown active for 10 seconds due to rapid first and second plays."
-                );
-                return;
-              }
-            }
-
-            this.lastPlayTimestamp = now; // Update the timestamp for the next play call
-            setTimeout(async () => {
-              await this.play();
-            }, 3000);
-            return;
-          }
-        }
-
-        this.previousTrack = this.currentTrack;
+        const endedTrack = this.currentTrack;
+        this.previousTrack = endedTrack;
         this.currentTrack = null;
+        this.isPlaying = false;
+
+        // Emit track end ONCE
+        this.poru.emit("trackEnd", this, endedTrack, data);
 
         if (this.loop === "TRACK") {
-          this.queue.unshift(this.previousTrack!);
-          await this.poru.emit("trackEnd", this, this.currentTrack!, data);
-          return await this.play();
+          this.queue.unshift(endedTrack);
         } else if (this.loop === "QUEUE") {
-          this.queue.push(this.previousTrack!);
-          await this.poru.emit("trackEnd", this, this.currentTrack!, data);
-          return await this.play();
+          this.queue.push(endedTrack);
         }
 
         if (this.queue.length === 0) {
-          this.isPlaying = false;
-          return this.poru.emit("queueEnd", this);
-        } else if (this.queue.length > 0) {
-          this.isPlaying = false;
-          this.poru.emit("trackEnd", this, this.currentTrack!, data);
-          return await this.play();
+          this.poru.emit("queueEnd", this);
+          await this.destroy(); // ✅ IMPORTANT
+          return;
         }
 
-        this.isPlaying = false;
-        this.poru.emit("queueEnd", this);
-        break;
+        await this.play();
+        return;
       }
 
       case "TrackStuckEvent": {
@@ -738,7 +696,7 @@ export class Player extends EventEmitter {
           });
         }
         this.poru.emit("socketClose", this, this.currentTrack!, data);
-    //    await this.pause(true);
+        //    await this.pause(true);
         this.poru.emit(
           "debug",
           `Player -> ${this.guildId}`,
@@ -865,8 +823,7 @@ export class Player extends EventEmitter {
       this.poru.emit(
         "debug",
         this.node.name,
-        `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${
-          event || "Unknown code"
+        `[Voice Receiver Web Socket] Connection was closed with the following Error code: ${event || "Unknown code"
         }`
       );
 
@@ -1012,8 +969,7 @@ export class Player extends EventEmitter {
     this.poru.emit("voiceReceiverError", this, event);
     this.poru.emit(
       "debug",
-      `[Voice Receiver Web Socket] Connection for NodeLink Voice Receiver (${
-        this.node.name
+      `[Voice Receiver Web Socket] Connection for NodeLink Voice Receiver (${this.node.name
       }) has the following error code: ${event.code || event}`
     );
   }

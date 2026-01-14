@@ -498,64 +498,28 @@ class Player extends events_1.EventEmitter {
                 break;
             }
             case "TrackEndEvent": {
-                if (["loadFailed", "cleanup", "replaced"].includes(data.reason)) {
-                    if (this.queue.length === 0 && this.loop === "NONE") {
-                        return this.poru.emit("queueEnd", this);
-                    }
-                    else {
-                        await this.poru.emit("trackEnd", this, this.currentTrack, data);
-                        // Cooldown tracking logic for first and second play
-                        const now = Date.now();
-                        if (!this.lastPlayTimestamp) {
-                            this.lastPlayTimestamp = now;
-                            setTimeout(async () => {
-                                await this.play();
-                            }, 3000);
-                            return;
-                        }
-                        const timeSinceLastPlay = now - this.lastPlayTimestamp;
-                        if (timeSinceLastPlay <= 5000) {
-                            // Add a cooldown of 10 seconds
-                            if (!this.cooldown || now - this.cooldown > 10000) {
-                                this.cooldown = now;
-                                this.lastPlayTimestamp = null; // Reset the timestamp to avoid repeated cooldowns
-                                //  this.poru.emit("cooldown", this, 10); // Emit cooldown event (optional)
-                                // this.message.delete().catch(e => null)
-                                console.log("Cooldown active for 10 seconds due to rapid first and second plays.");
-                                return;
-                            }
-                        }
-                        this.lastPlayTimestamp = now; // Update the timestamp for the next play call
-                        setTimeout(async () => {
-                            await this.play();
-                        }, 3000);
-                        return;
-                    }
-                }
-                this.previousTrack = this.currentTrack;
+                // Prevent duplicate TrackEnd handling
+                if (!this.currentTrack)
+                    return;
+                const endedTrack = this.currentTrack;
+                this.previousTrack = endedTrack;
                 this.currentTrack = null;
+                this.isPlaying = false;
+                // Emit track end ONCE
+                this.poru.emit("trackEnd", this, endedTrack, data);
                 if (this.loop === "TRACK") {
-                    this.queue.unshift(this.previousTrack);
-                    await this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return await this.play();
+                    this.queue.unshift(endedTrack);
                 }
                 else if (this.loop === "QUEUE") {
-                    this.queue.push(this.previousTrack);
-                    await this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return await this.play();
+                    this.queue.push(endedTrack);
                 }
                 if (this.queue.length === 0) {
-                    this.isPlaying = false;
-                    return this.poru.emit("queueEnd", this);
+                    this.poru.emit("queueEnd", this);
+                    await this.destroy(); // ✅ IMPORTANT
+                    return;
                 }
-                else if (this.queue.length > 0) {
-                    this.isPlaying = false;
-                    this.poru.emit("trackEnd", this, this.currentTrack, data);
-                    return await this.play();
-                }
-                this.isPlaying = false;
-                this.poru.emit("queueEnd", this);
-                break;
+                await this.play();
+                return;
             }
             case "TrackStuckEvent": {
                 this.poru.emit("trackError", this, this.currentTrack, data);
