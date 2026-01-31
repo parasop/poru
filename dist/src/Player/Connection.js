@@ -49,6 +49,8 @@ class Connection {
             data: { voice: this.voice },
         });
         setTimeout(async () => {
+            if (!this.player.poru.players.has(this.player.guildId))
+                return;
             await this.player.node.rest.updatePlayer({
                 guildId: this.player.guildId,
                 data: { paused: false },
