@@ -463,12 +463,14 @@ export class Player extends EventEmitter {
    * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
    */
   public async destroy(): Promise<boolean> {
-    await this.disconnect()
-    await this.node.rest.destroyPlayer(this.guildId)
-    this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`)
-    this.poru.emit("playerDestroy", this)
-    return this.poru.players.delete(this.guildId)
-  };
+    const isDestroyed = this.poru.players.delete(this.guildId);
+    await this.disconnect();
+    await this.node.rest.destroyPlayer(this.guildId);
+    this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
+    this.poru.emit("playerDestroy", this);
+    return isDestroyed
+  }
+
 
   /**
    * Restarts playback from the current track.

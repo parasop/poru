@@ -364,13 +364,13 @@ class Player extends events_1.EventEmitter {
      * @returns {Promise<boolean>} - A Promise that resolves to a boolean which is true if an element in the Map existed and has been removed, or false if the element does not exist.
      */
     async destroy() {
+        const isDestroyed = this.poru.players.delete(this.guildId);
         await this.disconnect();
         await this.node.rest.destroyPlayer(this.guildId);
         this.poru.emit("debug", this.guildId, `[Poru Player] destroyed the player`);
         this.poru.emit("playerDestroy", this);
-        return this.poru.players.delete(this.guildId);
+        return isDestroyed;
     }
-    ;
     /**
      * Restarts playback from the current track.
      * @returns {Promise<Player>} - A Promise that resolves to the Player instance.
@@ -552,7 +552,7 @@ class Player extends events_1.EventEmitter {
                     });
                 }
                 this.poru.emit("socketClose", this, this.currentTrack, data);
-                await this.pause(true);
+                //   await this.pause(true)
                 this.poru.emit("debug", `Player -> ${this.guildId}`, "Player paused Cause Channel deleted Or Client was kicked");
                 break;
             }

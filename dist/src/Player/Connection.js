@@ -30,6 +30,7 @@ class Connection {
             sessionId: null,
             token: null,
             endpoint: null,
+            channelId: null
         };
         this.self_mute = false;
         this.self_deaf = false;
@@ -44,11 +45,14 @@ class Connection {
         this.voice.endpoint = data.endpoint;
         this.voice.token = data.token;
         this.region = data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
+        this.voice.channelId = this.player.voiceChannel;
         await this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
         setTimeout(async () => {
+            if (!this.player.poru.players.has(this.player.guildId))
+                return;
             await this.player.node.rest.updatePlayer({
                 guildId: this.player.guildId,
                 data: { paused: false },
