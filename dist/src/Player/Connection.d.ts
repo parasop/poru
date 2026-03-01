@@ -4,6 +4,7 @@ export interface IVoiceServer {
     token: string;
     sessionId: string;
     endpoint?: string;
+    channelId: string;
 }
 type TYear = `${number}${number}${number}${number}`;
 type TMonth = `${number}${number}`;

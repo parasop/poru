@@ -30,6 +30,7 @@ class Connection {
             sessionId: null,
             token: null,
             endpoint: null,
+            channelId: null
         };
         this.self_mute = false;
         this.self_deaf = false;
@@ -43,6 +44,7 @@ class Connection {
             throw new Error("[Poru Error] No Session id found.");
         this.voice.endpoint = data.endpoint;
         this.voice.token = data.token;
+        this.voice.channelId = this.player.voiceChannel;
         this.region = data.endpoint.split(".").shift()?.replace(/[0-9]/g, "") || null;
         await this.player.node.rest.updatePlayer({
             guildId: this.player.guildId,
