@@ -55,6 +55,7 @@ export class Connection {
     public voice: IVoiceServer | PartialNull<IVoiceServer>;
     public self_mute: boolean;
     public self_deaf: boolean;
+    private serverUpdateTimeout: NodeJS.Timeout | null;
 
     /**
      * The connection class
@@ -72,6 +73,7 @@ export class Connection {
         };
         this.self_mute = false;
         this.self_deaf = false;
+        this.serverUpdateTimeout = null;
     }
 
     /**
@@ -90,8 +92,10 @@ export class Connection {
             guildId: this.player.guildId,
             data: { voice: this.voice },
         });
-        setTimeout(async () => {
+        if (this.serverUpdateTimeout) clearTimeout(this.serverUpdateTimeout);
+        this.serverUpdateTimeout = setTimeout(async () => {
             if (!this.player.poru.players.has(this.player.guildId)) return;
+            if (this.player.isPaused) return;
             await this.player.node.rest.updatePlayer({
                 guildId: this.player.guildId,
                 data: { paused: false },
