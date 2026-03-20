@@ -269,9 +269,10 @@ export class Node {
     public async reconnect(): Promise<void> {
         this.reconnectAttempt = setTimeout(async () => {
             if (this.attempt > this.reconnectTries) {
-                throw new Error(
+                this.poru.emit("nodeError", this, new Error(
                     `[Poru Websocket] Unable to connect with ${this.options.name} node after ${this.reconnectTries} tries`
-                );
+                ));
+                return;
             }
 
             // Delete the ws instance
@@ -294,11 +295,11 @@ export class Node {
     public async disconnect(): Promise<void> {
         if (!this.isConnected) return;
 
-        this.poru.players.forEach(async (player) => {
+        for (const player of this.poru.players.values()) {
             if (player.node == this) {
                 await player.autoMoveNode();
             };
-        });
+        }
 
         this.ws?.close(1000, "destroy");
         this.ws?.removeAllListeners();
@@ -386,7 +387,11 @@ export class Node {
             this.isConnected = true;
             this.poru.emit("debug", this.options.name, `[Web Socket] Connection ready ${this.socketURL}`);
 
-            if (this.autoResume) this.poru.players.forEach(async (player) => player.node === this ? await player.restart() : null);
+            if (this.autoResume) {
+                for (const player of this.poru.players.values()) {
+                    if (player.node === this) await player.restart();
+                }
+            }
         } catch (error) {
             this.poru.emit("debug", `[Web Socket] Error while opening the connection with the node ${this.options.name}.`, error)
         };

@@ -12,7 +12,7 @@ type Loop = "NONE" | "TRACK" | "QUEUE"
 
 const escapeRegExp = (str: string) => {
   try {
-    str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   } catch { }
 }
 
@@ -230,9 +230,9 @@ export class Player extends EventEmitter {
     }
     if (track.info.length) {
       const sameDuration = result.tracks.find(
-        (track) =>
-          track.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
-          track.info.length <= (track.info.length ? track.info.length : 0) + 2000
+        (resultTrack) =>
+          resultTrack.info.length >= (track.info.length ? track.info.length : 0) - 2000 &&
+          resultTrack.info.length <= (track.info.length ? track.info.length : 0) + 2000
       )
       if (sameDuration) {
         track.info.identifier = sameDuration.info.identifier;
@@ -298,7 +298,7 @@ export class Player extends EventEmitter {
 
     if (!encodedTrack && !this.currentTrack) throw new Error("[Poru Exception] A track must be playing right now or be supplied.");
 
-    encodedTrack = this.currentTrack?.track;
+    if (!encodedTrack) encodedTrack = this.currentTrack?.track;
 
     return await this.node.rest.get<NodeLinkGetLyrics>(`/v4/lyrics?track=${encodeURIComponent(encodedTrack ?? "")}`)
   };
@@ -772,9 +772,10 @@ export class Player extends EventEmitter {
   private async voiceReceiverReconnect(): Promise<void> {
     this.voiceReceiverReconnectTimeout = setTimeout(async () => {
       if (this.voiceReceiverAttempt > this.voiceReceiverReconnectTries) {
-        throw new Error(
+        this.poru.emit("nodeError", this.node, new Error(
           `[Poru Voice Receiver Websocket] Unable to connect with ${this.node.name} node to the voice Receiver Websocket after ${this.voiceReceiverReconnectTries} tries`
-        );
+        ));
+        return;
       }
       // Delete the ws instance
       this.isConnected = false;

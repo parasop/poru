@@ -347,7 +347,9 @@ export class Poru extends EventEmitter {
     public async init() {
         if (this.isActivated) return this;
         this.userId = this.client.user.id;
-        this._nodes.forEach(async (node) => await this.addNode(node));
+        for (const node of this._nodes) {
+            await this.addNode(node);
+        }
         this.isActivated = true;
 
         if (this.options.plugins) {
